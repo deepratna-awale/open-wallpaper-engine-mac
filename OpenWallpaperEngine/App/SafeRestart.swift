@@ -25,6 +25,12 @@ final class SafeRestart: ObservableObject {
 
     /// `SafeRestartLedger.key(for:)` of every flagged wallpaper, for the library.
     @Published private(set) var flaggedKeys: Set<String> = []
+    /// The wallpapers the previous run was showing when it ended uncleanly, for a problem report.
+    private(set) var uncleanExitSuspects: [SafeRestartLedger.Suspect] = []
+    /// Report a Problem… on the notice: opens a report on the run the notice is about.
+    var onReport: ((Reason) -> Void)?
+    /// Whether a notice is waiting for launch to finish (`showPendingNotice`).
+    var hasPendingNotice: Bool { pending != nil }
 
     let watchdog: RenderWatchdog
     private let store: SafeRestartStore
@@ -50,6 +56,7 @@ final class SafeRestart: ObservableObject {
         let suspects = ledger.beginLaunch()
         store.save(ledger)
         flaggedKeys = ledger.flaggedKeys
+        uncleanExitSuspects = suspects
         if !suspects.isEmpty {
             let names = suspects.map(\.wallpaper.project.title).joined(separator: ", ")
             OWELog.info(.app, "Previous run ended uncleanly; not restoring \(names)")
@@ -163,8 +170,16 @@ final class SafeRestart: ObservableObject {
             message += " " + String(localized: "It has now done this twice in a row and is flagged in the library.")
         }
         notice?.close()
+        var report: (() -> Void)?
+        if let onReport {
+            report = { [weak self] in
+                self?.dismissNotice()
+                onReport(reason)
+            }
+        }
         notice = SafeRestartNotice(message: message,
                                    onRetry: { [weak self] in self?.retry(suspects) },
+                                   onReport: report,
                                    onDismiss: { [weak self] in self?.dismissNotice() })
         notice?.show()
     }

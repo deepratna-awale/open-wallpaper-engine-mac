@@ -51,6 +51,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The settings window's tab and the setting a link or search result opens.
     let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
+    /// Report a Problem: the run record, the recent log and the report window (`App/ProblemReport`).
+    lazy var problemReporter = ProblemReporter()
     /// Each playlist's system-wide shortcut (`App/GlobalShortcuts`).
     lazy var playlistShortcuts = PlaylistShortcutController(viewModel: wallpaperViewModel)
     /// Playlist transitions, and Settings' transition for wallpapers chosen by hand, on the
@@ -266,6 +268,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // First: keeps the last run's log and notices whether it quit, before anything logs.
+        problemReporter.beginRun()
         // Behind the screen saver: no Dock icon from the start.
         if launchedForScreenSaver { NSApp.setActivationPolicy(.accessory) }
 
@@ -343,6 +347,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
+        problemReporter.previousWallpapers = safeRestart.uncleanExitSuspects.map { ProblemReport.Wallpaper($0.wallpaper) }
+        problemReporter.currentWallpapers = { [unowned self] in
+            wallpaperViewModel.wallpapers.values.filter { $0.project != .invalid }.map { ProblemReport.Wallpaper($0) }
+        }
+        safeRestart.onReport = { [weak self] reason in
+            guard let self else { return }
+            if case .uncleanExit = reason {
+                problemReporter.showReport(previousRun: true)
+            } else {
+                problemReporter.showReport()
+            }
+        }
 
         // The Wallpaper Editor's process: what it saves reaches the wallpapers running here.
         wallpaperEditorLauncher.start()

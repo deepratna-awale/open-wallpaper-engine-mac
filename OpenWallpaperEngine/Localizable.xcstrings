@@ -22492,6 +22492,194 @@
         }
       }
     },
+    "Collecting logs…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ جمع السجلات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolle werden gesammelt …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando registros…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collecte des journaux…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉग इकट्ठा किए जा रहे हैं…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccolta dei log…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログを収集中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그 수집 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbieranie dzienników…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coletando registros…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбор журналов…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlükler toplanıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирання журналів…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在收集日志…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在收集記錄⋯"
+          }
+        }
+      }
+    },
+    "Collects the app's recent log and the latest crash report into one file you can read before attaching it to a GitHub issue." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجمع السجل الأخير للتطبيق وأحدث تقرير انهيار في ملف واحد يمكنك قراءته قبل إرفاقه بمشكلة على GitHub."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fasst das aktuelle Protokoll der App und den neuesten Absturzbericht in einer Datei zusammen, die Sie lesen können, bevor Sie sie an ein GitHub-Issue anhängen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reúne el registro reciente de la app y el último informe de fallo en un archivo que puedes leer antes de adjuntarlo a una incidencia de GitHub."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regroupe le journal récent de l’app et le dernier rapport de plantage dans un seul fichier, que vous pouvez lire avant de le joindre à un ticket GitHub."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप के हाल के लॉग और नवीनतम क्रैश रिपोर्ट को एक फ़ाइल में इकट्ठा करता है, जिसे आप GitHub इशू में अटैच करने से पहले पढ़ सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccoglie il log recente dell’app e l’ultimo resoconto dell’arresto anomalo in un unico file che puoi leggere prima di allegarlo a una segnalazione su GitHub."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリの最近のログと最新のクラッシュレポートを1つのファイルにまとめます。GitHub の Issue に添付する前に内容を確認できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱의 최근 로그와 최신 충돌 보고서를 하나의 파일로 모읍니다. GitHub 이슈에 첨부하기 전에 내용을 읽어 볼 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbiera ostatni dziennik aplikacji i najnowszy raport awarii w jednym pliku, który możesz przeczytać przed załączeniem go do zgłoszenia w GitHubie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reúne o registro recente do app e o relatório de falha mais recente em um arquivo que você pode ler antes de anexá-lo a um issue do GitHub."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Собирает недавний журнал приложения и последний отчёт о сбое в один файл, который можно прочитать перед тем, как прикрепить к обсуждению на GitHub."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamanın son günlüğünü ve en son çökme raporunu, bir GitHub sorununa eklemeden önce okuyabileceğiniz tek bir dosyada toplar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирає нещодавній журнал програми й останній звіт про збій в один файл, який можна прочитати, перш ніж прикріпити його до обговорення на GitHub."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 App 的近期日志和最新的崩溃报告汇总到一个文件中，你可以在附加到 GitHub 议题前先阅读。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 App 的近期記錄和最新的當機報告彙整成一個檔案，你可以在附加到 GitHub 議題前先閱讀。"
+          }
+        }
+      }
+    },
     "Comments" : {
       "comment" : "Heading of the details panel's section that lists a Workshop wallpaper's Steam comments",
       "localizations" : {
@@ -72936,6 +73124,101 @@
         }
       }
     },
+    "Last Run" : {
+      "comment" : "Problem report window: the report covers the app's previous run, which ended unexpectedly",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التشغيل السابق"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzter Start"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión anterior"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session précédente"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछला रन"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessione precedente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回の実行"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지난 실행"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poprzednie uruchomienie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última Sessão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прошлый запуск"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki Çalıştırma"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній запуск"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次运行"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次執行"
+          }
+        }
+      }
+    },
     "Last Updated" : {
       "comment" : "Sort wallpapers by when their Workshop item last changed",
       "localizations" : {
@@ -96845,6 +97128,100 @@
         }
       }
     },
+    "Open Wallpaper Engine quit unexpectedly last time." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم إنهاء Open Wallpaper Engine بشكل غير متوقع في المرة السابقة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine wurde beim letzten Mal unerwartet beendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine se cerró de forma inesperada la última vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine s’est fermé de manière inattendue la dernière fois."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछली बार Open Wallpaper Engine अनपेक्षित रूप से बंद हो गया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’ultima volta Open Wallpaper Engine si è chiuso in modo imprevisto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前回、Open Wallpaper Engine が予期せず終了しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지난번에 Open Wallpaper Engine이 예기치 않게 종료되었습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatnim razem Open Wallpaper Engine nieoczekiwanie zakończył działanie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine foi encerrado inesperadamente da última vez."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В прошлый раз Open Wallpaper Engine неожиданно завершил работу."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine geçen sefer beklenmedik şekilde kapandı."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Минулого разу Open Wallpaper Engine неочікувано завершив роботу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 上次意外退出。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 上次意外結束。"
+          }
+        }
+      }
+    },
     "Open Wallpaper Engine's Accent" : {
       "comment" : "Settings › Theming: picker label, the accent color of Open Wallpaper Engine's own windows",
       "localizations" : {
@@ -119407,6 +119784,196 @@
         }
       }
     },
+    "Report a Problem" : {
+      "comment" : "Title of the window that collects a problem report, and its section in Settings › Diagnostics",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبلاغ عن مشكلة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem melden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un problema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un problème"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "समस्या की रिपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala un problema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "問題を報告"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "문제 보고"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zgłoś problem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatar um Problema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщить о проблеме"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorun Bildir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити про проблему"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告问题"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回報問題"
+          }
+        }
+      }
+    },
+    "Report a Problem…" : {
+      "comment" : "Help menu item and button that open the problem report window",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبلاغ عن مشكلة…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem melden …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un problema…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un problème…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "समस्या की रिपोर्ट करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala un problema…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "問題を報告…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "문제 보고…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zgłoś problem…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatar um Problema…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщить о проблеме…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorun Bildir…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити про проблему…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告问题…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回報問題⋯"
+          }
+        }
+      }
+    },
     "Report a Security Issue" : {
       "localizations" : {
         "ar" : {
@@ -119497,6 +120064,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "回報安全性問題"
+          }
+        }
+      }
+    },
+    "Report on GitHub…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبلاغ على GitHub…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf GitHub melden …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar en GitHub…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler sur GitHub…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub पर रिपोर्ट करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala su GitHub…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub で報告…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub에서 보고…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zgłoś w GitHubie…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatar no GitHub…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщить на GitHub…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub’da Bildir…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити на GitHub…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 GitHub 上报告…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 GitHub 上回報⋯"
           }
         }
       }
@@ -154345,6 +155006,194 @@
         }
       }
     },
+    "The report has the app's recent log, the crash report macOS saved, and your Mac's model and macOS version. Your user name, your Mac's name and your home folder are removed. Nothing is sent: you choose where the report goes." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتضمن التقرير السجل الأخير للتطبيق، وتقرير الانهيار الذي حفظه macOS، وطراز جهاز Mac وإصدار macOS. تتم إزالة اسم المستخدم واسم جهاز Mac ومجلد الحساب. لا يتم إرسال أي شيء: أنت تختار وجهة التقرير."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bericht enthält das aktuelle Protokoll der App, den von macOS gesicherten Absturzbericht sowie das Modell Ihres Mac und die macOS-Version. Ihr Benutzername, der Name Ihres Mac und Ihr Benutzerordner werden entfernt. Es wird nichts gesendet: Sie entscheiden, wohin der Bericht geht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El informe incluye el registro reciente de la app, el informe de fallo que guardó macOS, y el modelo de tu Mac y la versión de macOS. Se eliminan tu nombre de usuario, el nombre de tu Mac y tu carpeta de inicio. No se envía nada: tú eliges adónde va el informe."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le rapport contient le journal récent de l’app, le rapport de plantage enregistré par macOS, ainsi que le modèle de votre Mac et la version de macOS. Votre nom d’utilisateur, le nom de votre Mac et votre dossier de départ sont retirés. Rien n’est envoyé : vous choisissez où va le rapport."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिपोर्ट में ऐप का हाल का लॉग, macOS द्वारा सहेजी गई क्रैश रिपोर्ट, और आपके Mac का मॉडल और macOS संस्करण शामिल हैं। आपका यूज़र नाम, आपके Mac का नाम और आपका होम फ़ोल्डर हटा दिए जाते हैं। कुछ भी भेजा नहीं जाता: रिपोर्ट कहाँ जाए, यह आप तय करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il resoconto contiene il log recente dell’app, il resoconto dell’arresto anomalo salvato da macOS, il modello del tuo Mac e la versione di macOS. Il tuo nome utente, il nome del Mac e la tua cartella Inizio vengono rimossi. Non viene inviato nulla: scegli tu dove va il resoconto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このレポートには、アプリの最近のログ、macOS が保存したクラッシュレポート、Mac の機種と macOS のバージョンが含まれます。ユーザ名、Mac の名前、ホームフォルダは取り除かれます。何も送信されません。レポートの送り先はあなたが決めます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보고서에는 앱의 최근 로그, macOS가 저장한 충돌 보고서, Mac 모델과 macOS 버전이 포함됩니다. 사용자 이름, Mac 이름, 홈 폴더는 제거됩니다. 아무것도 전송되지 않으며 보고서를 어디로 보낼지는 사용자가 선택합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raport zawiera ostatni dziennik aplikacji, raport awarii zapisany przez macOS oraz model Maca i wersję macOS. Nazwa użytkownika, nazwa Maca i folder domowy są usuwane. Nic nie jest wysyłane: to Ty decydujesz, gdzie trafi raport."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O relatório inclui o registro recente do app, o relatório de falha salvo pelo macOS e o modelo do seu Mac e a versão do macOS. Seu nome de usuário, o nome do seu Mac e sua pasta pessoal são removidos. Nada é enviado: você escolhe para onde o relatório vai."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отчёт содержит недавний журнал приложения, отчёт о сбое, сохранённый macOS, а также модель вашего Mac и версию macOS. Ваше имя пользователя, имя Mac и путь к папке пользователя удаляются. Ничего не отправляется: вы сами решаете, куда передать отчёт."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapor; uygulamanın son günlüğünü, macOS’in kaydettiği çökme raporunu ve Mac’inizin modeli ile macOS sürümünü içerir. Kullanıcı adınız, Mac’inizin adı ve ev klasörünüz kaldırılır. Hiçbir şey gönderilmez: raporun nereye gideceğine siz karar verirsiniz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт містить нещодавній журнал програми, звіт про збій, збережений macOS, а також модель вашого Mac і версію macOS. Ваше імʼя користувача, назву Mac і шлях до домашньої папки вилучено. Нічого не надсилається: ви самі вирішуєте, куди передати звіт."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告包含 App 的近期日志、macOS 保存的崩溃报告，以及你的 Mac 机型和 macOS 版本。你的用户名、Mac 名称和个人文件夹会被移除。不会发送任何内容：报告去向由你决定。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "報告包含 App 的近期記錄、macOS 儲存的當機報告，以及你的 Mac 機型和 macOS 版本。你的使用者名稱、Mac 名稱和個人專屬檔案夾會被移除。不會傳送任何內容：報告的去向由你決定。"
+          }
+        }
+      }
+    },
+    "The report is saved and selected in Finder. Drag it into the GitHub issue to attach it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم حفظ التقرير وتحديده في فايندر. اسحبه إلى المشكلة على GitHub لإرفاقه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bericht ist gesichert und im Finder ausgewählt. Ziehen Sie ihn in das GitHub-Issue, um ihn anzuhängen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El informe se ha guardado y está seleccionado en el Finder. Arrástralo a la incidencia de GitHub para adjuntarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le rapport est enregistré et sélectionné dans le Finder. Faites-le glisser dans le ticket GitHub pour le joindre."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिपोर्ट सहेज ली गई है और Finder में चुनी गई है। इसे अटैच करने के लिए GitHub इशू में ड्रैग करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il resoconto è stato salvato ed è selezionato nel Finder. Trascinalo nella segnalazione su GitHub per allegarlo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レポートは保存され、Finder で選択されています。GitHub の Issue にドラッグして添付してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보고서가 저장되었고 Finder에서 선택되어 있습니다. GitHub 이슈로 드래그하여 첨부하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raport został zapisany i zaznaczony w Finderze. Przeciągnij go do zgłoszenia w GitHubie, aby go załączyć."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O relatório foi salvo e está selecionado no Finder. Arraste-o para o issue do GitHub para anexá-lo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отчёт сохранён и выбран в Finder. Перетащите его в обсуждение на GitHub, чтобы прикрепить."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapor kaydedildi ve Finder’da seçili. Eklemek için GitHub sorununa sürükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт збережено й вибрано у Finder. Перетягніть його в обговорення на GitHub, щоб прикріпити."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告已存储并在访达中选中。将它拖到 GitHub 议题中即可附加。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "報告已儲存並在 Finder 中選取。將它拖到 GitHub 議題中即可附加。"
+          }
+        }
+      }
+    },
     "The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts." : {
       "localizations" : {
         "ar" : {
@@ -157450,6 +158299,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "這部 Mac 未連接 Wi-Fi 或區域網路。"
+          }
+        }
+      }
+    },
+    "This Run" : {
+      "comment" : "Problem report window: the report covers the app's current run",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التشغيل الحالي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktueller Start"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session actuelle"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह रन"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessione attuale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今回の実行"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 실행"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bieżące uruchomienie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessão Atual"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущий запуск"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Çalıştırma"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний запуск"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本次运行"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本次執行"
           }
         }
       }

@@ -119,6 +119,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - A wallpaper shown on several displays renders once and is presented on each.
 - Quality settings: Render Resolution (Your Display, 4K, Full) with Upscaling (Render Scale 50–75 %), Texture Resolution, Effect Detail (Match Display), reflections, shadows and volumetrics.
 - **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
+- **Report a Problem** (Help menu, Settings › Diagnostics, and offered on the launch after a crash) — a plain-text report with the app's log from just before the crash, macOS's crash report and the wallpapers that were showing, with your user name, Mac's name and home folder removed. Nothing is sent: you read it, then save it or attach it to the filled-in GitHub bug report it opens.
 - **Caches** (Settings › Performance) — the app's caches clean up what has been unused for 60 days, and **Clear Caches…** deletes them except what the wallpapers on screen use.
 
 ### Screen saver, lock screen & theming

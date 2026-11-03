@@ -116,6 +116,7 @@ extension AppDelegate {
             .separator(),
             plain("Terms of Use", #selector(showTermsOfUse)),
             plain("Privacy Policy", #selector(showPrivacyPolicy)),
+            plain("Report a Problem…", #selector(reportProblem)),
             plain("Report a Security Issue", #selector(openSecurityReport)),
             .separator(),
             debugMenu,

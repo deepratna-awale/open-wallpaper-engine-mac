@@ -51,6 +51,15 @@ struct DiagnosticsPage: SettingsPage {
             }
             .settingsAnchor(SettingsAnchor.diagnostics)
 
+            Section {
+                Button("Report a Problem…") { AppDelegate.shared.reportProblem() }
+            } header: {
+                Label("Report a Problem", systemImage: "ladybug")
+            } footer: {
+                Text("Collects the app's recent log and the latest crash report into one file you can read before attaching it to a GitHub issue.")
+            }
+            .settingsAnchor(SettingsAnchor.problemReport)
+
             if ThreadGuards.isDevBuild {
                 Section {
                     if threadGuards.sites.isEmpty {

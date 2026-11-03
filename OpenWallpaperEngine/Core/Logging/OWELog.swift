@@ -76,18 +76,34 @@ enum OWELog {
         emit(.error, category, message)
     }
 
+    /// The app's on-disk record of its recent messages, for problem reports (`RecentLog`). Only the
+    /// app's own process has one; helper runs and test hosts don't.
+    private static let recentLogSink = OSAllocatedUnfairLock<RecentLog?>(initialState: nil)
+
+    /// Starts or stops copying messages to `log`. Call once at launch.
+    static func record(to log: RecentLog?) {
+        recentLogSink.withLock { $0 = log }
+    }
+
     private static func emit(_ severity: Severity,
                              _ category: Category,
                              _ message: () -> String) {
-        guard severity != .silent, severity >= minimumSeverity, let logger = loggers[category] else { return }
+        guard severity != .silent, let logger = loggers[category] else { return }
+        let logsToSystem = severity >= minimumSeverity
+        // Info and errors while the Log Level isn't None, whatever it lets into the unified log.
+        let recent = severity >= .info && minimumSeverity != .silent ? recentLogSink.withLock { $0 } : nil
+        guard logsToSystem || recent != nil else { return }
         // Public: these messages carry paths and effect names, which the unified log would
         // otherwise redact to <private> and make useless for diagnosing a wallpaper.
         let text = message()
-        switch severity {
-        case .debug: logger.debug("\(text, privacy: .public)")
-        case .info: logger.info("\(text, privacy: .public)")
-        case .error: logger.error("\(text, privacy: .public)")
-        case .silent: break
+        if logsToSystem {
+            switch severity {
+            case .debug: logger.debug("\(text, privacy: .public)")
+            case .info: logger.info("\(text, privacy: .public)")
+            case .error: logger.error("\(text, privacy: .public)")
+            case .silent: break
+            }
         }
+        recent?.append(severity, category, text)
     }
 }

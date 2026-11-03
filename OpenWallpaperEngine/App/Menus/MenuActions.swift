@@ -81,6 +81,11 @@ extension AppDelegate {
         NSWorkspace.shared.open(Self.helpURL)
     }
 
+    /// Help › Report a Problem…: on the last run when it ended without quitting, else on this one.
+    @objc func reportProblem() {
+        problemReporter.showReport(previousRun: problemReporter.uncleanExit != nil)
+    }
+
     @objc func openSecurityReport() {
         NSWorkspace.shared.open(Self.securityReportURL)
     }

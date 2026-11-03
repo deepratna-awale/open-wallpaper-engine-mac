@@ -44,6 +44,8 @@ extension AppDelegate {
         }
         
         safeRestart.showPendingNotice()
+        // After a crash with no wallpaper showing, safe restart has no notice to carry the offer.
+        problemReporter.showPendingNotice(offeredElsewhere: safeRestart.hasPendingNotice)
         updater.willRelaunch = { [unowned self] in
             self.captureUpdateRelaunchState().save(to: .app)
             // Sparkle quits next; a sheet would stop that.
@@ -202,6 +204,7 @@ extension AppDelegate {
         if applicationRuleLoader.isHoldingRestorePoint { applicationRuleLoader.update(nil) }
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
+        problemReporter.applicationWillTerminate()
         mcpServerPlugin.stop()
         updater.stopShaderPrewarm()
         cacheMaintenance.stop()
