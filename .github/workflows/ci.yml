@@ -43,6 +43,11 @@ env:
   # Scripts/ci-run-tests.sh runs a shard (parallel classes, then serial ones, failures retried
   # once); Scripts/ci-local.sh runs the whole suite the same way locally.
 
+# The macOS jobs run on the maintainer's Mac (a self-hosted runner labelled owe-mac) while the
+# repository variable OWE_SELF_HOSTED_MAC is 'true', for pushes, schedules, manual runs and pull
+# requests from this repository's own branches; pull requests from forks always run on GitHub's
+# macos-26 runners, so no outside code runs on that Mac (docs/self-hosted-runner.md).
+
 jobs:
   # Lets a pull request through only out of draft or with the "ready to merge" label, and only
   # when it has every commit on main, so what is tested is what merges.
@@ -116,7 +121,7 @@ jobs:
   # artifact can.
   build:
     needs: gate
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -238,7 +243,7 @@ jobs:
     name: build-and-test (${{ matrix.shard }}/3)
     needs: [plan, build]
     if: needs.plan.outputs.selection != 'none'
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -341,7 +346,7 @@ jobs:
   # The local packages' own tests (Packages/*), which the app's test bundle doesn't hold.
   packages:
     needs: gate
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -390,7 +395,7 @@ jobs:
   # if they can't.
   asset-cache:
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 40
     environment: steam-ci
     outputs:
@@ -415,7 +420,7 @@ jobs:
     name: asset-tests (${{ matrix.shard }}/4)
     needs: [build, asset-cache]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 60
     environment: steam-ci
     permissions:

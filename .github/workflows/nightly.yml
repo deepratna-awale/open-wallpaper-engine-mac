@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   slow-tests:
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 120
     # The Steam secrets live in this environment, which only main can use.
     environment: steam-ci
