@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Report a Problem.** After the app crashes, hangs and is force-quit, or the Mac loses power, the next launch offers a report. It holds the app's log from just before it ended, the crash report macOS saved, the wallpapers that were showing and your Mac's model and macOS version, with your user name, your Mac's name and your home folder taken out. You read it first; **Report on GitHub…** saves it, shows it in Finder and opens a filled-in bug report to drag it into. Nothing is sent by the app. **Help › Report a Problem…** and Settings › Diagnostics make one any time.
+
 ## [1.0.0-beta.15] - 2026-11-03
 
 ### Changed

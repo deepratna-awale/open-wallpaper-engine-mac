@@ -6,13 +6,13 @@
 import Cocoa
 import SwiftUI
 
-/// A small floating panel with a message, Dismiss and an optional Retry. It does not
-/// take focus or block anything, unlike an alert.
+/// A small floating panel with a message, Dismiss, and optional Retry and Report a Problem…
+/// buttons. It does not take focus or block anything, unlike an alert.
 @MainActor
 final class SafeRestartNotice {
     private let panel: NSPanel
 
-    init(message: String, onRetry: (() -> Void)?, onDismiss: @escaping () -> Void) {
+    init(message: String, onRetry: (() -> Void)?, onReport: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 120),
                         styleMask: [.titled, .nonactivatingPanel, .utilityWindow, .fullSizeContentView],
                         backing: .buffered, defer: false)
@@ -23,7 +23,7 @@ final class SafeRestartNotice {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let notice = NoticeView(message: message, onRetry: onRetry, onDismiss: onDismiss).appAccentTint()
+        let notice = NoticeView(message: message, onRetry: onRetry, onReport: onReport, onDismiss: onDismiss).appAccentTint()
         let hosting: NSView
         if #available(macOS 26, *) {
             hosting = NSHostingView(rootView: notice)
@@ -65,6 +65,7 @@ final class SafeRestartNotice {
 private struct NoticeView: View {
     let message: String
     let onRetry: (() -> Void)?
+    let onReport: (() -> Void)?
     let onDismiss: () -> Void
 
     var body: some View {
@@ -76,9 +77,12 @@ private struct NoticeView: View {
                 Text(message)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            // Not glass buttons: the panel is already glass on macOS 26.
             HStack {
+                if let onReport {
+                    Button("Report a Problem…", action: onReport)
+                }
                 Spacer()
-                // Not glass buttons: the panel is already glass on macOS 26.
                 Button("Dismiss", action: onDismiss)
                 if let onRetry {
                     Button("Retry", action: onRetry)

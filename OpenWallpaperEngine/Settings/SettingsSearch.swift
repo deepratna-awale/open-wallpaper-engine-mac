@@ -34,6 +34,7 @@ enum SettingsAnchor {
     static let permissions = "permissions"
     static let diagnostics = "diagnostics"
     static let threadGuards = "threadguards"
+    static let problemReport = "problemreport"
     static let developer = "developer"
     static let reset = "reset"
     static let plugins = "plugins"
@@ -149,6 +150,7 @@ struct SettingsSearch {
 
             entry("Shader Cache", .diagnostics, SettingsAnchor.diagnostics),
             entry("Shader Compiler", .diagnostics, SettingsAnchor.diagnostics),
+            entry("Report a Problem", .diagnostics, SettingsAnchor.problemReport),
             entry("Log Level", .diagnostics, SettingsAnchor.developer),
             entry("Reset Config", .diagnostics, SettingsAnchor.reset),
 
