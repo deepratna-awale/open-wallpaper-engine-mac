@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.15] - 2026-11-03
+
+### Changed
+
+- **Sparkle 2.10.1** for updates. It fixes an update that could install before the app quit when the app's path used composed Unicode characters.
+
+### Fixed
+
+- **The live screen saver animates after the app is relaunched.** After a relaunch the app looked for the screen saver's helper before macOS had started it, never looked again, and "Open Wallpaper Engine Live" only ever showed the still. The app now keeps trying for a while, and again whenever the helper is turned on in Login Items.
+- **The "Open Wallpaper Engine" screen saver no longer crashes about once a second** once the app starts drawing for it, which made the screen flicker.
+
 ## [1.0.0-beta.14] - 2026-11-01
 
 ### Fixed
