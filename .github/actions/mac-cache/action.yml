@@ -48,6 +48,12 @@ runs:
           ln -s "$root/DerivedData" build/DerivedData
           ln -s "$root/SourcePackages" build/SourcePackages
         fi
+        # A cancelled job leaves its test processes (ci-run-tests.sh, xcodebuild, the test hosts)
+        # running: they take the CPU and the shared isolated-tests folders from this job. Each one
+        # names its run's products folder, so only another run's CI test processes match.
+        for pid in $(pgrep -f "$root/products/" || true); do
+          ps -o args= -p "$pid" 2>/dev/null | grep -q "$root/products/$RUN_ID/" || kill "$pid" 2>/dev/null || true
+        done
         assets=${OWE_CI_ASSETS:-}
         if [[ -n "$assets" && ! -d "$assets/assets/shaders" ]]; then
           echo "::warning::OWE_CI_ASSETS ($assets) holds no assets/shaders; using the asset cache instead."
