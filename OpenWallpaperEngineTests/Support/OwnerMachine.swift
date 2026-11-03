@@ -6,6 +6,6 @@ import Foundation
 /// `xcodebuild`) so those tests skip on the self-hosted Mac too (docs/self-hosted-runner.md), where
 /// the drive exists: CI's answer mustn't depend on which runner took the job.
 enum OwnerMachine {
-    static let volume = ProcessInfo.processInfo.environment["OWE_HERMETIC"] == "1"
+    static let volume: String = ProcessInfo.processInfo.environment["OWE_HERMETIC"] == "1"
         ? "/nonexistent/owe-hermetic" : "\(OwnerMachine.volume)"
 }
