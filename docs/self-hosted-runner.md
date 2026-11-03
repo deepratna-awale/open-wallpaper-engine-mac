@@ -23,7 +23,8 @@ it off when the Mac will be off or asleep for a while: a job sent to the Mac wai
 a day) and doesn't fall back to GitHub's runners.
 
 One runner takes one job at a time, so on the Mac the tests and the asset tests each run as one
-shard instead of three and four. The jobs don't wait for a runner that never comes.
+shard instead of three and four, with one test copy of the app at a time (`OWE_TEST_WORKERS=1`)
+rather than three. The jobs don't wait for a runner that never comes.
 
 ## What the Mac keeps between runs
 

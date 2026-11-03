@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs a list of test classes from a test build the way CI does:
-#   1. the non-serial classes with three parallel workers,
+#   1. the non-serial classes with three parallel workers (OWE_TEST_WORKERS overrides it),
 #   2. then the serial classes of .github/test-map.yml one at a time.
 # A failing test is retried once (-retry-tests-on-failure -test-iterations 2); a test that fails
 # both times fails the run. Both parts run even if the first fails. Each part writes a result
@@ -49,7 +49,7 @@ status=0
 if (( ${#PARALLEL_ONLY[@]} )); then
   rm -rf "$RESULTS/parallel.xcresult"
   xcodebuild test-without-building "${COMMON[@]}" \
-    -parallel-testing-enabled YES -parallel-testing-worker-count 3 \
+    -parallel-testing-enabled YES -parallel-testing-worker-count "${OWE_TEST_WORKERS:-3}" \
     -resultBundlePath "$RESULTS/parallel.xcresult" \
     "${PARALLEL_ONLY[@]}" 2>&1 | tee -a "$LOG" || status=1
 fi

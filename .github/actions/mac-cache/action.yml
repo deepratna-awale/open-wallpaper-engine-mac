@@ -54,6 +54,8 @@ runs:
         for pid in $(pgrep -f "$root/products/" || true); do
           ps -o args= -p "$pid" 2>/dev/null | grep -q "$root/products/$RUN_ID/" || kill "$pid" 2>/dev/null || true
         done
+        # One test host at a time on the maintainer's Mac (Scripts/ci-run-tests.sh), not three.
+        echo "OWE_TEST_WORKERS=1" >> "$GITHUB_ENV"
         assets=${OWE_CI_ASSETS:-}
         if [[ -n "$assets" && ! -d "$assets/assets/shaders" ]]; then
           echo "::warning::OWE_CI_ASSETS ($assets) holds no assets/shaders; using the asset cache instead."
