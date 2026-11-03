@@ -13,11 +13,11 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![보관함](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="보관함" width="720">
 
 ## 차별점
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![배경화면 편집기](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="배경화면 편집기" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 - **장면 편집/내보내기**: 실행 중인 배경화면의 레이어와 효과를 데스크탑에서 실시간으로 바꾸고, 화면 보호기에 표시할 내용을 선택하거나, 배경화면을 Live Photo 또는 Android 패키지로 내보낼 수 있습니다.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![장면 편집/내보내기](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="장면 편집/내보내기" width="720">
 
 - **화면 보호기 및 잠금 화면**: 화면 보호기는 각 디스플레이의 배경화면을 실시간으로 보여 주거나(*화면 보호기를 배경화면과 동일하게*) 사용자가 선택한 배경화면을 보여 주며, 잠금 화면에는 그 이미지가 표시됩니다.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Wi-Fi로 보내기](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi로 보내기" width="456">
 
 - **디스플레이**: Wallpaper Engine처럼 디스플레이마다 다른 배경화면, 여러 디스플레이에 걸쳐 늘리거나 각 디스플레이에 복제한 배경화면, 그룹, 분할, 프로필을 지원합니다. **윈도우에서 재생**은 배경화면을 별도의 윈도우에서 재생합니다.
 
-  ![디스플레이](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="디스플레이" width="400">
 
 - **플레이리스트**: 타이머, 로그인 시, 시간대, 요일에 따라 Wallpaper Engine의 전환 효과와 함께 배경화면을 바꿉니다.
 
-  ![플레이리스트 설정](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="플레이리스트 설정" width="420">
 
 - **제어**: 동작, 플레이리스트, 배경화면, 디스플레이 프로필용 단축키, Wallpaper Engine의 `-control` [명령줄](../../docs/command-line.md), 그리고 **MCP 서버** 플러그인을 제공합니다. MCP 클라이언트는 이 플러그인을 통해 사용자 본인의 계정만 열 수 있는 로컬 연결로 배경화면, 플레이리스트, 설정을 지정하고 장면을 편집합니다.
 
-  ![MCP 서버 플러그인](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 서버 플러그인" width="456">
 
 - **전원**: 화면이 잠겨 있는 동안 배경화면이 일시 정지되고, Wallpaper Engine의 *노트북 배터리 사용 시* 규칙을 따르며, 배터리 또는 저전력 모드에서는 더 낮은 품질 프리셋과 프레임 속도로 낮출 수 있습니다.
 - **테마**: 메뉴 막대, 강조 색상, 색이 입혀진 아이콘과 폴더가 배경화면의 색상을 따라갑니다. Open Wallpaper Engine 자체의 윈도우에는 배경화면의 정확한 색상을 사용할 수 있습니다.
 
-  ![테마](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="테마" width="540">
 
 그 밖의 모든 기능은 영역별로 [docs/features.md](../../docs/features.md)에서 확인하세요.
 

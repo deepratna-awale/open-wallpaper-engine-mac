@@ -9,11 +9,18 @@ Short looping clips of the app for the README, the docs and the wiki. Each clip 
 
 GitHub strips `<video>` from Markdown unless the file was uploaded as a GitHub attachment, and the
 repository's own `.webm`/`.mp4` don't play inline. The READMEs therefore show the animated WebP and
-link it to the `.webm`:
+link it to the `.webm`, with an explicit width so every clip shows at the same size:
 
-```markdown
-[![Scene Edit / Export](docs/media/demo/scene-edit.webp)](docs/media/demo/scene-edit.webm)
+```html
+<a href="docs/media/demo/scene-edit.webm"><img src="docs/media/demo/scene-edit.webp" alt="Scene Edit / Export" width="720"></a>
 ```
+
+Screenshots (`docs/images/`) get a width too, because GitHub otherwise shows each at its own pixel
+size up to the column's width, so a small dialog came out larger than a whole window. Whole-window
+shots use 720, like the clips; dialogs and settings panes use about 0.6 of their pixel width
+(`displays.png` 400, `playlists.png` 420, `mcp-plugin.png` and `send-over-wifi.png` 456,
+`theming.png` 540), so a dialog's text comes out about the size of a window's. Use the same widths in every translated
+README.
 
 Pages that can play video (the website) can use the `.webm` with the `.mp4` as a fallback and the
 `.png` as `poster`.

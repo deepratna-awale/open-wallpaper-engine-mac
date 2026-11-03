@@ -13,11 +13,11 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![Kitaplık](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="Kitaplık" width="720">
 
 ## Onu Farklı Kılanlar
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Duvar Kâğıdı Düzenleyici](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Duvar Kâğıdı Düzenleyici" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 - **Sahne Düzenle/Dışa Aktar**: çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, ekran koruyucunun ne göstereceğini seçin ya da duvar kâğıdını bir Live Photo veya Android paketi olarak dışa aktarın.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Sahne Düzenle/Dışa Aktar](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Sahne Düzenle/Dışa Aktar" width="720">
 
 - **Ekran koruyucu ve kilit ekranı**: ekran koruyucu her ekranın duvar kâğıdını canlı olarak (*Ekran Koruyucu Duvar Kâğıdıyla Aynı*) ya da sizin seçtiğiniz bir duvar kâğıdını gösterir; kilit ekranı ise onun bir resmini gösterir.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Wi-Fi üzerinden gönder](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi üzerinden gönder" width="456">
 
 - **Ekranlar**: Wallpaper Engine’deki gibi her ekrana ayrı bir duvar kâğıdı, tüm ekranlara yayılan ya da her birine kopyalanan tek bir duvar kâğıdı; ayrıca gruplar, bölmeler ve profiller. **Pencerede Oynat** bir duvar kâğıdını kendi penceresinde oynatır.
 
-  ![Ekranlar](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Ekranlar" width="400">
 
 - **Çalma listeleri**: duvar kâğıtlarını zamanlayıcıyla, oturum açılışında, günün saatine veya haftanın gününe göre, Wallpaper Engine’in geçişleriyle değiştirin.
 
-  ![Çalma listesi ayarları](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Çalma listesi ayarları" width="420">
 
 - **Denetim**: eylemler, çalma listeleri, duvar kâğıtları ve ekran profilleri için kısayol tuşları; Wallpaper Engine’in `-control` [komut satırı](../../docs/command-line.md); ve MCP istemcilerinin, yalnızca sizin hesabınızın açabildiği yerel bir bağlantı üzerinden duvar kâğıtlarını, çalma listelerini ve ayarları belirleyip sahneleri düzenlediği **MCP Sunucusu** eklentisi.
 
-  ![MCP Sunucusu eklentisi](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP Sunucusu eklentisi" width="456">
 
 - **Güç**: duvar kâğıtları ekran kilitliyken duraklar, Wallpaper Engine’in *Dizüstü bilgisayar pille çalışırken* kuralına uyar ve pilde ya da Düşük Güç Modu’nda daha düşük bir kalite ön ayarına ve kare hızına geçebilir.
 - **Renk Teması**: menü çubuğu, vurgu rengi ve renklendirilmiş simgeler ile klasörler duvar kâğıdının rengine uyar; Open Wallpaper Engine’in kendi pencereleri tam rengi kullanabilir.
 
-  ![Renk Teması](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Renk Teması" width="540">
 
 Geri kalan her şey, alan alan: [docs/features.md](../../docs/features.md).
 

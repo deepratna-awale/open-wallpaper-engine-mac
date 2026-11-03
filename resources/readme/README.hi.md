@@ -13,11 +13,11 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![लाइब्रेरी](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="लाइब्रेरी" width="720">
 
 ## इसे क्या अलग बनाता है
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![वॉलपेपर एडिटर](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="वॉलपेपर एडिटर" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 - **सीन एडिट/एक्सपोर्ट**: चल रहे वॉलपेपर की लेयर और इफ़ेक्ट सीधे डेस्कटॉप पर लाइव बदलें, चुनें कि स्क्रीन सेवर क्या दिखाए, या वॉलपेपर को Live Photo या Android पैकेज के रूप में एक्सपोर्ट करें.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![सीन एडिट/एक्सपोर्ट](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="सीन एडिट/एक्सपोर्ट" width="720">
 
 - **स्क्रीन सेवर और लॉक स्क्रीन**: स्क्रीन सेवर हर डिस्प्ले का वॉलपेपर लाइव दिखाता है (*स्क्रीन सेवर वॉलपेपर जैसा ही*), या आपका चुना हुआ कोई वॉलपेपर, और लॉक स्क्रीन उसकी एक तस्वीर दिखाती है.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Wi-Fi पर भेजें](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi पर भेजें" width="456">
 
 - **डिस्प्ले**: हर डिस्प्ले पर अलग वॉलपेपर, एक वॉलपेपर सभी डिस्प्ले पर फैला हुआ या हर डिस्प्ले पर क्लोन किया हुआ, साथ ही ग्रुप, स्प्लिट और प्रोफ़ाइल — बिल्कुल Wallpaper Engine की तरह. **विंडो में चलाएँ** किसी वॉलपेपर को उसकी अपनी विंडो में चलाता है.
 
-  ![डिस्प्ले](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="डिस्प्ले" width="400">
 
 - **प्लेलिस्ट**: टाइमर पर, लॉगिन पर, दिन के समय या हफ़्ते के दिन के हिसाब से वॉलपेपर बदलें, Wallpaper Engine के ट्रांज़िशन के साथ.
 
-  ![प्लेलिस्ट सेटिंग](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="प्लेलिस्ट सेटिंग" width="420">
 
 - **कंट्रोल**: ऐक्शन, प्लेलिस्ट, वॉलपेपर और डिस्प्ले प्रोफ़ाइल के लिए हॉटकी; Wallpaper Engine की `-control` [कमांड लाइन](../../docs/command-line.md); और **MCP सर्वर** प्लग-इन, जिसके ज़रिए MCP क्लाइंट वॉलपेपर, प्लेलिस्ट और सेटिंग सेट करते हैं और सीन एडिट करते हैं, एक लोकल कनेक्शन पर जिसे सिर्फ़ आपका अकाउंट खोल सकता है.
 
-  ![MCP सर्वर प्लग-इन](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP सर्वर प्लग-इन" width="456">
 
 - **पावर**: स्क्रीन लॉक रहने पर वॉलपेपर रुक जाते हैं, Wallpaper Engine के *लैपटॉप बैटरी पर हो तब* नियम का पालन करते हैं, और बैटरी पर या लो पावर मोड में कम क्वालिटी प्रीसेट और कम फ़्रेम रेट पर जा सकते हैं.
 - **थीमिंग**: मेन्यू बार, एक्सेंट कलर और टिंट किए गए आइकन और फ़ोल्डर वॉलपेपर के रंग के हिसाब से बदलते हैं; Open Wallpaper Engine की अपनी विंडो ठीक वही रंग इस्तेमाल कर सकती हैं.
 
-  ![थीमिंग](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="थीमिंग" width="540">
 
 बाकी सब कुछ, हिस्से के हिसाब से: [docs/features.md](../../docs/features.md).
 

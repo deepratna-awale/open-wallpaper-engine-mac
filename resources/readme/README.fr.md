@@ -13,11 +13,11 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![La bibliothèque](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="La bibliothèque" width="720">
 
 ## Ce qui le distingue
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Éditeur de fond d’écran](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Éditeur de fond d’écran" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 
 - **Modifier/exporter la scène** : modifiez en direct sur le bureau les calques et les effets du fond d’écran en cours, choisissez ce qu’affiche l’économiseur d’écran, ou exportez le fond d’écran en Live Photo ou en paquet Android.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Modifier/exporter la scène](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Modifier/exporter la scène" width="720">
 
 - **Économiseur d’écran et écran verrouillé** : l’économiseur d’écran affiche en direct le fond d’écran de chaque moniteur (*Économiseur d’écran identique au fond d’écran*), ou celui que vous choisissez, et l’écran verrouillé en affiche une image.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Envoyer par Wi-Fi](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Envoyer par Wi-Fi" width="456">
 
 - **Moniteurs** : un fond d’écran par moniteur, un seul étiré sur tous ou cloné sur chacun, des groupes, des divisions et des profils, comme dans Wallpaper Engine. **Lire dans une fenêtre** lit un fond d’écran dans sa propre fenêtre.
 
-  ![Moniteurs](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Moniteurs" width="400">
 
 - **Playlists** : changez de fond d’écran selon une minuterie, à l’ouverture de session, selon l’heure ou le jour de la semaine, avec les transitions de Wallpaper Engine.
 
-  ![Réglages des playlists](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Réglages des playlists" width="420">
 
 - **Contrôle** : des raccourcis pour les actions, les playlists, les fonds d’écran et les profils de moniteurs ; la [ligne de commande](../../docs/command-line.md) `-control` de Wallpaper Engine ; et le plug-in **Serveur MCP**, grâce auquel les clients MCP définissent les fonds d’écran, les playlists et les réglages et modifient les scènes, via une connexion locale que seul votre compte peut ouvrir.
 
-  ![Plug-in Serveur MCP](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Serveur MCP" width="456">
 
 - **Énergie** : les fonds d’écran se mettent en pause quand l’écran est verrouillé, suivent la règle *Portable sur batterie* de Wallpaper Engine, et peuvent passer à un préréglage de qualité et à une fréquence d’images plus bas sur batterie ou en mode Économie d’énergie.
 - **Thème de couleur** : la barre des menus, la couleur d’accentuation ainsi que les icônes et les dossiers teintés suivent la couleur du fond d’écran ; les fenêtres d’Open Wallpaper Engine peuvent utiliser la couleur exacte.
 
-  ![Thème de couleur](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Thème de couleur" width="540">
 
 Tout le reste, domaine par domaine : [docs/features.md](../../docs/features.md).
 

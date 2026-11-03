@@ -13,11 +13,11 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](docs/media/demo/hero.webp)](docs/media/demo/hero.webm)
+<a href="docs/media/demo/hero.webm"><img src="docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](docs/media/demo/wallpapers-in-motion.webp)](docs/media/demo/wallpapers-in-motion.webm)
+<a href="docs/media/demo/wallpapers-in-motion.webm"><img src="docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![The library](docs/images/library.jpg)
+<img src="docs/images/library.jpg" alt="The library" width="720">
 
 ## What sets it apart
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](docs/media/demo/wallpaper-editor.webp)](docs/media/demo/wallpaper-editor.webm)
+  <a href="docs/media/demo/wallpaper-editor.webm"><img src="docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Wallpaper Editor](docs/images/wallpaper-editor.jpg)
+  <img src="docs/images/wallpaper-editor.jpg" alt="Wallpaper Editor" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
 - **Scene Edit / Export**: change the running wallpaper's layers and effects live on the desktop, choose what the screen saver shows, or export the wallpaper as a Live Photo or an Android package.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](docs/media/demo/scene-edit.webp)](docs/media/demo/scene-edit.webm)
+  <a href="docs/media/demo/scene-edit.webm"><img src="docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Scene Edit / Export](docs/images/scene-editor-live.jpg)
+  <img src="docs/images/scene-editor-live.jpg" alt="Scene Edit / Export" width="720">
 
 - **Screen saver and lock screen**: the screen saver shows each display's wallpaper live (*Screen Saver Same as Wallpaper*), or one you choose, and the lock screen shows a picture of it.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](docs/media/demo/live-photo-export.webp)](docs/media/demo/live-photo-export.webm)
+  <a href="docs/media/demo/live-photo-export.webm"><img src="docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](docs/media/demo/android-export.webp)](docs/media/demo/android-export.webm)
+  <a href="docs/media/demo/android-export.webm"><img src="docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Send over Wi-Fi](docs/images/send-over-wifi.png)
+  <img src="docs/images/send-over-wifi.png" alt="Send over Wi-Fi" width="456">
 
 - **Displays**: a wallpaper per display, one stretched across them or cloned onto each, groups, splits and profiles, as in Wallpaper Engine. **Play in Window** plays a wallpaper in a window of its own.
 
-  ![Displays](docs/images/displays.png)
+  <img src="docs/images/displays.png" alt="Displays" width="400">
 
 - **Playlists**: change wallpapers on a timer, at login, by time of day or day of week, with Wallpaper Engine's transitions.
 
-  ![Playlist settings](docs/images/playlists.png)
+  <img src="docs/images/playlists.png" alt="Playlist settings" width="420">
 
 - **Control**: hotkeys for actions, playlists, wallpapers and display profiles; Wallpaper Engine's `-control` [command line](docs/command-line.md); and the **MCP Server** plugin, through which MCP clients set wallpapers, playlists and settings and edit scenes, over a local connection only your account can open.
 
-  ![MCP Server plugin](docs/images/mcp-plugin.png)
+  <img src="docs/images/mcp-plugin.png" alt="MCP Server plugin" width="456">
 
 - **Power**: wallpapers pause while the screen is locked, follow Wallpaper Engine's *Laptop on battery* rule, and can drop to a lower quality preset and frame rate on battery or in Low Power Mode.
 - **Theming**: the menu bar, the accent colour and tinted icons and folders follow the wallpaper's colour; Open Wallpaper Engine's own windows can use the exact colour.
 
-  ![Theming](docs/images/theming.png)
+  <img src="docs/images/theming.png" alt="Theming" width="540">
 
 Everything else, area by area: [docs/features.md](docs/features.md).
 

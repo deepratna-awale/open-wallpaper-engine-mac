@@ -13,11 +13,11 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![ライブラリ](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="ライブラリ" width="720">
 
 ## ほかにない特長
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![壁紙エディタ](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="壁紙エディタ" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 - **シーン編集/書き出し**：再生中の壁紙のレイヤーやエフェクトをデスクトップ上でリアルタイムに変更したり、スクリーンセーバーに表示するものを選んだり、壁紙を Live Photo または Android パッケージとして書き出したりできます。
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![シーン編集/書き出し](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="シーン編集/書き出し" width="720">
 
 - **スクリーンセーバーとロック画面**：スクリーンセーバーは各ディスプレイの壁紙をライブで表示するか（*スクリーンセーバを壁紙と同じにする*）、選んだ壁紙を表示します。ロック画面にはその画像が表示されます。
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Wi-Fi で送信](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi で送信" width="456">
 
 - **ディスプレイ**：Wallpaper Engine と同じく、ディスプレイごとの壁紙、複数ディスプレイへの引き伸ばしや複製、グループ、分割、プロファイルに対応します。**ウインドウで再生** で、壁紙を専用のウインドウで再生できます。
 
-  ![ディスプレイ](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="ディスプレイ" width="400">
 
 - **プレイリスト**：タイマー、ログイン時、時間帯、曜日に応じて壁紙を切り替えます。Wallpaper Engine のトランジションも使えます。
 
-  ![プレイリストの設定](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="プレイリストの設定" width="420">
 
 - **コントロール**：アクション、プレイリスト、壁紙、ディスプレイプロファイル用のホットキー、Wallpaper Engine の `-control` [コマンドライン](../../docs/command-line.md)、そして **MCP サーバ** プラグインを備えています。MCP クライアントはこのプラグインを通じて、あなたのアカウントからしか開けないローカル接続で、壁紙、プレイリスト、設定を変更したり、シーンを編集したりできます。
 
-  ![MCP サーバプラグイン](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP サーバプラグイン" width="456">
 
 - **電源**：画面がロックされている間は壁紙が一時停止し、Wallpaper Engine の *バッテリー駆動中のノートブック* ルールに従います。バッテリー駆動時や低電力モードでは、より低い品質プリセットとフレームレートに下げることもできます。
 - **テーマ設定**：メニューバー、アクセントカラー、アイコンとフォルダの色合いが壁紙の色に合わせて変わります。Open Wallpaper Engine 自身のウインドウでは、壁紙の色そのものを使うこともできます。
 
-  ![テーマ設定](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="テーマ設定" width="540">
 
 そのほかの機能の分野別一覧：[docs/features.md](../../docs/features.md)
 

@@ -13,11 +13,11 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![資料庫](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="資料庫" width="720">
 
 ## 與眾不同之處
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![背景圖片編輯器](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="背景圖片編輯器" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
 - **場景編輯/輸出**：直接在桌面上即時修改正在執行的背景圖片的圖層與效果，選擇螢幕保護程式顯示的內容，或將背景圖片輸出為原況照片或 Android 套件。
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![場景編輯/輸出](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="場景編輯/輸出" width="720">
 
 - **螢幕保護程式與鎖定畫面**：螢幕保護程式即時顯示每台顯示器的背景圖片（*螢幕保護程式與桌布相同*），或顯示你選擇的背景圖片；鎖定畫面則顯示它的一張圖片。
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![透過 Wi-Fi 傳送](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="透過 Wi-Fi 傳送" width="456">
 
 - **顯示器**：與 Wallpaper Engine 相同：每台顯示器一張背景圖片、一張背景圖片橫跨所有顯示器或在每台顯示器上複製，並支援群組、分割與設定檔。**在視窗中播放** 可在獨立的視窗中播放背景圖片。
 
-  ![顯示器](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="顯示器" width="400">
 
 - **播放列表**：依計時器、登入時、一天中的時段或星期幾更換背景圖片，並使用 Wallpaper Engine 的轉場效果。
 
-  ![播放列表設定](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="播放列表設定" width="420">
 
 - **控制**：用於動作、播放列表、背景圖片與顯示器設定檔的快速鍵；Wallpaper Engine 的 `-control` [命令列](../../docs/command-line.md)；以及 **MCP 伺服器** 外掛，MCP 用戶端可透過它設定背景圖片、播放列表與設定並編輯場景，連線僅限本機，且只有你的帳號可以開啟。
 
-  ![MCP 伺服器外掛](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 伺服器外掛" width="456">
 
 - **電源**：螢幕鎖定時背景圖片會暫停，遵循 Wallpaper Engine 的 *筆記型電腦使用電池時* 規則，並可在使用電池或處於低耗電模式時降至較低的畫質預設與畫面播放速率。
 - **主題顏色**：選單列、強調色以及著色的圖像與檔案夾會跟隨背景圖片的顏色變化；Open Wallpaper Engine 自己的視窗可以使用背景圖片的準確顏色。
 
-  ![主題顏色](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="主題顏色" width="540">
 
 其他所有功能（依領域分類）：[docs/features.md](../../docs/features.md)。
 

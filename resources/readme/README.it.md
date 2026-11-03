@@ -13,11 +13,11 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![La libreria](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="La libreria" width="720">
 
 ## Cosa lo distingue
 
@@ -34,9 +34,9 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Editor sfondi](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Editor sfondi" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
 - **Modifica/esporta scena**: modifica dal vivo sulla scrivania i livelli e gli effetti dello sfondo in esecuzione, scegli cosa mostra il salvaschermo o esporta lo sfondo come Live Photo o come pacchetto Android.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Modifica/esporta scena](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Modifica/esporta scena" width="720">
 
 - **Salvaschermo e schermata di blocco**: il salvaschermo mostra dal vivo lo sfondo di ciascuno schermo (*Salvaschermo uguale allo sfondo*), oppure uno a tua scelta, e la schermata di blocco ne mostra un’immagine.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Invia via Wi-Fi](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Invia via Wi-Fi" width="456">
 
 - **Schermi**: uno sfondo per schermo, uno solo esteso su tutti o clonato su ciascuno, gruppi, suddivisioni e profili, come in Wallpaper Engine. **Riproduci in una finestra** riproduce uno sfondo in una finestra tutta sua.
 
-  ![Schermi](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Schermi" width="400">
 
 - **Playlist**: cambia sfondo con un timer, all’accesso, in base all’ora del giorno o al giorno della settimana, con le transizioni di Wallpaper Engine.
 
-  ![Impostazioni delle playlist](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Impostazioni delle playlist" width="420">
 
 - **Controllo**: tasti di scelta rapida per azioni, playlist, sfondi e profili degli schermi; la [riga di comando](../../docs/command-line.md) `-control` di Wallpaper Engine; e il plug-in **Server MCP**, tramite il quale i client MCP impostano sfondi, playlist e impostazioni e modificano le scene, attraverso una connessione locale che solo il tuo account può aprire.
 
-  ![Plug-in Server MCP](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Server MCP" width="456">
 
 - **Alimentazione**: gli sfondi vanno in pausa mentre lo schermo è bloccato, seguono la regola *Portatile a batteria* di Wallpaper Engine e possono passare a un preset di qualità e a una frequenza fotogrammi inferiori a batteria o in modalità Risparmio energetico.
 - **Tema colore**: la barra dei menu, il colore di evidenziazione e le icone e le cartelle colorate seguono il colore dello sfondo; le finestre di Open Wallpaper Engine possono usare il colore esatto.
 
-  ![Tema colore](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Tema colore" width="540">
 
 Tutto il resto, area per area: [docs/features.md](../../docs/features.md).
 
