@@ -25,8 +25,16 @@ jobs:
       - id: xcode
         uses: ./.github/actions/select-xcode
 
+      # On the Mac, DerivedData stays between runs (an incremental build), and the Mac's own
+      # assets and shader cache are used.
+      - id: mac
+        uses: ./.github/actions/mac-cache
+        with:
+          build: 'true'
+
       # Restores the encrypted asset cache, or downloads the assets and (on main) saves them.
-      - uses: ./.github/actions/we-assets
+      - if: ${{ !steps.mac.outputs.assets }}
+        uses: ./.github/actions/we-assets
         with:
           cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
           steam-user: ${{ secrets.OWE_CI_STEAM_USER }}
@@ -39,6 +47,7 @@ jobs:
 
       # Encrypted: the cache holds MSL translated from Wallpaper Engine's shaders.
       - id: shadercache
+        if: steps.mac.outputs.local != 'true'
         uses: ./.github/actions/shader-cache
         with:
           mode: restore
@@ -48,7 +57,7 @@ jobs:
       - name: Build and test, slow tests included
         # A failing test is retried once; a test that fails both times fails the run.
         env:
-          TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
+          TEST_RUNNER_OWE_ASSETS: ${{ steps.mac.outputs.assets || env.WE_ASSETS }}
           TEST_RUNNER_OWE_SLOW_TESTS: '1'
           TEST_RUNNER_OWE_TEST_PHASES: ${{ github.workspace }}/build/results/phases
         run: |
@@ -83,7 +92,7 @@ jobs:
           retention-days: 30
 
       - uses: ./.github/actions/shader-cache
-        if: success() && github.ref == 'refs/heads/main'
+        if: success() && github.ref == 'refs/heads/main' && steps.mac.outputs.local != 'true'
         with:
           mode: save
           xcode-version: ${{ steps.xcode.outputs.version }}
