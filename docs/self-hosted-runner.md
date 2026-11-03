@@ -37,8 +37,9 @@ what is already on the disk (`.github/actions/mac-cache`):
 - **The shader and pipeline caches** are the isolated test copy's own under `~/Library/Caches`,
   which simply stay.
 - **The WE assets** come from the folder `OWE_CI_ASSETS` names in the runner's `.env` (step 3). The
-  asset jobs then never log in to Steam. Without it they restore or download the assets as on
-  GitHub's runners.
+  asset jobs then never log in to Steam, and the test jobs get them too: the library tests find
+  the wallpaper library on this Mac by themselves and fail without the assets. Without
+  `OWE_CI_ASSETS` the asset jobs restore or download the assets as on GitHub's runners.
 
 ## Setting it up (once, on the Mac)
 
