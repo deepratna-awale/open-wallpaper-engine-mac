@@ -186,12 +186,13 @@ Or *Actions → Release → Run workflow* with `tag` = an **existing** tag (the 
 out that tag).
 
 The run: check secrets → check out → parse the tag → check the Sparkle key pair → import the
-certificate into a temporary keychain → archive (manual signing, hardened runtime,
+certificate into a temporary keychain → build the Steam helper (`Scripts/build-steam-helper.sh`
+with the .NET 9 SDK; `OWE_REQUIRE_STEAM_HELPER` fails the archive without it) → archive (manual signing, hardened runtime,
 `--timestamp`, no `get-task-allow`, `SPARKLE_PUBLIC_ED_KEY` and `OWE_VERSION_LABEL` set) →
 export (`developer-id`) → verify every Mach-O is Developer ID + runtime + timestamp, the
 version, label, `SUPublicEDKey` and `SUFeedURL`, and that the only executables besides the app
-are the known ones (Sparkle's, the framework, the Wallpaper Editor, `owe-mcp`, the Chromium
-helpers and the screen saver) → notarize the app (`notarytool submit --wait`; on failure it prints
+are the known ones (Sparkle's, the framework, the Wallpaper Editor, `owe-mcp`,
+`owe-steam-helper-<arch>`, the Chromium helpers and the screen saver) → notarize the app (`notarytool submit --wait`; on failure it prints
 `notarytool log`) → staple → zip → DMG (signed, notarized, stapled) → verify with
 `codesign`, `spctl` and `stapler validate` → sign the zip with `sign_update` into
 `<zip>.sparkle.json` → draft release named *Open Wallpaper Engine 1.1.0 Beta 1* (for
@@ -333,12 +334,16 @@ not an entitlement) and running `/usr/bin/perl` with the bundled `nowPlayingAdap
 (a resource, not an executable) need nothing more under the hardened runtime.
 
 The nested code is the app's own (`OpenWallpaperEngine.framework`, `Wallpaper Editor.app` and
-`owe-mcp` in `Contents/Helpers`, the `owe-chromium-helper` XPC service and its four
+`owe-mcp` and `owe-steam-helper-arm64`/`-x86_64` in `Contents/Helpers`, the `owe-chromium-helper` XPC service and its four
 `OWE Chromium Helper` apps, and `Open Wallpaper Engine.saver` in `Contents/Resources`) and
 `Sparkle.framework` (Swift package, embedded by Xcode) with its `Autoupdate` tool, `Updater.app`
 and two XPC services. The app isn't sandboxed, so it doesn't use Sparkle's XPC services; they
 ship inside the framework, signed. Xcode's `developer-id` export re-signs all of it with the
 Developer ID identity, hardened runtime and a timestamp; the verify step checks every Mach-O for
 that, checks the Sparkle components, the framework and the saver with
-`codesign --verify --strict`, and fails on any other executable. No `--deep` signing is used
+`codesign --verify --strict`, and fails on any other executable. The Steam helper (`SteamHelper/`,
+.NET 9) is signed by the "Embed Steam Helper" build phase with the app's team and
+`SteamHelper/OWESteamHelper.entitlements` (only `cs.allow-jit`, which .NET needs); the verify step
+fails if either copy is missing, signed by another team, or has an entitlement that weakens the
+hardened runtime. No `--deep` signing is used
 (Apple advises against it); `codesign --verify --deep --strict` checks the whole bundle.

@@ -92,7 +92,7 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `fix:`, `feat:`, `perf:`, `refactor:`, `build:`, `docs:`, `test:`.
 - Keep commits small and single-purpose. File moves and renames go in their own commit with no logic changes, so review and `git log --follow` stay useful. Asset or vendor drops never share a commit with code.
-- Branch from `main` as `<your-name>/<topic>` and open the PR against `main`.
+- Branch from `main` as `<type>/<topic>`, the commit type and a short description (`fix/live-screen-saver-relaunch`, `docs/steam-sign-in`; an issue fix is `fix/issue-<number>-<topic>`), and open the PR against `main`.
 - Performance work goes in one PR per wallpaper type (scene, video, web), and an optimisation stays only if it measurably wins.
 - No per-wallpaper hacks: fixes must follow WE's behaviour for every wallpaper (rule 1).
 - The PR description says what changed, why, and how it was verified ([template](.github/pull_request_template.md)).

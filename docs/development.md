@@ -8,6 +8,7 @@ Building from source and where the code lives. Read [CONTRIBUTING.md](../CONTRIB
 - macOS >= 14.0
 - Xcode >= 26.3 (macOS 26 SDK). The code is Swift 6 language mode; CI builds with Xcode 26.3 (Swift 6.2), which is stricter than newer Xcodes about some concurrency checks, so see CONTRIBUTING.md › Building for checking with CI's compiler.
 - Xcode Command Line Tools
+- Optional: the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0), to build the Steam helper (`Scripts/build-steam-helper.sh`). Without it, `Scripts/build-steam-helper.sh --download` takes the copy CI built from `main` (needs the `gh` CLI, signed in); without either, the app builds and runs but can't sign in to Steam.
 
 ### Steps
 ```sh
@@ -33,7 +34,8 @@ Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL �
 - `OpenWallpaperEngine/Scene/Scripting/` — SceneScript runtime and audio/FFT bindings
 - `OpenWallpaperEngine/Audio/` — system audio capture (`SystemAudioCapture.swift`, `ProcessTapAudioCapture.swift`, `SystemAudioBackend.swift`) and the per-player level tap (`AudioLevelTap.swift`)
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — the Metal scene renderer and shader library
-- `OpenWallpaperEngine/Workshop/WorkshopDownloadService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Workshop browsing and downloads
+- `OpenWallpaperEngine/Workshop/` — the Steam login (`SteamAccount.swift`, `SteamLogin.swift`, `SteamSignInView.swift`), the helper's client (`SteamHelperClient.swift`, `SteamHelperDownload.swift`), Workshop browsing and downloads (`WorkshopAPIService.swift`, `WorkshopDownloadService.swift`, `WorkshopViewModel.swift`), subscriptions, favourites, comments and update checks
+- `SteamHelper/` — `owe-steam-helper`, the .NET program the app runs for every Steam request (QR or password sign-in, Workshop queries, downloads, the assets); its protocol and licence (GPL-2.0-or-later) are in [SteamHelper/README.md](../SteamHelper/README.md). `Vendor/DepotDownloader/` is the download code it includes
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
 - `OpenWallpaperEngine/Library/DisplayLayout/` — display layouts, groups, splits and profiles ([docs/display-layouts.md](display-layouts.md))
 - `OpenWallpaperEngine/Editor/`, `Packages/OWEEditor/` — the Wallpaper Editor
@@ -42,5 +44,7 @@ Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL �
 - `OpenWallpaperEngine/DepthMaps/` — the Depth Map Generation plugin ([docs/depth-maps.md](depth-maps.md))
 - `OpenWallpaperEngine/Theming/`, `Packages/OWETheming/` — Theming ([docs/theming.md](theming.md))
 - `OpenWallpaperEngine/MCP/`, `Packages/OWEControl/`, `MCPServer/` — the MCP Server plugin: the app's control socket and the `owe-mcp` server ([docs/mcp.md](mcp.md))
+- `OWESaverBroker/`, `OpenWallpaperEngineSaverExtension/` — the live screen saver's launcher and extension; `OWEChromiumHelper/` — the Chromium web engine's XPC service; `EditorHelper/` — the Wallpaper Editor app's bundle files ([architecture](architecture.md#targets))
+- `Scripts/build-steam-helper.sh` — builds the Steam helper into `build/steam-helper/` (`--download` fetches CI's build instead)
 - `Scripts/fill-assets-cache.sh` — development helper: copies the assets subset of a Wallpaper Engine install into a local folder or the Wallpaper Storage cache
 - `Scripts/scene-api-coverage.py` — reports which SceneScript APIs installed wallpapers use versus what is implemented
