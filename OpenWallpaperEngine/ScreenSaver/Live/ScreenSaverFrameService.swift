@@ -8,7 +8,7 @@ import IOSurface
 /// objects) and each frame's stamp. Its views' attaches and pings count as a saver showing
 /// (`onAlive`). Without the broker (it isn't registered) nothing connects and the extension plays
 /// its video. Thread-safe: XPC calls in on its own queues.
-final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked Sendable { // `lock` owns `clients`, `latest`.
+final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked Sendable { // `lock` owns `clients`, `latest`, the broker's fields.
     let listener = NSXPCListener.anonymous()
     /// A view attached or pinged (not a preview), on the main queue.
     var onAlive: (@MainActor () -> Void)?
@@ -18,32 +18,113 @@ final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked
     private var clients: [ObjectIdentifier: Client] = [:]
     private var latest: LiveSaverFramesMessage?
     private var broker: NSXPCConnection?
+    private var brokerService = ScreenSaverLiveNames.brokerService
+    private var brokerFailures = 0
+    /// Counts broker connections: a retry scheduled for an earlier one is dropped.
+    private var brokerGeneration = 0
+    private let brokerRetryBase: TimeInterval
+    /// `invalidate` was called: nothing connects again.
+    private var stopped = false
     /// Peers must be signed by this requirement; nil accepts any (an unsigned build).
     private let peerRequirement: String?
 
-    init(peerRequirement: String? = ScreenSaverFrameService.ownTeamRequirement) {
+    init(peerRequirement: String? = ScreenSaverFrameService.ownTeamRequirement, brokerRetryBase: TimeInterval = 0.5) {
         self.peerRequirement = peerRequirement
+        self.brokerRetryBase = brokerRetryBase
         super.init()
         listener.delegate = self
         listener.resume()
     }
 
-    /// Hands the endpoint to the broker; false when it can't be reached (not registered).
+    /// Hands the endpoint to the broker. A broker that can't be looked up yet (the app connects
+    /// before `SMAppService` has submitted the broker's agent, as on every relaunch) invalidates
+    /// the connection: it is tried again after `brokerRetryDelay`, a few times. A broker that
+    /// exits later interrupts it instead, and gets the endpoint again when launchd restarts it.
     func registerWithBroker(service: String = ScreenSaverLiveNames.brokerService) {
-        let connection = NSXPCConnection(machServiceName: service)
+        lock.withLock {
+            brokerService = service
+            brokerFailures = 0
+        }
+        connectBroker()
+    }
+
+    /// The broker's agent can be looked up now (it was registered or allowed): registers again,
+    /// unless it already has the endpoint.
+    func brokerAvailable() {
+        let connects = lock.withLock { () -> Bool in
+            guard !stopped, broker == nil else { return false }
+            brokerFailures = 0
+            return true
+        }
+        if connects { connectBroker() }
+    }
+
+    /// How long after the `failures`th failed lookup in a row the broker is tried again: half a
+    /// second, doubling to at most 30 s; nil once `brokerRetryLimit` lookups failed (the agent
+    /// isn't registered or allowed: `brokerAvailable` tries again when it is).
+    static func brokerRetryDelay(afterFailures failures: Int, base: TimeInterval = 0.5) -> TimeInterval? {
+        guard failures >= 1, failures <= brokerRetryLimit else { return nil }
+        return min(base * pow(2, Double(failures - 1)), 30)
+    }
+
+    static let brokerRetryLimit = 10
+
+    /// Broker lookups that failed in a row since the last `registerWithBroker`/`brokerAvailable`.
+    var brokerFailureCount: Int { lock.withLock { brokerFailures } }
+
+    private func connectBroker() {
+        let connection = NSXPCConnection(machServiceName: lock.withLock { brokerService })
         connection.remoteObjectInterface = LiveSaverFramesMessage.brokerInterface()
         connection.interruptionHandler = { [weak self] in
             // The broker exited (launchd starts it again on demand): register again.
             OWELog.info(.app, "Live screen saver: the broker restarted; registering again")
             self?.sendEndpoint()
         }
-        connection.invalidationHandler = { [weak self] in
-            OWELog.info(.app, "Live screen saver: no broker (the screen saver extension can't reach the app)")
-            self?.lock.withLock { self?.broker = nil }
+        let id = ObjectIdentifier(connection)
+        connection.invalidationHandler = { [weak self] in self?.brokerInvalidated(id) }
+        let (connects, previous) = lock.withLock { () -> (Bool, NSXPCConnection?) in
+            guard !stopped else { return (false, nil) }
+            defer {
+                broker = connection
+                brokerGeneration += 1
+            }
+            return (true, broker)
         }
+        previous?.invalidate()
+        guard connects else { return connection.invalidate() }
         connection.resume()
-        lock.withLock { broker = connection }
         sendEndpoint()
+    }
+
+    private enum BrokerRetry {
+        /// An older connection, or the service was invalidated.
+        case ignore
+        case giveUp
+        case after(TimeInterval, generation: Int)
+    }
+
+    private func brokerInvalidated(_ id: ObjectIdentifier) {
+        let retry = lock.withLock { () -> BrokerRetry in
+            guard let broker, ObjectIdentifier(broker) == id else { return .ignore }
+            self.broker = nil
+            guard !stopped else { return .ignore }
+            brokerFailures += 1
+            guard let delay = Self.brokerRetryDelay(afterFailures: brokerFailures, base: brokerRetryBase) else { return .giveUp }
+            return .after(delay, generation: brokerGeneration)
+        }
+        switch retry {
+        case .ignore:
+            break
+        case .giveUp:
+            OWELog.info(.app, "Live screen saver: no broker (the screen saver extension can't reach the app)")
+        case let .after(delay, generation):
+            OWELog.info(.app, "Live screen saver: the broker can't be reached yet; trying again in \(delay) s")
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self else { return }
+                let current = self.lock.withLock { !self.stopped && self.broker == nil && self.brokerGeneration == generation }
+                if current { self.connectBroker() }
+            }
+        }
     }
 
     private func sendEndpoint() {
@@ -56,7 +137,10 @@ final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked
 
     func invalidate() {
         listener.invalidate()
-        let (all, broker) = lock.withLock { (Array(clients.values), self.broker) }
+        let (all, broker) = lock.withLock {
+            stopped = true
+            return (Array(clients.values), self.broker)
+        }
         broker?.invalidate()
         all.forEach { $0.connection.invalidate() }
     }

@@ -122,4 +122,29 @@ final class ScreenSaverFrameServiceTests: XCTestCase {
         XCTAssertFalse(mismatched.isConsistent)
         XCTAssertTrue(try message(surfaces: 0, live: false).isConsistent, "no rings, no surfaces")
     }
+
+    // MARK: Broker registration
+
+    func testTheBrokerIsTriedAgainSoonThenLessOftenThenNoMore() {
+        let delays = (1...ScreenSaverFrameService.brokerRetryLimit + 1).map { ScreenSaverFrameService.brokerRetryDelay(afterFailures: $0) }
+        XCTAssertEqual(delays.prefix(7), [0.5, 1, 2, 4, 8, 16, 30])
+        XCTAssertEqual(delays[ScreenSaverFrameService.brokerRetryLimit - 1], 30, "capped")
+        XCTAssertNil(delays[ScreenSaverFrameService.brokerRetryLimit], "given up after the limit")
+        XCTAssertNil(ScreenSaverFrameService.brokerRetryDelay(afterFailures: 0))
+    }
+
+    /// The app looks the broker up before its launch agent is submitted on every relaunch: the
+    /// failed lookup is tried again instead of leaving the extension without the app (#512).
+    func testABrokerThatCantBeLookedUpIsTriedAgain() {
+        let registering = ScreenSaverFrameService(peerRequirement: nil, brokerRetryBase: 0.01)
+        registering.registerWithBroker(service: "app.openwallpaperengine.tests.no-broker.\(UUID().uuidString)")
+        let retried = expectation(for: NSPredicate { @Sendable _, _ in registering.brokerFailureCount >= 3 }, evaluatedWith: nil)
+        wait(for: [retried], timeout: 10)
+        registering.invalidate()
+        let failures = registering.brokerFailureCount
+        let settled = expectation(description: "settled")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { settled.fulfill() }
+        wait(for: [settled], timeout: 2)
+        XCTAssertEqual(registering.brokerFailureCount, failures, "an invalidated service stops trying")
+    }
 }
