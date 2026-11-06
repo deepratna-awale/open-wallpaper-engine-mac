@@ -23,9 +23,12 @@ final class WorkshopThumbnailLoaderTests: XCTestCase {
         let loader = WorkshopThumbnailLoader(maxPixelSize: 256)
         let loaded = await loader.image(for: file)
         let image = try XCTUnwrap(loaded)
-        let pixels = try XCTUnwrap(image.representations.first)
-        XCTAssertEqual(max(pixels.pixelsWide, pixels.pixelsHigh), 256)
-        XCTAssertEqual(pixels.pixelsWide, 2 * pixels.pixelsHigh, "the aspect ratio stays")
+        // The decoded bitmap, not `representations.first?.pixelsWide`: on macOS 27 an
+        // NSImage(cgImage:) rep reports its point size times the main screen's backing scale.
+        let pixels = try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+        XCTAssertEqual(max(pixels.width, pixels.height), 256)
+        XCTAssertEqual(pixels.width, 2 * pixels.height, "the aspect ratio stays")
+        XCTAssertEqual(image.size, NSSize(width: 256, height: 128), "drawn one point per decoded pixel")
 
         try FileManager.default.removeItem(at: file)
         let again = await loader.image(for: file)
