@@ -54,9 +54,10 @@
       </a>
     </div>
     <p class="meta" id="meta">macOS 14 or later · Free and open source (GPL-3.0)</p>
-    <p class="badges"><a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases"><img
-      src="https://img.shields.io/endpoint?url=https%3A%2F%2Fopenwallpaperengine.app%2Fdownloads.json"
-      height="20" alt="DMG downloads"></a></p>
+    <p class="count"><a id="count" href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases" hidden>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>
+      <span><strong id="count-n"></strong> downloads</span></a></p>
     <img class="hero-shot" src="screenshots/live-snowy-plains.jpg" width="1600" height="900"
          alt="The Snowy Plains scene wallpaper running on a Mac desktop: a snow-covered cabin at sunset with falling snow.">
   </header>
@@ -548,6 +549,35 @@ async function newestRelease(fetchFn) {
     notes.href = release.html_url; notes.textContent = "Release notes";
     meta.appendChild(notes);
   } catch (_) { /* keep the fallback link */ }
+})();
+
+// DMG downloads across every release. GitHub's own per-asset counts also include the update
+// deltas and the zips the Appcast workflow fetches, so only DMGs are counted. If the API is
+// unavailable (it allows 60 unauthenticated requests an hour), the count the Pages deploy wrote
+// to downloads.json is used; if both fail, the line stays hidden.
+async function dmgDownloads(fetchFn) {
+  try {
+    let total = 0;
+    for (let page = 1; page <= 10; page++) {
+      const r = await fetchFn(`${REPO_API}/releases?per_page=100&page=${page}`, { headers: { Accept: "application/vnd.github+json" } });
+      if (!r.ok) throw new Error(r.status);
+      const list = await r.json();
+      for (const rel of list) for (const a of rel.assets || []) if (a.name.endsWith(".dmg")) total += a.download_count || 0;
+      if (list.length < 100) return total;
+    }
+    return total;
+  } catch (_) { /* try downloads.json */ }
+  try {
+    const r = await fetchFn("downloads.json", { cache: "no-cache" });
+    const n = r.ok ? Number((await r.json()).message) : NaN;
+    return Number.isFinite(n) ? n : null;
+  } catch (_) { return null; }
+}
+(async () => {
+  const n = await dmgDownloads(fetch);
+  if (!n) return;
+  document.getElementById("count-n").textContent = n.toLocaleString();
+  document.getElementById("count").hidden = false;
 })();
 </script>
 </body>
