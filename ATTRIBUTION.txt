@@ -13,9 +13,9 @@ need Wallpaper Engine's built-in effects, materials, models, particles, GLSL sha
 runtime, compatibility patches, fonts and UI strings; the app takes them from the user's own copy
 of Wallpaper Engine on Steam:
 
-- Settings > Assets downloads the user's copy with SteamCMD, using the account the user logged
-  in with (it must own Wallpaper Engine), keeps only those files and Wallpaper Engine's default
-  wallpapers in the user's Wallpaper Storage folder, and deletes the rest of the download; or
+- Settings > Assets downloads only those files and Wallpaper Engine's default wallpapers from the
+  user's copy, through the app's Steam helper and the Steam account the user signed in with (it
+  must own Wallpaper Engine), into the user's Wallpaper Storage folder; or
 - the user chooses the folder of an existing Wallpaper Engine install, which is read in place.
 
 The fonts keep their own licences; their licence files (e.g. "SIL Open Font License.txt") come

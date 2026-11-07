@@ -5,7 +5,7 @@ struct KeychainSecret: Sendable {
     let keychain: KeychainStore
     let account: String
 
-    /// A service name under the app's bundle identifier, e.g. `<bundle id>.steam-web-api-key`, or
+    /// A service name under the app's bundle identifier, e.g. `<bundle id>.steam-login`, or
     /// under the isolated suite for tests and development copies, so they never touch the real item.
     static func service(_ suffix: String, prefix: String = AppStorageLocation.current.keychainServicePrefix) -> String {
         "\(prefix).\(suffix)"
