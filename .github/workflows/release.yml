@@ -118,14 +118,9 @@ jobs:
             || { echo "::error::SPARKLE_PUBLIC_ED_KEY is not the public key of SPARKLE_PRIVATE_KEY"; exit 1; }
           echo "The Sparkle keys match."
 
+      # The same Xcode as CI (26.3, macOS 26 SDK), so a release builds what CI tested.
       - name: Use the supported Xcode
-        # The same Xcode as CI (26.3, macOS 26 SDK), so a release builds what CI tested.
-        run: |
-          X=/Applications/Xcode_26.3.app
-          [[ -d $X ]] || X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | head -1)
-          [[ -n "$X" && -d "$X" ]] || { echo "::error::no Xcode 26 on the runner"; exit 1; }
-          sudo xcode-select -s "$X"
-          xcodebuild -version
+        uses: ./.github/actions/select-xcode
 
       - name: Build the Steam helper
         # SteamHelper/ is a .NET program; the archive's "Embed Steam Helper" phase signs and embeds

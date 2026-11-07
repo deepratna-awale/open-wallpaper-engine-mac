@@ -1,7 +1,7 @@
 import Foundation
 
 /// A release version as the tags spell it: `X.Y.Z` or `X.Y.Z-(alpha|beta|rc).N`.
-/// `Scripts/release-version.sh` applies the same rules to tags in the release workflow.
+/// `Scripts/release/release-version.sh` applies the same rules to tags in the release workflow.
 struct ReleaseVersion: Comparable, CustomStringConvertible {
     enum Stage: String, Comparable {
         case alpha, beta, rc
