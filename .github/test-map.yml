@@ -63,7 +63,6 @@ ignore:
   - "resources/**"
   - "LICENSE"
   - "ATTRIBUTION.txt"
-  - "OpenWallpaperEngine/OpenWallpaperEngine.docc/**"
   # The release scripts have their own tests, which every build-and-test run includes.
   - "Scripts/**"
 
