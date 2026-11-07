@@ -18,7 +18,7 @@ trap 'rm -rf "$WORK"' EXIT
 
 for target in glslang SPIRVCross ShaderToolchain; do
     # Xcode names a package target's build directory `<target>-t.build` or `<target>.build`. -H
-    # follows a symlinked DerivedData (the self-hosted Mac keeps it outside the checkout).
+    # follows a symlinked DerivedData.
     objects=$(find -H "$DERIVED" -name "*.o" \( -path "*/$target-t.build/Objects-normal/*" \
         -o -path "*/$target.build/Objects-normal/*" \))
     if [[ -z "$objects" ]]; then
