@@ -33,11 +33,9 @@ for pt in 16 32 128 256 512; do
   "$TMP/render" frame "$TMP/full.png" $SET/icon_${pt}x${pt}@2x.png $((pt * 2))
 done
 
-# 3. In-app images: we.placeholder and the docs art, the flat logo.
+# 3. In-app image: we.placeholder, the flat logo.
 "$TMP/render" svg svg/logo-flat.svg $XCASSETS/we.placeholder.imageset/we.placeholder.png 512
 "$TMP/render" svg svg/logo-flat.svg $XCASSETS/we.placeholder.imageset/we.placeholder@2x.png 1024
-"$TMP/render" svg svg/logo-flat.svg \
-  $ROOT/OpenWallpaperEngine/OpenWallpaperEngine.docc/Resources/documentation-art/OpenWallpaperEngine-icon@2x.png 1024
 
 # 4. Menu bar: the template SVG itself (vector, template rendering intent in Contents.json).
 cp svg/menubar-template.svg $XCASSETS/OWEStatusIcon.imageset/OWEStatusIcon.svg

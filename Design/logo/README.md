@@ -20,7 +20,7 @@ The artwork is a redesign of [Klaus Zhu](https://github.com/klauszhu1105)'s orig
 | `OpenWallpaperEngine/Resources/AppIcon.icon` | The Icon Composer bundle: `icon.json` plus the layer SVGs in `Assets/`. On macOS 26+ the system renders it with glass and its default, dark, clear and tinted looks. Its background is the solid `fill` in `icon.json`, which `build.sh` sets from the palette. |
 | `Assets.xcassets/AppIcon.appiconset` | The macOS 14/15 fallback: `ictool`'s own rendering of `AppIcon.icon`, at 16–512 pt @1x/@2x. |
 | `Assets.xcassets/OWEStatusIcon.imageset` | The menu bar icon: the template SVG, with preserved vector data and the template rendering intent, so macOS draws it white on dark bars and black on light ones. |
-| `Assets.xcassets/we.placeholder.imageset`, `OpenWallpaperEngine.docc/.../OpenWallpaperEngine-icon@2x.png` | The flat logo. |
+| `Assets.xcassets/we.placeholder.imageset` | The flat logo. |
 | `OpenWallpaperEngineSaver/thumbnail.png`, `thumbnail@2x.png` | The screen saver tile in System Settings: the flat logo on the palette's `background`, at 90 × 58 pt. The legacy `.saver` and the screen saver extension both bundle these files. |
 | `OpenWallpaperEngineSaverExtension/Assets.xcassets/thumbnail.imageset` | The same tile at 107 × 65 pt, the size of the `thumbnail` image in Apple's own `com.apple.screensaver` extensions. |
 
