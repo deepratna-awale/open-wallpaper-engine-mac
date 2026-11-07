@@ -4,7 +4,7 @@ name: Pages
 # release from the GitHub API, so it needs no redeploy when a release is published.
 # The site is served at https://openwallpaperengine.app/: the custom domain is set in the
 # repository's Settings → Pages (an Actions deployment has no CNAME file). See docs/releasing.md.
-# Each deploy also writes downloads.json, the README's downloads badge (DMG downloads across every
+# Each deploy also writes downloads.json, the README's downloads badge and the site's fallback count (DMG downloads across every
 # release), so it redeploys every six hours to keep that count current.
 on:
   push:
