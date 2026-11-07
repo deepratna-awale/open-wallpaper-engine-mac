@@ -30,7 +30,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: "Run `/usr/bin/log show --last 10m --predicate 'process == \"Open Wallpaper Engine\"'` after loading the wallpaper and paste the errors."
+      description: "After loading the wallpaper, Help › Report a Problem… in the app collects the log, and any crash report, into a file to attach under What's wrong. Or run `/usr/bin/log show --last 10m --predicate 'process == \"Open Wallpaper Engine\"'` and paste the errors."
       render: text
   - type: input
     id: macos
@@ -43,6 +43,7 @@ body:
     id: owe
     attributes:
       label: Open Wallpaper Engine version
-      placeholder: 1.0.0-beta.3
+      description: From the About window.
+      placeholder: 1.0.0-beta.15
     validations:
       required: true

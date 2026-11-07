@@ -6,7 +6,7 @@ Open Wallpaper Engine is in beta. Security fixes go into the next release only; 
 
 | Version | Supported |
 |---|---|
-| Latest 1.0.0 beta (1.0.0-beta.12 today) | ✅ |
+| The latest 1.0.0 beta ([releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)) | ✅ |
 | Older betas | ❌ Update first |
 
 The app updates itself through Sparkle. To get a fix, choose **Check for Updates…** in the app menu (⌥⌘U), or download the latest release from [openwallpaperengine.app](https://openwallpaperengine.app/) or [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). Every release is a beta, so keep **Receive beta updates** on in Settings → Updates; with it off, Sparkle offers no update until a stable release is out.

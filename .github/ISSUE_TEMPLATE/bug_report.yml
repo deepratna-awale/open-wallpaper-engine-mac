@@ -40,6 +40,6 @@ body:
     attributes:
       label: Open Wallpaper Engine version
       description: From the About window.
-      placeholder: 1.0.0-beta.3
+      placeholder: 1.0.0-beta.15
     validations:
       required: true
