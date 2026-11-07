@@ -135,7 +135,7 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertTrue(SafeRestartStore.defaultFileURL.path.hasPrefix(store.supportDirectory.path))
         XCTAssertTrue(SceneScriptStorage.defaultDirectory.path.hasPrefix(store.supportDirectory.path))
         XCTAssertTrue(ShaderVariantTranslator.defaultCacheDirectory?.path.hasPrefix(store.cachesDirectory.path) ?? true)
-        XCTAssertTrue(KeychainSecret.service("steam-web-api-key").hasPrefix(store.keychainServicePrefix + "."))
+        XCTAssertTrue(KeychainSecret.service(SteamCredentials.steamLoginItem.suffix).hasPrefix(store.keychainServicePrefix + "."))
     }
 
     func testIsolationTagSources() {
