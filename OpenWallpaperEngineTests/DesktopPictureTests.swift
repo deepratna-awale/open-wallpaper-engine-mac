@@ -208,6 +208,23 @@ final class DesktopPictureTests: XCTestCase {
         for url in setter.pictures.values { XCTAssertTrue(FileManager.default.fileExists(atPath: url.path)) }
     }
 
+    /// macOS keeps each desktop picture uncompressed, so a snapshot rendered for a larger display
+    /// is drawn at this display's size, not copied.
+    func testASnapshotLargerThanTheDisplayIsDrawnAtTheDisplaysSize() async throws {
+        let a = try wallpaper("a")
+        try saveSnapshot(a, red, width: 320, height: 180)
+        await sync.update(plans(["1": a]), placement: .fill)
+        let url = try XCTUnwrap(setter.pictures[1])
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))
+        let picture = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        XCTAssertEqual([picture.width, picture.height], [160, 90])
+        assertColor(try color(url, x: 0.5, y: 0.5), red)
+
+        XCTAssertTrue(DesktopPictureSync.fits(url, within: SIMD2(160, 90)))
+        XCTAssertFalse(DesktopPictureSync.fits(url, within: SIMD2(159, 90)))
+        XCTAssertFalse(DesktopPictureSync.fits(root.appending(path: "missing.heic"), within: SIMD2(160, 90)))
+    }
+
     /// Until a scene has a snapshot its display shows the preview, as the display itself does,
     /// never a stale or white picture; with no preview either, black. The snapshot replaces it.
     func testWithoutASnapshotThePreviewShowsThenTheSnapshotReplacesIt() async throws {

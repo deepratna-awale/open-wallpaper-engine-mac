@@ -42,6 +42,12 @@ struct WallpaperSettingsIdentity: Hashable {
 
     /// The identity of the wallpaper in `directory`.
     static func resolve(directory: URL, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
+        // Only a wallpaper folder has a project.json and is registered (not the bundled placeholder
+        // video, whose "folder" is the video file).
+        var isFolder: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: directory.path, isDirectory: &isFolder), isFolder.boolValue else {
+            return WallpaperSettingsIdentity(directory: directory, projectData: nil)
+        }
         let projectURL = WEProject.url(in: directory)
         let projectData: Data?
         do {
@@ -51,10 +57,7 @@ struct WallpaperSettingsIdentity: Hashable {
             projectData = nil
         }
         let derived = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
-        // Only a wallpaper folder is registered (not, say, the bundled placeholder video).
-        var isFolder: ObjCBool = false
-        guard !derived.isWorkshop, FileManager.default.fileExists(atPath: directory.path, isDirectory: &isFolder),
-              isFolder.boolValue else { return derived }
+        guard !derived.isWorkshop else { return derived }
         let local = LocalWallpaperIdentities.identity(
             directory: directory, derived: derived.rawValue, contentKnown: projectData != nil, defaults: defaults)
         return WallpaperSettingsIdentity(rawValue: local)

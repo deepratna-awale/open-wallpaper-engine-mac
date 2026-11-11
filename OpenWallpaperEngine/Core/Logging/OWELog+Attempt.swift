@@ -29,13 +29,16 @@ extension OWELog {
         }
     }
 
-    /// Whether `error` says only that the file isn't there.
+    /// Whether `error` says only that the file isn't there. That includes a path through
+    /// something that isn't a folder (ENOTDIR), such as a file looked up "inside" the bundled
+    /// placeholder video.
     static func isMissingFile(_ error: Error) -> Bool {
         if let cocoa = error as? CocoaError, cocoa.code == .fileReadNoSuchFile || cocoa.code == .fileNoSuchFile { return true }
+        let missing = [Int(ENOENT), Int(ENOTDIR)]
         let ns = error as NSError
-        if ns.domain == NSPOSIXErrorDomain, ns.code == Int(ENOENT) { return true }
+        if ns.domain == NSPOSIXErrorDomain, missing.contains(ns.code) { return true }
         if let underlying = ns.userInfo[NSUnderlyingErrorKey] as? NSError,
-           underlying.domain == NSPOSIXErrorDomain, underlying.code == Int(ENOENT) { return true }
+           underlying.domain == NSPOSIXErrorDomain, missing.contains(underlying.code) { return true }
         return false
     }
 

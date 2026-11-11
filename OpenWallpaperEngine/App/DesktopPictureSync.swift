@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import ImageIO
 import OWETheming
 
 /// Keeps each display's system desktop picture, which the lock screen and the menu bar's tint
@@ -14,7 +15,8 @@ import OWETheming
 /// - **Spaces, wake, reconnection.** macOS sets a picture on the current Space only, and may
 ///   reset it; `reassert` shows each display's current picture again where something else shows.
 /// - **Work.** Sources are looked up, decoded and drawn off the main thread, one update at a time;
-///   a plain display (one frame at its own size) copies its snapshot without decoding it.
+///   a plain display (one frame at its own size) copies its snapshot without decoding it, unless
+///   the snapshot has more pixels than the display: the picture is never larger than the display.
 /// - **Theming.** With Settings › Theming › Menu Bar on, each display's picture gets its menu bar
 ///   strip in the scheme colour (`DesktopPictureTheming`), drawn over the composed picture; the
 ///   strip is part of the picture's signature, so a new colour draws the pictures again.
@@ -188,6 +190,16 @@ final class DesktopPictureSync {
         }
     }
 
+    /// Whether the picture in `url` has no more pixels than a display of `size` shows, read from
+    /// its header. A picture whose size can't be read is drawn, not copied.
+    nonisolated static func fits(_ url: URL, within size: SIMD2<Int>) -> Bool {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties[kCGImagePropertyPixelHeight] as? Int else { return false }
+        return width <= size.x && height <= size.y
+    }
+
     private nonisolated static func render(_ job: Job, placement: WallpaperPlacement, files: LockScreenPicture,
                                            loader: DisplayPictureLoader) async -> Outcome {
         let plan = job.plan
@@ -217,7 +229,9 @@ final class DesktopPictureSync {
             return .unchanged
         }
         do {
-            if plan.isPlain, !hasStrip, case .file(let url, _, true) = sources.first {
+            // A snapshot larger than the display (rendered for a larger display, say) is drawn
+            // at the display's size instead: macOS keeps every desktop picture uncompressed.
+            if plan.isPlain, !hasStrip, case .file(let url, _, true) = sources.first, fits(url, within: plan.pixelSize) {
                 return .written(try files.write(snapshot: url, display: plan.display, showing: job.showing), signature: signature)
             }
             let images = zip(plan.layers, sources).map { layer, source -> DesktopPictureComposer.Source? in
