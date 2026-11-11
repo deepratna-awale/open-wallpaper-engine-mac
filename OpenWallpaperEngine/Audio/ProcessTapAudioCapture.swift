@@ -78,11 +78,13 @@ final class ProcessTapAudioCapture {
 
         var streamDescription: AudioStreamBasicDescription = try Self.property(
             tapID, kAudioTapPropertyFormat, default: AudioStreamBasicDescription())
+        let tapFormat = StreamFormat(streamDescription)
         // The tap clocks the aggregate, so the two rates agree. Reading the device's is optional:
         // the tap's own rate is the fallback.
-        if let rate: Float64 = try? Self.property(aggregateID, kAudioDevicePropertyNominalSampleRate,
-                                                  default: Float64(0)), rate > 0 {
-            streamDescription.mSampleRate = rate
+        let aggregateRate: Float64? = try? Self.property(aggregateID, kAudioDevicePropertyNominalSampleRate,
+                                                         default: Float64(0))
+        if let aggregateRate, aggregateRate > 0 {
+            streamDescription.mSampleRate = aggregateRate
         }
         guard let format = AVAudioFormat(streamDescription: &streamDescription),
               let converter = CaptureFormatConverter(inputFormat: format) else {
@@ -93,13 +95,69 @@ final class ProcessTapAudioCapture {
         try check(AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateID, ioQueue) { [weak self] _, input, _, _, _ in
             self?.process(input)
         }, "create the IO block")
-        // A global tap follows the default output device, and takes its format.
-        addListener(AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultOutputDevice,
-                    reason: "the default output device changed")
-        addListener(tapID, kAudioTapPropertyFormat, reason: "the tap's format changed")
-        addListener(aggregateID, kAudioDevicePropertyNominalSampleRate, reason: "the output sample rate changed")
-        addListener(aggregateID, kAudioDevicePropertyDeviceIsAlive, reason: "the output device went away")
+        addListeners(tapFormat: tapFormat, aggregateRate: aggregateRate)
         try check(AudioDeviceStart(aggregateID, ioProcID), "start the aggregate device")
+    }
+
+    /// Watches what the capture was built for. Core Audio also sends these notifications when
+    /// nothing changed: adding or removing the private aggregate makes coreaudiod look for its
+    /// default devices again, which notifies the default output device's listeners. A restart on
+    /// that one builds a new aggregate, which notifies again, and the capture is rebuilt every
+    /// couple of seconds, stalling coreaudiod. So each listener reads the value again and only
+    /// reports one that differs from the value at start (`isInterruption`).
+    @available(macOS 14.2, *)
+    private func addListeners(tapFormat: StreamFormat, aggregateRate: Float64?) {
+        let system = AudioObjectID(kAudioObjectSystemObject)
+        let tap = tapID
+        let aggregate = aggregateID
+        // A global tap follows the default output device, and takes its format.
+        let outputDevice = ProcessTapAudioCapture.outputDevice()
+        addListener(system, kAudioHardwarePropertyDefaultOutputDevice, reason: "the default output device changed") {
+            ProcessTapAudioCapture.isInterruption(atStart: outputDevice, now: ProcessTapAudioCapture.outputDevice())
+        }
+        addListener(tap, kAudioTapPropertyFormat, reason: "the tap's format changed") {
+            let now = try? ProcessTapAudioCapture.property(tap, kAudioTapPropertyFormat, default: AudioStreamBasicDescription())
+            return ProcessTapAudioCapture.isInterruption(atStart: tapFormat, now: now.map(StreamFormat.init))
+        }
+        addListener(aggregate, kAudioDevicePropertyNominalSampleRate, reason: "the output sample rate changed") {
+            ProcessTapAudioCapture.isInterruption(atStart: aggregateRate,
+                                now: try? ProcessTapAudioCapture.property(aggregate, kAudioDevicePropertyNominalSampleRate, default: Float64(0)))
+        }
+        addListener(aggregate, kAudioDevicePropertyDeviceIsAlive, reason: "the output device went away") {
+            ProcessTapAudioCapture.isInterruption(atStart: UInt32(1),
+                                now: try? ProcessTapAudioCapture.property(aggregate, kAudioDevicePropertyDeviceIsAlive, default: UInt32(0)))
+        }
+    }
+
+    /// The parts of a stream format the capture's converter is built from.
+    struct StreamFormat: Equatable {
+        let sampleRate: Float64
+        let formatID: AudioFormatID
+        let formatFlags: AudioFormatFlags
+        let bytesPerFrame: UInt32
+        let channelsPerFrame: UInt32
+        let bitsPerChannel: UInt32
+
+        init(_ description: AudioStreamBasicDescription) {
+            sampleRate = description.mSampleRate
+            formatID = description.mFormatID
+            formatFlags = description.mFormatFlags
+            bytesPerFrame = description.mBytesPerFrame
+            channelsPerFrame = description.mChannelsPerFrame
+            bitsPerChannel = description.mBitsPerChannel
+        }
+    }
+
+    /// Whether a property notification means the capture no longer matches the hardware: the
+    /// value differs from the one the capture started with. A value that can't be read any more
+    /// (nil, its object is gone) differs from one that could.
+    static func isInterruption<Value: Equatable>(atStart: Value?, now: Value?) -> Bool {
+        atStart != now
+    }
+
+    private static func outputDevice() -> AudioObjectID? {
+        try? property(AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultOutputDevice,
+                      default: AudioObjectID(kAudioObjectUnknown))
     }
 
     /// Every process's output, including this app's own sounds: WE's loopback capture hears its
@@ -177,10 +235,15 @@ final class ProcessTapAudioCapture {
 
     // MARK: - Core Audio helpers
 
-    private func addListener(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector, reason: String) {
+    /// `changed` runs on the listener queue; it must not touch the capture's own state.
+    private func addListener(_ object: AudioObjectID, _ selector: AudioObjectPropertySelector, reason: String,
+                             changed: @escaping @Sendable () -> Bool) {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal,
                                                  mElement: kAudioObjectPropertyElementMain)
-        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in self?.onInterruption(reason) }
+        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            guard changed() else { return }
+            self?.onInterruption(reason)
+        }
         let status = AudioObjectAddPropertyListenerBlock(object, &address, listenerQueue, block)
         guard status == noErr else {
             OWELog.error(.audio, "Unable to watch for \(reason) (status \(status)); the process tap won't follow it.")
