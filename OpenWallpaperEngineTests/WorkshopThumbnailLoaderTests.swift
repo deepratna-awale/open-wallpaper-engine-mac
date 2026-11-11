@@ -1,4 +1,5 @@
 import AppKit
+import os
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -56,7 +57,60 @@ final class WorkshopThumbnailLoaderTests: XCTestCase {
         XCTAssertNil(loader.cachedImage(for: copies[0]))
     }
 
+    func testRequestsForOneURLShareADownload() async throws {
+        let png = try Data(contentsOf: file)
+        PreviewStubProtocol.state.withLock { $0 = .init(body: png) }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [PreviewStubProtocol.self]
+        let loader = WorkshopThumbnailLoader(session: URLSession(configuration: configuration), maxPixelSize: 256)
+        let url = try XCTUnwrap(URL(string: "https://previews.invalid/one.png"))
+
+        // The preload and four cards ask while the (slow) download is under way.
+        loader.preload([url])
+        let loaded = await withTaskGroup(of: Bool.self) { group -> Int in
+            for _ in 0..<4 { group.addTask { await loader.image(for: url) != nil } }
+            return await group.reduce(0) { $0 + ($1 ? 1 : 0) }
+        }
+        XCTAssertEqual(loaded, 4)
+        XCTAssertEqual(PreviewStubProtocol.state.withLock { $0.requests }, 1)
+
+        // In memory now: neither a card nor a preload downloads it again.
+        _ = await loader.image(for: url)
+        loader.preload([url])
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertEqual(PreviewStubProtocol.state.withLock { $0.requests }, 1)
+    }
+
     func testNonImageDataIsNil() {
         XCTAssertNil(WorkshopThumbnailLoader.downsample(Data("not an image".utf8), maxPixelSize: 64))
     }
+}
+
+/// Answers every request with one body after a short wait, and counts the requests.
+private final class PreviewStubProtocol: URLProtocol, @unchecked Sendable {
+    struct State {
+        var body = Data()
+        var requests = 0
+    }
+
+    static let state = OSAllocatedUnfairLock(initialState: State())
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        let body = Self.state.withLock { state -> Data in
+            state.requests += 1
+            return state.body
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) { [self] in
+            guard let url = request.url,
+                  let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil) else { return }
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: body)
+            client?.urlProtocolDidFinishLoading(self)
+        }
+    }
+
+    override func stopLoading() {}
 }
