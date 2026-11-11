@@ -28,6 +28,10 @@ final class ScreenSaverPlugin: ObservableObject {
     private let installer: ScreenSaverInstaller
     let settingsStore: ScreenSaverSettingsStore
     @Published private(set) var isEnabled = false
+    /// The plugin's setting once it has been applied (`update`), nil until then. What acts on the
+    /// setting outside the app (the broker's launch agent) follows this, not `isEnabled`, whose
+    /// `false` before the first `update` isn't the user's choice.
+    @Published private(set) var appliedSetting: Bool?
     /// The view model whose displays the plan follows (`observe(_:)`).
     private(set) weak var viewModel: WallpaperViewModel?
     private var observation: AnyCancellable?
@@ -79,6 +83,7 @@ final class ScreenSaverPlugin: ObservableObject {
     func update(enabled: Bool, wallpaper: WEWallpaper?) {
         let wasEnabled = isEnabled
         isEnabled = enabled
+        appliedSetting = enabled
         let store = store, installer = installer
         guard enabled else {
             if wasEnabled { Self.fileQueue.async { installer.uninstall(); store.removeAll() } }

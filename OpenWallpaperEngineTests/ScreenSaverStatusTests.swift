@@ -58,4 +58,19 @@ final class ScreenSaverStatusTests: XCTestCase {
         XCTAssertNil(plugin.status(for: wallpaper(type: "scene")), "off")
         XCTAssertNil(plugin.status(for: wallpaper(type: "video", file: "clip.mp4")), "off")
     }
+
+    /// The broker's launch agent follows the applied setting: a plugin that hasn't been told the
+    /// setting yet must not look turned off, or every launch would unregister the agent.
+    @MainActor
+    func testTheSettingIsUnknownUntilItIsApplied() {
+        let plugin = ScreenSaverPlugin(store: ScreenSaverVideoStore(directory: FileManager.default.temporaryDirectory
+            .appending(path: "owe-status-\(UUID().uuidString)")),
+                                       installer: ScreenSaverInstaller(bundledSaver: nil,
+                                                                       saversDirectory: URL(fileURLWithPath: "/tmp/owe-status-savers"),
+                                                                       mayInstall: false))
+        XCTAssertFalse(plugin.isEnabled)
+        XCTAssertNil(plugin.appliedSetting, "not the user's choice yet")
+        plugin.update(enabled: false, wallpaper: nil)
+        XCTAssertEqual(plugin.appliedSetting, false)
+    }
 }

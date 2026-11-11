@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Workshop previews are downloaded once.** Browsing the Workshop fetched most preview pictures two to six times (hundreds of megabytes in a couple of minutes): pages were preloaded into a cache too small to keep them, and each card then downloaded its picture again. Previews are now kept on disk, and a preload and its card share one download. ([#536](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/536))
 - **Desktop and lock-screen pictures are never larger than the display.** A picture rendered for a larger display (4K, say) was set as it was on a smaller one, and macOS stores every desktop picture uncompressed: four times the disk writes on a 1080p display. The picture is now drawn at the display's own size. ([#541](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/541))
 - **Launch at Login is left alone unless you change it.** Every launch registered or unregistered the login item again, whatever its state. The app now changes it only when it differs from the setting. ([#544](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/544))
+- **The live screen saver's helper is no longer restarted at every launch.** With the Screen Saver plugin on, each launch removed the helper from macOS's background items and added it again a second later, which left a moment when the screen saver couldn't reach the app and made the launch a little slower.
 
 ## [1.0.0-beta.15] - 2026-11-03
 

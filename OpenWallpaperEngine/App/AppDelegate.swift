@@ -326,7 +326,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             liveScreenSaver.launchedForScreenSaver()
         }
         liveScreenSaver.start()
-        screenSaverBrokerCancellable = screenSaver.$isEnabled.removeDuplicates().sink { [weak self] enabled in
+        // Only once the setting is known: the plugin's `false` before that would unregister the agent.
+        screenSaverBrokerCancellable = screenSaver.$appliedSetting.compactMap { $0 }.removeDuplicates().sink { [weak self] enabled in
             MainActor.assumeIsolated { self?.screenSaverBroker.update(enabled: enabled) }
         }
         // The frame service may have looked the broker up before its agent was there.
