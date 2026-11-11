@@ -104,6 +104,20 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertTrue(AppBundleLayout.appBundle === Bundle.main, "the app reads its own Info.plist")
     }
 
+    /// The placeholder for a missing wallpaper plays its dark video in Dark Mode; its folder, which
+    /// identifies it, is the same in both appearances, and no other video is replaced.
+    func testThePlaceholderPlaysItsDarkVideoInDarkMode() {
+        let placeholder = AppBundleLayout.wallpaperNotFoundURL
+        XCTAssertEqual(AppBundleLayout.playedVideo(for: placeholder, dark: false), placeholder)
+        XCTAssertEqual(AppBundleLayout.playedVideo(for: placeholder, dark: true), AppBundleLayout.wallpaperNotFoundDarkURL)
+        let other = URL(fileURLWithPath: "/wallpapers/123/video.mp4")
+        XCTAssertEqual(AppBundleLayout.playedVideo(for: other, dark: true), other)
+
+        let wallpaper = WallpaperViewModel.defaultWallpaper
+        XCTAssertEqual(wallpaper.wallpaperDirectory, placeholder)
+        XCTAssertEqual(wallpaper.mediaURL, AppBundleLayout.playedVideo(for: placeholder))
+    }
+
     /// Both apps are small executables running the OpenWallpaperEngine framework: the code and its
     /// own resources are in the framework, once; what is per app stays in each app's bundle.
     func testTheCodeAndItsResourcesAreInTheFramework() throws {
@@ -112,6 +126,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(framework.bundleURL.lastPathComponent, "OpenWallpaperEngine.framework")
         XCTAssertNotNil(framework.url(forResource: "default", withExtension: "metallib"), "the engine's Metal library")
         XCTAssertNotNil(framework.url(forResource: "WallpaperNotFound", withExtension: "mp4"))
+        XCTAssertNotNil(framework.url(forResource: "WallpaperNotFoundDark", withExtension: "mp4"))
         XCTAssertNotNil(framework.url(forResource: "nowPlayingAdapter", withExtension: "pl"))
         XCTAssertNil(Bundle.main.url(forResource: "default", withExtension: "metallib"), "no second Metal library in the app")
         // SwiftUI and `String(localized:)` read the strings and the asset catalog from the app's own bundle.

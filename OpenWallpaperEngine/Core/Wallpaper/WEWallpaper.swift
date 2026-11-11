@@ -36,12 +36,14 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     var previewURL: URL? { project.previewURL(in: settingsDirectory) }
 
     /// A remote wallpaper stores an absolute URL in `project.file`; everything else stores a path
-    /// relative to its folder.
+    /// relative to its folder. The placeholder for a missing wallpaper plays its dark version in
+    /// Dark Mode (`AppBundleLayout.playedVideo`).
     var mediaURL: URL {
         if let remote = URL(string: project.file), let scheme = remote.scheme?.lowercased(),
            scheme == "http" || scheme == "https" {
             return remote
         }
+        guard !project.file.isEmpty else { return AppBundleLayout.playedVideo(for: wallpaperDirectory) }
         return wallpaperDirectory.appending(path: project.file)
     }
 
