@@ -11,6 +11,10 @@ import os
 /// not an `NSCache`, which may drop entries whenever the system wants memory, so a card shown a
 /// moment ago could flash its placeholder and download again.
 ///
+/// A preview is downloaded once however many ask for it: loads of one URL share a download, and
+/// the session keeps the files on disk (`previewSession`), so a thumbnail dropped from memory, or
+/// a page preloaded before it is shown (`preload`), is decoded again without another download.
+///
 /// `@unchecked Sendable`: the cache is behind a lock, and nothing else is mutable.
 final class WorkshopThumbnailLoader: @unchecked Sendable {
     private struct Entry {
@@ -23,7 +27,20 @@ final class WorkshopThumbnailLoader: @unchecked Sendable {
         var entries: [URL: Entry] = [:]
         var totalCost = 0
         var clock: UInt64 = 0
+        /// The downloads under way, so a second request for a URL waits for the first.
+        var downloads: [URL: Task<Data?, Never>] = [:]
     }
+
+    /// Previews are around 1 MB each. `URLSession.shared`'s cache keeps no response over 5 % of its
+    /// small capacity, so through it every preview was downloaded again each time it was wanted.
+    /// This one holds them on disk (up to 25 MB each), in the app's caches folder.
+    static let previewSession: URLSession = {
+        let configuration = URLSessionConfiguration.default
+        configuration.urlCache = URLCache(
+            memoryCapacity: 8 * 1024 * 1024, diskCapacity: 512 * 1024 * 1024,
+            directory: AppStorageLocation.current.appCachesDirectory.appending(path: "WorkshopPreviews"))
+        return URLSession(configuration: configuration)
+    }()
 
     private let cache = OSAllocatedUnfairLock(initialState: Cache())
     private let session: URLSession
@@ -32,7 +49,7 @@ final class WorkshopThumbnailLoader: @unchecked Sendable {
     /// The longer side of a decoded thumbnail, in pixels: a card at its largest on a Retina display.
     let maxPixelSize: Int
 
-    init(session: URLSession = .shared, maxPixelSize: Int = 640, memoryLimit: Int = 96 * 1024 * 1024) {
+    init(session: URLSession = WorkshopThumbnailLoader.previewSession, maxPixelSize: Int = 640, memoryLimit: Int = 96 * 1024 * 1024) {
         self.session = session
         self.maxPixelSize = maxPixelSize
         self.memoryLimit = memoryLimit
@@ -52,9 +69,46 @@ final class WorkshopThumbnailLoader: @unchecked Sendable {
         }
     }
 
-    /// Empties the cache.
+    /// Empties the cache. Downloads under way still finish.
     func removeAll() {
-        cache.withLock { $0 = Cache() }
+        cache.withLock { cache in
+            cache.entries = [:]
+            cache.totalCost = 0
+        }
+    }
+
+    /// Downloads the previews not in memory, without decoding them: a page the user may turn to
+    /// next then shows from the session's disk cache. Decoding them here would push the shown
+    /// page's thumbnails out of memory.
+    func preload(_ urls: [URL]) {
+        for url in urls where !cache.withLock({ $0.entries[url] != nil }) {
+            _ = download(url)
+        }
+    }
+
+    /// The download of the file at `url`, started now unless one is already under way, which is
+    /// then shared. Its value is nil (logged) when the file can't be downloaded.
+    private func download(_ url: URL) -> Task<Data?, Never> {
+        cache.withLock { cache -> Task<Data?, Never> in
+            if let running = cache.downloads[url] { return running }
+            let task = Task.detached(priority: .utility) { [session, weak self] () -> Data? in
+                // Waits for the lock held here, so it runs after the task is registered.
+                defer { self?.cache.withLock { $0.downloads[url] = nil } }
+                do {
+                    let (data, response) = try await session.data(from: url)
+                    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+                        OWELog.debug(.workshop, "Workshop preview \(url.absoluteString) answered HTTP \(http.statusCode)")
+                        return nil
+                    }
+                    return data
+                } catch {
+                    OWELog.debug(.workshop, "Workshop preview \(url.absoluteString) didn't load: \(error.localizedDescription)")
+                    return nil
+                }
+            }
+            cache.downloads[url] = task
+            return task
+        }
     }
 
     /// Keeps `image`, dropping the least recently used thumbnails while the total is over the limit.
@@ -77,18 +131,9 @@ final class WorkshopThumbnailLoader: @unchecked Sendable {
     /// A load the card no longer needs still finishes into the cache.
     func image(for url: URL) async -> NSImage? {
         if let cached = cachedImage(for: url) { return cached }
-        let task = Task.detached(priority: .utility) { [session, maxPixelSize] () -> CGImage? in
-            do {
-                let (data, response) = try await session.data(from: url)
-                if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-                    OWELog.debug(.workshop, "Workshop preview \(url.absoluteString) answered HTTP \(http.statusCode)")
-                    return nil
-                }
-                return Self.downsample(data, maxPixelSize: maxPixelSize)
-            } catch {
-                OWELog.debug(.workshop, "Workshop preview \(url.absoluteString) didn't load: \(error.localizedDescription)")
-                return nil
-            }
+        guard let data = await download(url).value else { return nil }
+        let task = Task.detached(priority: .utility) { [maxPixelSize] in
+            Self.downsample(data, maxPixelSize: maxPixelSize)
         }
         guard let cgImage = await task.value else { return nil }
         let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
