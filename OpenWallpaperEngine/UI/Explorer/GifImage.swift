@@ -8,6 +8,7 @@
 import Cocoa
 import SwiftUI
 import ImageIO
+import UniformTypeIdentifiers
 
 struct GifImage: NSViewRepresentable {
     // NSCache is thread-safe; the reference itself never changes. Filled off the main thread.
@@ -70,7 +71,7 @@ struct GifImage: NSViewRepresentable {
     /// decodes its frames itself (`PreviewFrameSequence`).
     private func loadImage(into nsView: PreviewImageView, coordinator: Coordinator) {
         let url = gifUrl ?? gifName.flatMap { AppBundleLayout.framework.url(forResource: $0, withExtension: "gif") }
-        guard let url else { return }
+        guard let url, Self.isPicture(url) else { return }
         nsView.animationURL = url
         let key = Self.stillKey(url)
         guard coordinator.loadedKey != key else { return }
@@ -97,11 +98,19 @@ struct GifImage: NSViewRepresentable {
     /// The downsampled still a tile shows for `url`: the one already loaded, else read now and
     /// kept for the tiles. For a few pictures at once, such as a drag's image.
     static func still(at url: URL) -> CGImage? {
+        guard isPicture(url) else { return nil }
         let key = Self.stillKey(url)
         if let cached = imageCache.object(forKey: key as NSString) { return cached.image }
         guard let image = downsampledImage(at: url, maxPixelSize: 512) else { return nil }
         imageCache.setObject(StillImage(image: image), forKey: key as NSString)
         return image
+    }
+
+    /// False for a video or sound file, which ImageIO can't open: a wallpaper without a preview
+    /// passes the placeholder video (`AppBundleLayout.wallpaperNotFoundURL`) and shows the empty tile.
+    nonisolated static func isPicture(_ url: URL) -> Bool {
+        guard let type = UTType(filenameExtension: url.pathExtension) else { return true }
+        return !type.conforms(to: .audiovisualContent)
     }
 
     /// The cache key of `url`'s still: its path and modification date, so a preview the Wallpaper

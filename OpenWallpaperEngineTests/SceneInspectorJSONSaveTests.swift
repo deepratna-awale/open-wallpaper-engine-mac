@@ -35,9 +35,18 @@ final class SceneInspectorJSONSaveTests: XCTestCase {
         XCTAssertNil(OWELog.attempt(.ui, "test") { () throws -> Int in throw Failure() })
     }
 
+    func testThePlaceholderVideoIsNotReadAsAPicture() {
+        XCTAssertFalse(GifImage.isPicture(AppBundleLayout.wallpaperNotFoundURL))
+        XCTAssertTrue(GifImage.isPicture(URL(fileURLWithPath: "/previews/preview.gif")))
+        XCTAssertTrue(GifImage.isPicture(URL(fileURLWithPath: "/previews/preview")))
+    }
+
     func testOnlyANoSuchFileErrorCountsAsMissing() {
         let missing = URL(fileURLWithPath: "/nonexistent-\(UUID().uuidString)/file.pkg")
         XCTAssertThrowsError(try Data(contentsOf: missing)) { XCTAssertTrue(OWELog.isMissingFile($0)) }
+        // A file "inside" a file, as project.json inside the placeholder video is.
+        let inFile = AppBundleLayout.wallpaperNotFoundURL.appending(path: "project.json")
+        XCTAssertThrowsError(try Data(contentsOf: inFile)) { XCTAssertTrue(OWELog.isMissingFile($0)) }
         XCTAssertThrowsError(try PKGParser(url: missing)) { XCTAssertTrue(OWELog.isMissingFile($0)) }
         XCTAssertThrowsError(try PKGParser(data: Data("nope".utf8))) { XCTAssertFalse(OWELog.isMissingFile($0)) }
     }
