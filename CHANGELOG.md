@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Report a Problem.** After the app crashes, hangs and is force-quit, or the Mac loses power, the next launch offers a report. It holds the app's log from just before it ended, the crash report macOS saved, the wallpapers that were showing and your Mac's model and macOS version, with your user name, your Mac's name and your home folder taken out. You read it first; **Report on GitHub…** saves it, shows it in Finder and opens a filled-in bug report to drag it into. Nothing is sent by the app. **Help › Report a Problem…** and Settings › Diagnostics make one any time.
 
+### Fixed
+
+- **Desktop and lock-screen pictures are never larger than the display.** A picture rendered for a larger display (4K, say) was set as it was on a smaller one, and macOS stores every desktop picture uncompressed: four times the disk writes on a 1080p display. The picture is now drawn at the display's own size. ([#541](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/541))
+
 ## [1.0.0-beta.15] - 2026-11-03
 
 ### Changed
