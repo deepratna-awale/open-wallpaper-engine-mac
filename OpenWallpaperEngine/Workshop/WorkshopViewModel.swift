@@ -483,10 +483,8 @@ class WorkshopViewModel: ObservableObject {
         Task { await steamLists.loadVotes(for: items.map(\.id)) }
     }
 
+    /// Through the thumbnail loader, so a preloaded preview is the download its card then uses.
     private func preloadThumbnails(_ items: [WorkshopItem]) {
-        for item in items {
-            guard let url = item.previewImageURL else { continue }
-            URLSession.shared.dataTask(with: url).resume()
-        }
+        thumbnails.preload(items.compactMap(\.previewImageURL))
     }
 }
