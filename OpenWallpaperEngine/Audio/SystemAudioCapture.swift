@@ -222,7 +222,9 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unc
     private func restartSystemAudioCapture(reason: String) {
         guard isRecordingEnabled, demand.isDemanded, permissionGate.canCapture() else { return }
         OWELog.info(.audio, "Restarting system audio capture: \(reason).")
-        restartScheduler.requestRestart()
+        guard let delay = restartScheduler.requestRestart() else { return }
+        // An error, so it shows at the default log level: every rebuild stalls coreaudiod.
+        OWELog.error(.audio, "System audio capture was restarted \(restartScheduler.rapidRestarts) times in a row within seconds of starting (now because \(reason)); the next restart waits \(Int(delay)) s.")
     }
 
     /// Without this, visuals stay frozen on the last buffer that arrived before capture stopped.
