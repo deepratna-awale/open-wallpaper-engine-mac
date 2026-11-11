@@ -109,8 +109,12 @@ final class ScenePreviewPlaceholder {
 
     /// The wallpaper's preview, downsampled to `maxPixels` on its longer side (a GIF's first frame).
     nonisolated static func previewImage(in directory: URL, maxPixels: Int) -> CGImage? {
+        // Only names that exist: ImageIO logs an error for each file it can't open, and most
+        // wallpapers have one of the names (the placeholder video, used as a folder, has none).
         for name in previewNames {
-            if let image = image(at: directory.appending(path: name), maxPixels: maxPixels) { return image }
+            let url = directory.appending(path: name)
+            guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else { continue }
+            if let image = image(at: url, maxPixels: maxPixels) { return image }
         }
         return nil
     }

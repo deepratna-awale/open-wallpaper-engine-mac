@@ -345,6 +345,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
         outputDeviceMonitor.start()
 
+        // The Wallpaper Not Found placeholder has a light and a dark video: a display showing it
+        // reloads when macOS changes appearance.
+        DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.systemAppearanceDidChange() }
+        }
+
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
         problemReporter.previousWallpapers = safeRestart.uncleanExitSuspects.map { ProblemReport.Wallpaper($0.wallpaper) }

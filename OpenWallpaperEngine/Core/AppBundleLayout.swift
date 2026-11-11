@@ -77,4 +77,25 @@ enum AppBundleLayout {
         // The framework always ships it (`Resources/WallpaperNotFound.mp4`).
         framework.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
     }
+
+    /// The same video darkened, shown instead while macOS is in Dark Mode.
+    static var wallpaperNotFoundDarkURL: URL {
+        // The framework always ships it (`Resources/WallpaperNotFoundDark.mp4`).
+        framework.url(forResource: "WallpaperNotFoundDark", withExtension: "mp4")!
+    }
+
+    /// Whether macOS is in Dark Mode now. The desktop belongs to the system, so the placeholder
+    /// follows the system's appearance, not the app's own Appearance setting. The global domain's
+    /// `AppleInterfaceStyle` is "Dark" in Dark Mode (Auto included) and absent otherwise.
+    static var systemIsDark: Bool {
+        UserDefaults.app.string(forKey: "AppleInterfaceStyle")?.caseInsensitiveCompare("Dark") == .orderedSame
+    }
+
+    /// The file that plays for `media` when `media` is the placeholder video: the dark one in Dark
+    /// Mode. Any other file is itself. The placeholder wallpaper keeps one folder and identity in
+    /// both appearances; only what plays differs.
+    static func playedVideo(for media: URL, dark: Bool = systemIsDark) -> URL {
+        guard dark, media.standardizedFileURL == wallpaperNotFoundURL.standardizedFileURL else { return media }
+        return wallpaperNotFoundDarkURL
+    }
 }

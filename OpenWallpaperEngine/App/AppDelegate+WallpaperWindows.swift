@@ -90,6 +90,16 @@ extension AppDelegate {
         orderWallpaperWindowsFront()
     }
 
+    /// macOS went into or out of Dark Mode: displays showing the Wallpaper Not Found placeholder
+    /// load its other video (`AppBundleLayout.playedVideo`). Nothing reloads while every display
+    /// shows a wallpaper.
+    func systemAppearanceDidChange() {
+        let placeholder = WallpaperViewModel.defaultWallpaper.wallpaperDirectory
+        guard wallpaperWindows.keys.contains(where: { wallpaperViewModel.wallpaper(for: $0).wallpaperDirectory == placeholder })
+        else { return }
+        rebuildWallpaperWindows()
+    }
+
     /// Closes wallpaper windows and drops their content, so every wallpaper view goes and with it
     /// its hold on the running instance (`WallpaperInstanceRegistry`), page or player.
     static func closeWallpaperWindows(_ windows: [String: NSWindow]) {
