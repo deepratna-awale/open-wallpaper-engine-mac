@@ -178,13 +178,32 @@ class GlobalSettingsViewModel: ObservableObject {
         self.validate()
     }
     
+    /// What to do with the app's login item so that it matches the Launch at Login setting.
+    enum LoginItemChange: Equatable {
+        case register, unregister
+    }
+
+    /// The change that makes the login item match `wanted`; nil when it already does. The setting
+    /// is published at every launch, and registering or unregistering each time is a call to
+    /// macOS's background task service for nothing. An isolated copy never changes it: the login
+    /// item belongs to the bundle identifier, which it shares with the user's own app, so its own
+    /// (off) setting would turn the real app's login item off.
+    nonisolated static func loginItemChange(wanted: Bool, status: SMAppService.Status, isIsolated: Bool) -> LoginItemChange? {
+        guard !isIsolated else { return nil }
+        // Waiting for the user's approval in Login Items counts as registered.
+        let registered = status == .enabled || status == .requiresApproval
+        guard wanted != registered else { return nil }
+        return wanted ? .register : .unregister
+    }
+
     func didAddToLoginItem(_ added: Bool) {
         let appService = SMAppService.mainApp
+        guard let change = Self.loginItemChange(wanted: added, status: appService.status,
+                                                isIsolated: AppStorageLocation.current.isIsolated) else { return }
         do {
-            if added {
-                try appService.register()
-            } else {
-                try appService.unregister()
+            switch change {
+            case .register: try appService.register()
+            case .unregister: try appService.unregister()
             }
         } catch {
             OWELog.error(.settings, "Launch-at-login update failed: \(error)")
