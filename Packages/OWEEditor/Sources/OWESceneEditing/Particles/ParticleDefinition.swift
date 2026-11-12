@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A particle system's JSON (`particles/….json`) as the particle editor changes it: the root's
 /// fields, and the lists of emitters, initializers, operators, renderers, children and control
@@ -181,7 +182,7 @@ public struct ParticleDefinition: Hashable, Sendable {
     /// Sets the field in `item`; nil removes the key (a flag: clears its bit).
     public static func set(_ value: SceneJSONValue?, for field: ParticleEditorSchema.Field, in item: inout Item) {
         if let bit = field.bit {
-            var flags = Int(item[field.key]?.doubleValue ?? 0)
+            var flags = Int(saturating: item[field.key]?.doubleValue ?? 0)
             if value?.boolValue == true { flags |= bit } else { flags &= ~bit }
             item[field.key] = .number(Double(flags))
             return

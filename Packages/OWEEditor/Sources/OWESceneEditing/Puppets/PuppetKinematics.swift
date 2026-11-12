@@ -1,5 +1,6 @@
 import Foundation
 import simd
+import WEFormat
 
 /// A bone's kinematic chain as Wallpaper Engine's Puppet Warp editor offers it (Edit Constraints ›
 /// Physics › Simulation mode "Kinematic chain"; docs/models-plan.md §2.14, §2.16): the bone is the
@@ -133,7 +134,7 @@ public struct PuppetBoneIK: Codable, Hashable, Sendable {
         guard bool("ik") == true else { return nil }
         self.init()
         behavior = rope ? .rope : .inverseKinematics
-        if let value = number("ikd") { limbDepth = max(Int(value), 1) }
+        if let value = number("ikd") { limbDepth = max(Int(saturating: value), 1) }
         orientationController = bool("ikg") ?? orientationController
         rotateWhenOverstretched = bool("ikr") ?? rotateWhenOverstretched
         if let value = number("ikrd") { fullRotationDistance = value }

@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// WE's particle editor as `wallpaperui.exe` builds it (docs/we-particle-editor-schema.json): every
 /// component the editor offers (emitters, initializers, operators, renderers, a child, a control
@@ -319,7 +320,7 @@ public indirect enum ParticleFieldCondition: Hashable, Sendable {
         case .not(let inner):
             return !inner.evaluate(values)
         case .flag(let bit):
-            let flags = Int(values["flags"]?.doubleValue ?? 0)
+            let flags = Int(saturating: values["flags"]?.doubleValue ?? 0)
             return flags & bit != 0
         case .equals(let key, let expected):
             guard let value = values[key] else { return false }
