@@ -1,7 +1,7 @@
 /// Float-to-integer conversion for values read from wallpaper files. `Int(_:)` on a floating-point
 /// value stops the process when the value is NaN, infinite or outside `Int`'s range; this never
 /// does. It truncates toward zero like `Int(_:)`, so callers round first as before.
-extension Int {
+public extension Int {
     /// `value` truncated toward zero and clamped to `range`: NaN becomes 0 (clamped to `range`),
     /// infinities and out-of-range values become the nearest bound.
     init<Source: BinaryFloatingPoint>(saturating value: Source, in range: ClosedRange<Int> = Int.min...Int.max) {
