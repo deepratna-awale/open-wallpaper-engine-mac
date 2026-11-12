@@ -640,6 +640,15 @@ static int CEF_CALLBACK resource_skip(cef_resource_handler_t *self, int64_t byte
     owe_cef_resource_request *request = (owe_cef_resource_request *)self;
     pthread_mutex_lock(&request->lock);
     uint64_t skip = bytes_to_skip > 0 ? (uint64_t)bytes_to_skip : 0;
+    if (request->status == 206) {
+        // CEF skips to a Range's first byte before reading (`stream_reader_url_loader.cc`), but
+        // the app already answered with just that range (`WebWallpaperSchemeHandler`): its body
+        // starts there. Moving again would read past the range, and a media pipeline that reads
+        // near the end (an Ogg's duration, a seek) would get nothing.
+        pthread_mutex_unlock(&request->lock);
+        *bytes_skipped = (int64_t)skip;
+        return 1;
+    }
     if (request->fd >= 0) {
         skip = MIN(skip, request->fileRemaining);
         request->fileOffset += skip;

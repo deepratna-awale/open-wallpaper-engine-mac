@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Chromium web wallpapers play their sound.** Audio and video that the page read in parts (an Ogg file finding its length, or any seek) got the wrong bytes, so the music of wallpapers such as 829261773 never started on the Chromium engine. ([#553](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/553))
+
 ## [1.0.0-beta.16] - 2026-11-11
 
 ### Added
