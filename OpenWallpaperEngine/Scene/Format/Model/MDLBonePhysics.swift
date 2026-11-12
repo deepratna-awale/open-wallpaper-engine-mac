@@ -139,7 +139,7 @@ struct MDLBonePhysics: Equatable {
             // The IK path keeps the friction as (tf / 100)², clamped to 0…1 (0x140266195).
             translationFriction = min(max((translationFriction / 100) * (translationFriction / 100), 0), 1)
             // 0x1402661cf…: `ikd` (an integer), `ikg`, `ikr`, `ikrd`, `ikse`, `ikfe`.
-            if let value = number("ikd") { ikDepth = max(Int(value), 1) }
+            if let value = number("ikd") { ikDepth = max(Int(saturating: value), 1) }
             for (flag, key) in [(Flags.ikGravityController, "ikg"), (.ikEndRotation, "ikr")] { set(flag, key) }
             if let value = number("ikrd") { ikRotationDistance = value > 1 ? value : 1 }
             for (flag, key) in [(Flags.ikStretch, "ikse"), (.ikFreeEndpoint, "ikfe")] { set(flag, key) }

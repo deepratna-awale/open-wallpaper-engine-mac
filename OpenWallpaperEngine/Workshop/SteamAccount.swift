@@ -130,7 +130,7 @@ final class SteamAccount: ObservableObject {
                 try store.save(login)
                 await adopt(login)
                 status = .signedIn(accountName: login.accountName)
-                OWELog.info(.workshop, "Signed in to Steam as \(login.accountName)")
+                OWELog.info(.workshop, "Signed in to Steam")
                 try await client.ensureLoggedOn()
                 await checkOwnership()
             } catch let error as SteamHelperError where error.code == .cancelled {

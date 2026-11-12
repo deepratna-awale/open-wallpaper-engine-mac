@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A material file's first pass (`passes[0]`), as the editors change it: the shader, its combos,
 /// textures by slot and constants, every other key kept as it was. The Model Editor's Advanced
@@ -48,7 +49,7 @@ public struct MaterialPassDocument: Hashable, Sendable {
     }
 
     public func combo(_ name: String, default fallback: Int) -> Int {
-        if case .object(let combos)? = pass["combos"], let value = combos[name]?.doubleValue { return Int(value) }
+        if case .object(let combos)? = pass["combos"], let value = combos[name]?.doubleValue { return Int(saturating: value) }
         return fallback
     }
 

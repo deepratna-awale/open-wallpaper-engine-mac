@@ -640,6 +640,15 @@ static int CEF_CALLBACK resource_skip(cef_resource_handler_t *self, int64_t byte
     owe_cef_resource_request *request = (owe_cef_resource_request *)self;
     pthread_mutex_lock(&request->lock);
     uint64_t skip = bytes_to_skip > 0 ? (uint64_t)bytes_to_skip : 0;
+    if (request->status == 206) {
+        // CEF skips to a Range's first byte before reading (`stream_reader_url_loader.cc`), but
+        // the app already answered with just that range (`WebWallpaperSchemeHandler`): its body
+        // starts there. Moving again would read past the range, and a media pipeline that reads
+        // near the end (an Ogg's duration, a seek) would get nothing.
+        pthread_mutex_unlock(&request->lock);
+        *bytes_skipped = (int64_t)skip;
+        return 1;
+    }
     if (request->fd >= 0) {
         skip = MIN(skip, request->fileRemaining);
         request->fileOffset += skip;
@@ -955,6 +964,27 @@ static cef_resource_request_handler_t *CEF_CALLBACK request_get_resource_request
     return &browser->resourceRequest;
 }
 
+/// Wallpaper Engine keeps a web wallpaper self-contained: its main frame only loads the
+/// wallpaper's own files, the remote embed page and `about:blank`, as `WebNavigationPolicy` does
+/// for WebKit. Frames inside the page (a YouTube or Vimeo player) load as before. Browser 0 is the
+/// phase-1 page the frame-capture command opens at any URL, so it is left alone.
+static int CEF_CALLBACK request_on_before_browse(cef_request_handler_t *self, cef_browser_t *cefBrowser,
+                                                 cef_frame_t *frame, cef_request_t *request, int user_gesture,
+                                                 int is_redirect) {
+    (void)user_gesture; (void)is_redirect;
+    owe_browser *browser = OWE_BROWSER(self, request);
+    BOOL mainFrame = frame && frame->is_main(frame);
+    NSString *url = take_string(request->get_url(request));
+    BOOL allowed = browser->id == 0 || !mainFrame
+        || [url hasPrefix:[NSString stringWithFormat:@"%slocal/", kWallpaperSchemePrefix]]
+        || [url isEqualToString:@(kEmbedPageURL)] || [url isEqualToString:@"about:blank"];
+    if (!allowed) os_log(OS_LOG_DEFAULT, "owe-chromium-helper: web wallpaper navigation to %{public}@ refused", url);
+    OWE_RELEASE(request);
+    OWE_RELEASE(frame);
+    OWE_RELEASE(cefBrowser);
+    return allowed ? 0 : 1;
+}
+
 static void CEF_CALLBACK request_on_render_process_terminated(cef_request_handler_t *self, cef_browser_t *cefBrowser,
                                                               cef_termination_status_t status, int error_code,
                                                               const cef_string_t *error_string) {
@@ -1001,6 +1031,7 @@ static owe_browser *make_browser(int browserId, int width, int height, double sc
     browser->load.on_load_error = load_on_load_error;
     browser_request_init_base(&browser->request.base, sizeof browser->request);
     browser->request.get_resource_request_handler = request_get_resource_request_handler;
+    browser->request.on_before_browse = request_on_before_browse;
     browser->request.on_render_process_terminated = request_on_render_process_terminated;
     browser_resourceRequest_init_base(&browser->resourceRequest.base, sizeof browser->resourceRequest);
     browser->resourceRequest.get_resource_handler = resource_request_get_resource_handler;

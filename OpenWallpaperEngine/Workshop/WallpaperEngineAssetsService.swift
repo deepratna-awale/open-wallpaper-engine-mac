@@ -423,7 +423,7 @@ private struct InstallJob {
                 onProgress(WallpaperEngineAssetsDownload.Progress(fraction: fraction))
             }
         }
-        OWELog.info(.workshop, "Steam helper assets download exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output, secrets: [login.refreshToken]))")
+        OWELog.info(.workshop, "Steam helper assets download exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output, secrets: [login.refreshToken, login.accountName]))")
         if cancellation.isCancelled { throw CancellationError() }
         let present = WallpaperEngineAssets.isAssetTree(download.appending(path: "assets"))
         switch SteamHelperDownload.outcome(output: run.output, exitCode: run.exitCode, downloaded: present) {

@@ -430,6 +430,10 @@ final class MCPLibraryRouterTests: XCTestCase {
         XCTAssertEqual(badChoice?.code, .invalidParams)
         let badBool = await error("settings_set", ["key": "reflections", "value": "maybe"])
         XCTAssertEqual(badBool?.code, .invalidParams)
+        let huge = await error("settings_set", ["key": "fps", "value": 1e20])
+        XCTAssertEqual(huge?.code, .invalidParams)
+        let hugeChoice = await error("settings_set", ["key": "shadows", "value": -1e300])
+        XCTAssertEqual(hugeChoice?.code, .invalidParams)
         XCTAssertEqual(service.setCalls.count, 4, "nothing is set when the value doesn't fit")
     }
 

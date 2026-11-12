@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import OWEInspectorKit
 import OWESceneEditing
+import WEFormat
 
 /// The contextual inspector: the selected layer's transform, appearance and effects, or, with no
 /// selection, the scene and its user properties. Controls are Scene Edit / Export's own
@@ -203,7 +204,7 @@ private struct LayerForm: View {
                                title: L("Brightness"), range: 0...2, fallback: 1)
                 fieldRow("colorBlendMode", title: services.blendModeTitle) {
                     InspectorOptionPicker(options: services.blendModes, selection: Binding(
-                        get: { Int(session.number("colorBlendMode", of: layer.id, default: 0)) },
+                        get: { Int(saturating: session.number("colorBlendMode", of: layer.id, default: 0)) },
                         set: { session.setValue(.number(Double($0)), for: "colorBlendMode", of: layer.id,
                                                 actionName: L("Change Blend Mode")) })) {
                         EmptyView()

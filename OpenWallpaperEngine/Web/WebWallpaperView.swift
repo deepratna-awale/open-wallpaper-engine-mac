@@ -80,7 +80,7 @@ struct WebWallpaperView: NSViewRepresentable {
         switch pageLoad(pageFile: viewModel.fileUrl, relativePath: wallpaper.project.file) {
         case .remoteEmbed(let html):
             viewModel.schemeHandler.directory = nil
-            webView.loadHTMLString(html, baseURL: URL(string: "https://localhost"))
+            webView.loadHTMLString(html, baseURL: WebNavigationPolicy.embedPageURL)
         case .scheme(let url):
             let patches = viewModel.compatPatches
             if patches != nil {

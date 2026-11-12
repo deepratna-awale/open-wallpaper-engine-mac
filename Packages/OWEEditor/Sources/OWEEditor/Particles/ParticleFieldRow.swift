@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import OWEInspectorKit
 import OWESceneEditing
+import WEFormat
 
 /// One field of a particle component with the control WE's panel gives its type: a free number
 /// box, a slider with a number box (its range from the schema, a typed value never clamped, as in
@@ -117,7 +118,7 @@ struct ParticleNumberField: View {
     /// Up to four decimals, without trailing zeros.
     static func format(_ value: Double, isInteger: Bool) -> String {
         guard value.isFinite else { return "0" }
-        if isInteger || value.rounded() == value { return String(Int(value.rounded())) }
+        if isInteger || value.rounded() == value { return String(Int(saturating: value.rounded())) }
         var text = String(format: "%.4f", value)
         while text.hasSuffix("0") { text.removeLast() }
         if text.hasSuffix(".") { text.removeLast() }

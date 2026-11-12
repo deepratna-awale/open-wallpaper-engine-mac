@@ -1,5 +1,6 @@
 import SwiftUI
 import OWESceneEditing
+import WEFormat
 
 /// The properties panel as the user will see it, live: the properties in order, each with its
 /// control, shown only while its condition holds, a group's properties folded under its label
@@ -112,6 +113,6 @@ struct UserPropertiesPreview: View {
     }
 
     static func formatted(_ number: Double, _ property: UserPropertyDraft) -> String {
-        property.fraction == false ? String(Int(number.rounded())) : String(format: "%.\(property.decimals)f", number)
+        property.fraction == false ? String(Int(saturating: number.rounded())) : String(format: "%.\(property.decimals)f", number)
     }
 }
