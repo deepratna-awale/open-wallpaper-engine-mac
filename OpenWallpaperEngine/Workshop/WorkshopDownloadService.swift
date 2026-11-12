@@ -357,7 +357,7 @@ class WorkshopDownloadService: ObservableObject {
         let run = helperDownloads.run(arguments: SteamHelperDownload.workshopArguments(workshopId: workshopId, directory: item,
                                                                                         validate: validate),
                                       login: login, cancellation: ProcessCancellation(), onOutput: onOutput)
-        OWELog.info(.workshop, "Steam helper download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output, secrets: [login.refreshToken]))")
+        OWELog.info(.workshop, "Steam helper download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output, secrets: [login.refreshToken, login.accountName]))")
         SteamHelperDownload.removeBookkeeping(in: item)
         let outcome = SteamHelperDownload.outcome(output: run.output, exitCode: run.exitCode,
                                                   downloaded: SteamHelperDownload.hasFiles(in: item))
