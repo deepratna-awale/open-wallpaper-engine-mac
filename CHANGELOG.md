@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The live screen saver's helper updates with the app.** After an update, the helper kept running the previous version until you logged out. It now restarts from the updated app the next time the app or the screen saver connects to it. ([#552](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/552))
+
 ## [1.0.0-beta.16] - 2026-11-11
 
 ### Added
