@@ -25,10 +25,14 @@ final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked
     private let brokerRetryBase: TimeInterval
     /// `invalidate` was called: nothing connects again.
     private var stopped = false
-    /// Peers must be signed by this requirement; nil accepts any (an unsigned build).
-    private let peerRequirement: String?
+    /// Peers must be signed by the requirement this returns; nil accepts any (an unsigned build).
+    /// Asked on the XPC queue when a peer connects, not in `init`: the default reads this app's
+    /// signature (`ownTeamRequirement`), a dozen Security calls that don't belong on the main
+    /// thread at launch, where the service is made.
+    private let peerRequirement: @Sendable () -> String?
 
-    init(peerRequirement: String? = ScreenSaverFrameService.ownTeamRequirement, brokerRetryBase: TimeInterval = 0.5) {
+    init(peerRequirement: @escaping @Sendable () -> String? = { ScreenSaverFrameService.ownTeamRequirement },
+         brokerRetryBase: TimeInterval = 0.5) {
         self.peerRequirement = peerRequirement
         self.brokerRetryBase = brokerRetryBase
         super.init()
@@ -166,7 +170,7 @@ final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked
     // MARK: Connections
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-        if let peerRequirement { connection.setCodeSigningRequirement(peerRequirement) }
+        if let requirement = peerRequirement() { connection.setCodeSigningRequirement(requirement) }
         let client = Client(connection: connection, service: self)
         connection.exportedInterface = LiveSaverFramesMessage.serviceInterface()
         connection.exportedObject = client
@@ -197,7 +201,8 @@ final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked
         }
     }
 
-    /// Peers signed by this app's team; nil for an unsigned or ad-hoc build.
+    /// Peers signed by this app's team; nil for an unsigned or ad-hoc build. Lazy, so it's read
+    /// once, on the first connection's queue.
     static let ownTeamRequirement: String? = {
         var code: SecCode?
         guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return nil }
