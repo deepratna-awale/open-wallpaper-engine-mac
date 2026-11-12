@@ -489,7 +489,12 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void) {
-        // Allow navigation to external URLs (e.g. YouTube embeds from URL-based web wallpapers)
+        let isMainFrame = navigationAction.targetFrame?.isMainFrame ?? true
+        guard WebNavigationPolicy.allows(navigationAction.request.url, isMainFrame: isMainFrame) else {
+            OWELog.info(.web, "Web wallpaper navigation to \(navigationAction.request.url?.absoluteString ?? "?") refused")
+            decisionHandler(.cancel)
+            return
+        }
         decisionHandler(.allow)
     }
 

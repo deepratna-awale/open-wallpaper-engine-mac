@@ -897,6 +897,27 @@ static cef_resource_request_handler_t *CEF_CALLBACK request_get_resource_request
     return ours ? &browser->resourceRequest : NULL;
 }
 
+/// Wallpaper Engine keeps a web wallpaper self-contained: its main frame only loads the
+/// wallpaper's own files, the remote embed page and `about:blank`, as `WebNavigationPolicy` does
+/// for WebKit. Frames inside the page (a YouTube or Vimeo player) load as before. Browser 0 is the
+/// phase-1 page the frame-capture command opens at any URL, so it is left alone.
+static int CEF_CALLBACK request_on_before_browse(cef_request_handler_t *self, cef_browser_t *cefBrowser,
+                                                 cef_frame_t *frame, cef_request_t *request, int user_gesture,
+                                                 int is_redirect) {
+    (void)user_gesture; (void)is_redirect;
+    owe_browser *browser = OWE_BROWSER(self, request);
+    BOOL mainFrame = frame && frame->is_main(frame);
+    NSString *url = take_string(request->get_url(request));
+    BOOL allowed = browser->id == 0 || !mainFrame
+        || [url hasPrefix:[NSString stringWithFormat:@"%slocal/", kWallpaperSchemePrefix]]
+        || [url isEqualToString:@(kEmbedPageURL)] || [url isEqualToString:@"about:blank"];
+    if (!allowed) os_log(OS_LOG_DEFAULT, "owe-chromium-helper: web wallpaper navigation to %{public}@ refused", url);
+    OWE_RELEASE(request);
+    OWE_RELEASE(frame);
+    OWE_RELEASE(cefBrowser);
+    return allowed ? 0 : 1;
+}
+
 static void CEF_CALLBACK request_on_render_process_terminated(cef_request_handler_t *self, cef_browser_t *cefBrowser,
                                                               cef_termination_status_t status, int error_code,
                                                               const cef_string_t *error_string) {
@@ -942,6 +963,7 @@ static owe_browser *make_browser(int browserId, int width, int height, double sc
     browser->load.on_load_error = load_on_load_error;
     init_base(&browser->request.base, sizeof browser->request);
     browser->request.get_resource_request_handler = request_get_resource_request_handler;
+    browser->request.on_before_browse = request_on_before_browse;
     browser->request.on_render_process_terminated = request_on_render_process_terminated;
     init_base(&browser->resourceRequest.base, sizeof browser->resourceRequest);
     browser->resourceRequest.get_resource_handler = resource_request_get_resource_handler;
