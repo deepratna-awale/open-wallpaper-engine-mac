@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The live screen saver's helper updates with the app.** After an update, the helper kept running the previous version until you logged out. It now restarts from the updated app the next time the app or the screen saver connects to it. ([#552](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/552))
 - **System audio capture stays up.** Audio-reactive wallpapers lost their input every couple of seconds while the capture restarted itself for an output device that hadn't gone anywhere. ([#556](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/556))
 - **The Chromium engine no longer crashes after a web wallpaper closes.** Its helper could crash a moment after a page closed and had to start again. ([#560](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/560))
+- **A Steam sign-in that stopped working asks you to log in again.** Steam had stopped taking the saved sign-in, so Favourites and the ownership check failed on every launch with nothing to say why. ([#561](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/561))
 
 ## [1.0.0-beta.16] - 2026-11-11
 
