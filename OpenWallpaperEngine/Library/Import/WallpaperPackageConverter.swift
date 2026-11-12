@@ -312,11 +312,14 @@ enum WallpaperPackageConverter {
         }
     }
 
-    private static func primarySceneFile(in wallpaperDirectory: URL) -> String? {
+    /// The scene file project.json names; nil when it names none or not a scene. A Workshop preset
+    /// item has no `file` (it sets another item's properties, `dependency`), so that's not an
+    /// error: only a project.json that can't be read or parsed is logged.
+    static func primarySceneFile(in wallpaperDirectory: URL) -> String? {
         guard let project = OWELog.attempt(.importer, "Convert: project.json of \(wallpaperDirectory.lastPathComponent)", {
-            try WEProject.read(in: wallpaperDirectory)
-        }) else { return nil }
-        return project.file.lowercased().hasSuffix(".json") ? project.file : nil
+            try WEProject.json(in: wallpaperDirectory)
+        }) ?? nil, let file = project["file"] as? String else { return nil }
+        return file.lowercased().hasSuffix(".json") ? file : nil
     }
 
     /// PKG entries are authored on Windows and are untrusted input, so reject anything absolute or

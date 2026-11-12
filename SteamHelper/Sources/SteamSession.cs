@@ -253,8 +253,10 @@ namespace OWESteamHelper
                 case EResult.OK:
                     isLoggedOn = true;
                     return client.SteamID?.ConvertToUInt64() ?? 0;
+                // InvalidParam: a saved sign-in Steam no longer takes for a client logon. Seen on every
+                // launch until the user signed in again, which fixed it.
                 case EResult.AccessDenied or EResult.Revoked or EResult.Expired or EResult.InvalidSignature
-                    or EResult.InvalidPassword:
+                    or EResult.InvalidPassword or EResult.InvalidParam:
                     login = null;
                     rejection = new HelperException(ErrorCode.TokenRejected, $"Steam refused the saved sign-in ({result}).", (int)result);
                     throw rejection;

@@ -186,6 +186,7 @@
 		EE5000000000000000000010 /* Exceptions for "OpenWallpaperEngineSaver" folder in "OpenWallpaperEngineSaver" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				LiveSaverBrokerExecutable.swift,
 				LiveSaverXPC.swift,
 			);
 			target = EE5000000000000000000001 /* OpenWallpaperEngineSaver */;
@@ -194,6 +195,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				GlobalSurfaceFrameSource.swift,
+				LiveSaverBrokerExecutable.swift,
 				OWESaverView.swift,
 			);
 			target = EE7000000000000000000001 /* OpenWallpaperEngineSaverExtension */;

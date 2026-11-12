@@ -11,7 +11,8 @@ import os
 // loginwindow's `didstart` and knows whether a real screen saver session runs: the `.saver`'s host
 // can only post a Darwin notification, which says a saver shows but not whether it is a preview. When a saver shows and the app isn't running, it
 // launches the app in the background (`LiveSaverLaunchPolicy`). It keeps nothing on disk; when it
-// exits the app registers again.
+// exits the app registers again. After an update it exits at the next connection, so launchd runs
+// the new binary (`LiveSaverBrokerExecutable`).
 
 let brokerLog = Logger(subsystem: "app.openwallpaper.engine.saverlab", category: "broker")
 
@@ -28,6 +29,12 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
     private var launchPolicy = LiveSaverLaunchPolicy()
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
+        if Self.executable.isOutOfDate {
+            // An update replaced the app: launchd starts the new broker, and the peer connects again.
+            brokerLog.notice("the app was updated; exiting for launchd to start the new broker (peer pid=\(connection.processIdentifier))")
+            DispatchQueue.main.async { exit(0) }
+            return false
+        }
         if let requirement = Self.peerRequirement { connection.setCodeSigningRequirement(requirement) }
         connection.exportedInterface = LiveSaverFramesMessage.brokerInterface()
         connection.exportedObject = self
@@ -138,6 +145,10 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
         return app.pathExtension == "app" ? app : nil
     }()
 
+    /// The binary launchd started (`LiveSaverBrokerExecutable`), read when the broker starts.
+    static let executable = LiveSaverBrokerExecutable(
+        path: Bundle.main.executableURL?.resolvingSymlinksInPath().path ?? CommandLine.arguments[0])
+
     /// Peers signed by the broker's own team (the app and its extension); none for an unsigned
     /// or ad-hoc build, which has no team to compare.
     static let peerRequirement: String? = {
@@ -153,6 +164,7 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
 }
 
 let broker = Broker()
+_ = Broker.executable // The file as it is at start, before any update replaces it.
 
 // loginwindow's sessions: a real one lets a saver launch the app, a preview or System Settings'
 // own views never do.

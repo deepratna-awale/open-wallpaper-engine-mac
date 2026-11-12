@@ -138,7 +138,10 @@ final class SceneUserPropertiesModel: ObservableObject {
     }
 
     private func load(_ wallpaper: WEWallpaper) {
-        guard let root = OWELog.attempt(.ui, "Properties: project.json of \(wallpaper.wallpaperDirectory.lastPathComponent)", {
+        // No project.json means no properties: the "Wallpaper Not Found" placeholder's "folder" is
+        // its video, so the file is looked up inside a file (`OWELog.isMissingFile`).
+        guard let root = OWELog.attempt(.ui, "Properties: project.json of \(wallpaper.wallpaperDirectory.lastPathComponent)",
+                                        quietIfMissing: true, {
             try WEProject.json(in: wallpaper.wallpaperDirectory)
         }) ?? nil else { return }
         let definitions = UserPropertyDefinition.all(projectJSON: root)

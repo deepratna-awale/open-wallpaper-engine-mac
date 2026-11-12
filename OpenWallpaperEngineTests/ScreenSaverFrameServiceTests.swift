@@ -30,7 +30,7 @@ final class ScreenSaverFrameServiceTests: XCTestCase {
     private var connection: NSXPCConnection!
 
     override func setUp() async throws {
-        service = ScreenSaverFrameService(peerRequirement: nil)
+        service = ScreenSaverFrameService(peerRequirement: { nil })
         fake = FakeExtension()
         connection = NSXPCConnection(listenerEndpoint: service.listener.endpoint)
         connection.remoteObjectInterface = LiveSaverFramesMessage.serviceInterface()
@@ -66,6 +66,26 @@ final class ScreenSaverFrameServiceTests: XCTestCase {
             .init(id: 0, width: 32, height: 16, surfaces: surfaces.map { IOSurfaceGetID($0) }, notifyName: "n"),
         ], displays: [.init(display: nil, ring: 0, crop: nil)]) : ScreenSaverLiveManifest(generation: 4)
         return LiveSaverFramesMessage(manifest: manifest, surfaces: surfaces)
+    }
+
+    /// The signing requirement is read when a peer connects, on the XPC queue, not when the
+    /// service is made on the main thread at launch.
+    func testThePeerRequirementIsReadOnlyWhenAPeerConnects() {
+        let reads = LockedValue(0)
+        let made = ScreenSaverFrameService(peerRequirement: { reads.mutate { $0 += 1 }; return nil })
+        defer { made.invalidate() }
+        XCTAssertEqual(reads.value, 0)
+        let peer = NSXPCConnection(listenerEndpoint: made.listener.endpoint)
+        peer.remoteObjectInterface = LiveSaverFramesMessage.serviceInterface()
+        peer.exportedInterface = LiveSaverFramesMessage.clientInterface()
+        peer.exportedObject = FakeExtension()
+        peer.resume()
+        defer { peer.invalidate() }
+        let replied = expectation(description: "attach replied")
+        (peer.remoteObjectProxyWithErrorHandler { XCTFail("XPC: \($0)") } as! LiveSaverServiceProtocol)
+            .attach(viewID: "v", display: "A", isPreview: true) { _ in replied.fulfill() }
+        wait(for: [replied], timeout: 5)
+        XCTAssertEqual(reads.value, 1)
     }
 
     func testAnAttachedViewCountsAsShowingButAPreviewDoesNot() {
@@ -136,7 +156,7 @@ final class ScreenSaverFrameServiceTests: XCTestCase {
     /// The app looks the broker up before its launch agent is submitted on every relaunch: the
     /// failed lookup is tried again instead of leaving the extension without the app (#512).
     func testABrokerThatCantBeLookedUpIsTriedAgain() {
-        let registering = ScreenSaverFrameService(peerRequirement: nil, brokerRetryBase: 0.01)
+        let registering = ScreenSaverFrameService(peerRequirement: { nil }, brokerRetryBase: 0.01)
         registering.registerWithBroker(service: "app.openwallpaperengine.tests.no-broker.\(UUID().uuidString)")
         let retried = expectation(for: NSPredicate { @Sendable _, _ in registering.brokerFailureCount >= 3 }, evaluatedWith: nil)
         wait(for: [retried], timeout: 10)

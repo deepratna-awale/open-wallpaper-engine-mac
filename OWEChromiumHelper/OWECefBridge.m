@@ -224,9 +224,9 @@ static void release_ref(cef_base_ref_counted_t *base) {
 
 // MARK: - Reference counting of long-lived handlers
 
-// The app, the renderer handler and each browser's handlers live until the browser closes (or for
-// the whole process), so their counting is a no-op; each browser's block is freed in
-// `on_before_close`, CEF's last call for it.
+// The app and the renderer handler live for the whole process, so their counting is a no-op. A
+// browser's handlers share the browser's count (`browser_add_ref`): CEF still holds and releases
+// them after `on_before_close`.
 static void CEF_CALLBACK static_add_ref(cef_base_ref_counted_t *self) { (void)self; }
 static int CEF_CALLBACK static_release(cef_base_ref_counted_t *self) { (void)self; return 0; }
 static int CEF_CALLBACK static_has_one_ref(cef_base_ref_counted_t *self) { (void)self; return 0; }
@@ -734,9 +734,55 @@ typedef struct {
     double scale;
     int closing;
     cef_browser_t *browser;
+    /// One count for the whole block, shared by its handlers: ours (until `on_before_close`) plus
+    /// CEF's. CEF releases the client and handlers it holds after `on_before_close`, when the
+    /// browser host goes away, so freeing the block there let CEF call through freed memory (the
+    /// helper's SIGBUS at 0xcdcd… after a wallpaper page closed).
+    atomic_int refs;
 } owe_browser;
 
 #define OWE_BROWSER(pointer, member) ((owe_browser *)((char *)(pointer) - offsetof(owe_browser, member)))
+
+static void browser_add_ref(owe_browser *browser) {
+    atomic_fetch_add_explicit(&browser->refs, 1, memory_order_relaxed);
+}
+
+/// Frees the block with the last count.
+static int browser_release(owe_browser *browser) {
+    if (atomic_fetch_sub_explicit(&browser->refs, 1, memory_order_acq_rel) != 1) return 0;
+    free(browser);
+    return 1;
+}
+
+// Counting for each handler embedded in `owe_browser`: its `base` is its first field, so `self`
+// leads back to the block through the member's offset.
+#define OWE_BROWSER_COUNTING(member)                                                                        \
+    static void CEF_CALLBACK browser_##member##_add_ref(cef_base_ref_counted_t *self) {                              \
+        browser_add_ref(OWE_BROWSER(self, member));                                                       \
+    }                                                                                                       \
+    static int CEF_CALLBACK browser_##member##_release(cef_base_ref_counted_t *self) {                               \
+        return browser_release(OWE_BROWSER(self, member));                                                \
+    }                                                                                                       \
+    static int CEF_CALLBACK browser_##member##_has_one_ref(cef_base_ref_counted_t *self) {                           \
+        return atomic_load(&OWE_BROWSER(self, member)->refs) == 1;                                        \
+    }                                                                                                       \
+    static int CEF_CALLBACK browser_##member##_has_at_least_one_ref(cef_base_ref_counted_t *self) {                  \
+        return atomic_load(&OWE_BROWSER(self, member)->refs) >= 1;                                        \
+    }                                                                                                       \
+    static void browser_##member##_init_base(cef_base_ref_counted_t *base, size_t size) {                            \
+        base->size = size;                                                                                  \
+        base->add_ref = browser_##member##_add_ref;                                                                   \
+        base->release = browser_##member##_release;                                                                   \
+        base->has_one_ref = browser_##member##_has_one_ref;                                                           \
+        base->has_at_least_one_ref = browser_##member##_has_at_least_one_ref;                                         \
+    }
+
+OWE_BROWSER_COUNTING(client)
+OWE_BROWSER_COUNTING(render)
+OWE_BROWSER_COUNTING(lifeSpan)
+OWE_BROWSER_COUNTING(load)
+OWE_BROWSER_COUNTING(request)
+OWE_BROWSER_COUNTING(resourceRequest)
 
 /// Open browsers by the app's number.
 static NSMutableDictionary<NSNumber *, NSValue *> *browsers;
@@ -760,19 +806,27 @@ static void with_host(int browserId, void (^body)(owe_browser *, cef_browser_hos
 }
 
 static cef_render_handler_t *CEF_CALLBACK client_get_render_handler(cef_client_t *self) {
-    return &OWE_BROWSER(self, client)->render;
+    owe_browser *browser = OWE_BROWSER(self, client);
+    browser_add_ref(browser); // the reference CEF takes with the handler
+    return &browser->render;
 }
 
 static cef_life_span_handler_t *CEF_CALLBACK client_get_life_span_handler(cef_client_t *self) {
-    return &OWE_BROWSER(self, client)->lifeSpan;
+    owe_browser *browser = OWE_BROWSER(self, client);
+    browser_add_ref(browser); // the reference CEF takes with the handler
+    return &browser->lifeSpan;
 }
 
 static cef_load_handler_t *CEF_CALLBACK client_get_load_handler(cef_client_t *self) {
-    return &OWE_BROWSER(self, client)->load;
+    owe_browser *browser = OWE_BROWSER(self, client);
+    browser_add_ref(browser); // the reference CEF takes with the handler
+    return &browser->load;
 }
 
 static cef_request_handler_t *CEF_CALLBACK client_get_request_handler(cef_client_t *self) {
-    return &OWE_BROWSER(self, client)->request;
+    owe_browser *browser = OWE_BROWSER(self, client);
+    browser_add_ref(browser); // the reference CEF takes with the handler
+    return &browser->request;
 }
 
 static int CEF_CALLBACK client_on_process_message_received(cef_client_t *self, cef_browser_t *cefBrowser,
@@ -863,10 +917,12 @@ static int CEF_CALLBACK life_span_on_before_popup(cef_life_span_handler_t *self,
 static void CEF_CALLBACK life_span_on_before_close(cef_life_span_handler_t *self, cef_browser_t *cefBrowser) {
     owe_browser *browser = OWE_BROWSER(self, lifeSpan);
     [browsers removeObjectForKey:@(browser->id)];
+    browser->closing = 1;
     OWE_RELEASE(browser->browser);
+    browser->browser = NULL;
     OWE_RELEASE(cefBrowser);
-    // CEF's last call for this browser: its handlers are no longer used.
-    free(browser);
+    // Our count; CEF's go when it lets go of the handlers.
+    browser_release(browser);
 }
 
 static void CEF_CALLBACK load_on_load_end(cef_load_handler_t *self, cef_browser_t *cefBrowser, cef_frame_t *frame,
@@ -903,7 +959,9 @@ static cef_resource_request_handler_t *CEF_CALLBACK request_get_resource_request
     OWE_RELEASE(request);
     OWE_RELEASE(frame);
     OWE_RELEASE(cefBrowser);
-    return ours ? &browser->resourceRequest : NULL;
+    if (!ours) return NULL;
+    browser_add_ref(browser); // the reference CEF takes with the handler
+    return &browser->resourceRequest;
 }
 
 /// Wallpaper Engine keeps a web wallpaper self-contained: its main frame only loads the
@@ -953,28 +1011,29 @@ static owe_browser *make_browser(int browserId, int width, int height, double sc
     browser->width = width;
     browser->height = height;
     browser->scale = scale;
-    init_base(&browser->client.base, sizeof browser->client);
+    atomic_init(&browser->refs, 1); // ours, until `on_before_close`
+    browser_client_init_base(&browser->client.base, sizeof browser->client);
     browser->client.get_render_handler = client_get_render_handler;
     browser->client.get_life_span_handler = client_get_life_span_handler;
     browser->client.get_load_handler = client_get_load_handler;
     browser->client.get_request_handler = client_get_request_handler;
     browser->client.on_process_message_received = client_on_process_message_received;
-    init_base(&browser->render.base, sizeof browser->render);
+    browser_render_init_base(&browser->render.base, sizeof browser->render);
     browser->render.get_view_rect = render_get_view_rect;
     browser->render.get_screen_info = render_get_screen_info;
     browser->render.on_paint = render_on_paint;
     browser->render.on_accelerated_paint = render_on_accelerated_paint;
-    init_base(&browser->lifeSpan.base, sizeof browser->lifeSpan);
+    browser_lifeSpan_init_base(&browser->lifeSpan.base, sizeof browser->lifeSpan);
     browser->lifeSpan.on_before_popup = life_span_on_before_popup;
     browser->lifeSpan.on_before_close = life_span_on_before_close;
-    init_base(&browser->load.base, sizeof browser->load);
+    browser_load_init_base(&browser->load.base, sizeof browser->load);
     browser->load.on_load_end = load_on_load_end;
     browser->load.on_load_error = load_on_load_error;
-    init_base(&browser->request.base, sizeof browser->request);
+    browser_request_init_base(&browser->request.base, sizeof browser->request);
     browser->request.get_resource_request_handler = request_get_resource_request_handler;
     browser->request.on_before_browse = request_on_before_browse;
     browser->request.on_render_process_terminated = request_on_render_process_terminated;
-    init_base(&browser->resourceRequest.base, sizeof browser->resourceRequest);
+    browser_resourceRequest_init_base(&browser->resourceRequest.base, sizeof browser->resourceRequest);
     browser->resourceRequest.get_resource_handler = resource_request_get_resource_handler;
     return browser;
 }
@@ -1096,12 +1155,13 @@ int owe_cef_create_browser(int browser_id, const char *url, int width, int heigh
         set_string(&address, url);
         // Recorded first: requests for the page may arrive before the call returns.
         browsers[@(browser_id)] = [NSValue valueWithPointer:browser];
+        browser_add_ref(browser); // the reference CEF takes with the client
         browser->browser = cef.create_browser_sync(&windowInfo, &browser->client, &address, &browserSettings,
                                                    extraInfo, NULL);
         cef.utf16_clear(&address);
         if (!browser->browser) {
             [browsers removeObjectForKey:@(browser_id)];
-            free(browser);
+            browser_release(browser);
             set_error(error, error_size, @"CEF didn't create the browser");
             return 1;
         }
