@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A particle system's collision operator as Show Particle Collision draws it in a 2D scene, in
 /// scene space, placed as the renderer places it (`ParticleCollision.placed`): from the emitter's
@@ -37,8 +38,8 @@ public enum ParticleCollisionShape: Hashable, Sendable {
         let diagonal = max((sceneSize * sceneSize).sum().squareRoot(), 1)
         var result: [ParticleCollisionShape] = []
         for item in operators {
-            let flags = Int(item["flags"]?.doubleValue ?? 0)
-            let anchor = flags & 1 != 0 ? controlPoint(min(max(Int(item["controlpoint"]?.doubleValue ?? 0), 0), 7)) : nil
+            let flags = Int(saturating: item["flags"]?.doubleValue ?? 0)
+            let anchor = flags & 1 != 0 ? controlPoint(Int(saturating: item["controlpoint"]?.doubleValue ?? 0, in: 0...7)) : nil
             switch item["name"]?.stringValue {
             case "collisionplane":
                 guard let n = direction(vector(item, "plane", SIMD3(0, 1, 0))) else { continue }

@@ -49,6 +49,10 @@ final class SceneBonePhysicsTests: XCTestCase {
         XCTAssertEqual(ik.translationFriction, 0.25, accuracy: 1e-6, "an IK bone keeps (tf / 100)²")
         XCTAssertEqual(ik.rotationStiffness, 0, "the physics keys aren't read for an IK bone")
 
+        let deep = try XCTUnwrap(MDLBonePhysics(properties: #"{"ik":true,"ikd":1e30}"#))
+        XCTAssertEqual(deep.ikDepth, Int.max, "an IK depth past Int's range saturates instead of trapping")
+        XCTAssertEqual(MDLBonePhysics(properties: #"{"ik":true,"ikd":-1e30}"#)?.ikDepth, 1)
+
         XCTAssertNil(MDLBonePhysics(properties: #"{"r":true,"rs":5}"#), "neither simulated nor IK: the flags clear")
         XCTAssertNil(MDLBonePhysics(properties: ""))
         XCTAssertNil(MDLBonePhysics(properties: "not json"))

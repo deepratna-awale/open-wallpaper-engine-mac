@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A control point of a particle system as the canvas shows it.
 public struct ParticleControlPointHandle: Hashable, Sendable {
@@ -61,7 +62,7 @@ extension ParticleEditingModel {
         let world = sceneTransform(of: layerID)
         return definition.items(.controlpoint).prefix(ParticleDefinition.capacity(of: .controlpoint)).enumerated()
             .compactMap { index, item in
-                let flags = Int(item["flags"]?.doubleValue ?? 0)
+                let flags = Int(saturating: item["flags"]?.doubleValue ?? 0)
                 guard flags & 16 == 0 else { return nil }
                 var components = SceneVector.components(item["offset"], fallback: [0, 0, 0])
                 if let preview = controlPointPreview, preview.layer == layerID, preview.index == index {
