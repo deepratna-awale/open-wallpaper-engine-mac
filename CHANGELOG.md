@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The Chromium engine no longer crashes after a web wallpaper closes.** Its helper could crash a moment after a page closed and had to start again. ([#560](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/560))
 - **A Steam sign-in that stopped working asks you to log in again.** Steam had stopped taking the saved sign-in, so Favourites and the ownership check failed on every launch with nothing to say why. ([#561](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/561))
 - **Chromium web wallpapers play their sound.** Audio and video that the page read in parts (an Ogg file finding its length, or any seek) got the wrong bytes, so the music of wallpapers such as 829261773 never started on the Chromium engine. ([#553](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/553))
+- **A very large number no longer crashes the app through its control socket.** Setting a number setting such as the frame rate to a value like 1e20 stopped the app instead of being refused. ([#562](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/562))
+- **Out-of-range numbers in a wallpaper or the editor no longer crash.** A huge or non-finite value in a bone's IK depth, a particle's flags, a shader combo, a blend mode or a slider preview now clamps instead of stopping the app. ([#564](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/564))
+
+### Security
+
+- **Your Steam account name stays out of the app's log.** It was written there at sign-in and while downloading, so it ended up in Report a Problem reports. ([#566](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/566))
+- **A web wallpaper's page can't navigate away from the wallpaper.** Pages could load other websites in its place, on both the WebKit and Chromium engines; a wallpaper now stays self-contained, as in Wallpaper Engine. ([#568](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/568))
 
 ## [1.0.0-beta.16] - 2026-11-11
 
