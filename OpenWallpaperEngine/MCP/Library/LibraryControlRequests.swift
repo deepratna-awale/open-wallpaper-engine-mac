@@ -331,7 +331,7 @@ final class LibraryControlRequests: ControlRequestGroup {
     private static func text(_ value: JSONValue) -> String {
         switch value {
         case .bool(let flag): return flag ? "on" : "off"
-        case .number(let number): return number.rounded() == number ? String(Int(number)) : String(number)
+        case .number(let number): return number.rounded() == number && abs(number) < 1e15 ? String(Int(number)) : String(number)
         case .string(let text): return text
         default: return "not set"
         }

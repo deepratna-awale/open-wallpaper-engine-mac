@@ -127,6 +127,6 @@ enum JSONSchema {
     }
 
     private static func format(_ number: Double) -> String {
-        number.rounded() == number ? String(Int(number)) : String(number)
+        number.rounded() == number && abs(number) < 1e15 ? String(Int(number)) : String(number)
     }
 }
