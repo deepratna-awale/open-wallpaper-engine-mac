@@ -26,6 +26,9 @@ final class InputDeviceAudioCapture {
     private var deviceID = AudioObjectID(kAudioObjectUnknown)
     private var ioProcID: AudioDeviceIOProcID?
     private var listeners: [(address: AudioObjectPropertyAddress, block: AudioObjectPropertyListenerBlock)] = []
+    /// Listener queue only. Cleared by `stop()`, since Core Audio still runs a removed listener
+    /// for a notification it already queued (see `ProcessTapAudioCapture.listenersActive`).
+    private var listenersActive = true
 
     // IO queue only while the device runs.
     private var converter: CaptureFormatConverter?
@@ -107,6 +110,7 @@ final class InputDeviceAudioCapture {
     func stop() {
         guard isStarted else { return }
         isStarted = false
+        listenerQueue.sync { listenersActive = false }
         for listener in listeners {
             var address = listener.address
             let status = AudioObjectRemovePropertyListenerBlock(deviceID, &address, listenerQueue, listener.block)
@@ -150,7 +154,10 @@ final class InputDeviceAudioCapture {
     private func addListener(_ selector: AudioObjectPropertySelector,
                              scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal, reason: String) {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: kAudioObjectPropertyElementMain)
-        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in self?.onInterruption(reason) }
+        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+            guard let self, self.listenersActive else { return }
+            self.onInterruption(reason)
+        }
         let status = AudioObjectAddPropertyListenerBlock(deviceID, &address, listenerQueue, block)
         guard status == noErr else {
             OWELog.error(.audio, "Unable to watch for \(reason) (status \(status)); the recording won't follow it.")

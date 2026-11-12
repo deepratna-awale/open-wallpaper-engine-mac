@@ -41,6 +41,11 @@ final class ProcessTapAudioCapture {
     private var ioProcID: AudioDeviceIOProcID?
     private var listeners: [(object: AudioObjectID, address: AudioObjectPropertyAddress,
                              block: AudioObjectPropertyListenerBlock)] = []
+    /// Listener queue only. Cleared by `stop()`: Core Audio still runs a removed listener for a
+    /// notification it already queued, and destroying the aggregate queues one (it's no longer
+    /// alive). That one arrived while `SystemAudioCapture` was starting the next capture and
+    /// restarted it again, so the capture was rebuilt every couple of seconds.
+    private var listenersActive = true
 
     // IO queue only while the device runs.
     private var converter: CaptureFormatConverter?
@@ -192,6 +197,7 @@ final class ProcessTapAudioCapture {
     func stop() {
         guard isStarted else { return }
         isStarted = false
+        listenerQueue.sync { listenersActive = false }
         for listener in listeners {
             var address = listener.address
             let status = AudioObjectRemovePropertyListenerBlock(listener.object, &address, listenerQueue, listener.block)
@@ -241,8 +247,8 @@ final class ProcessTapAudioCapture {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal,
                                                  mElement: kAudioObjectPropertyElementMain)
         let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-            guard changed() else { return }
-            self?.onInterruption(reason)
+            guard let self, self.listenersActive, changed() else { return }
+            self.onInterruption(reason)
         }
         let status = AudioObjectAddPropertyListenerBlock(object, &address, listenerQueue, block)
         guard status == noErr else {
