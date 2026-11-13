@@ -94,7 +94,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Scripts can create layers, particle systems and sounds, move the fog, drive bloom, pose puppets and models, play animation layers' own timelines, and run an effect's functions (`executeMaterialFunction`).
 - **Now Playing** — scenes and web wallpapers receive the current track and playback state (macOS 15.4 or later). The **Media blocklist** (Settings › Optimizations › Audio) hides chosen apps' media from wallpapers.
 - **Web wallpaper devtools** (Settings › Optimizations › Developer Tools, off by default, for the session only): Safari's Web Inspector for WebKit pages, Chromium's DevTools on 127.0.0.1:9222 for Chromium ones.
-- Web wallpapers receive their user properties and live audio. Dropdown values reach the page with the type their author gave them. Folder (`directory`) properties hand the page the folder's pictures or videos, all of them and each change (`fetchall`) or one at random on request (`ondemand`), and pages open chosen files as `'file:///' + path` in both web engines.
+- Web wallpapers receive their user properties and live audio. Dropdown values reach the page with the type their author gave them. Folder (`directory`) properties hand the page the folder's pictures or videos, all of them and each change (`fetchall`) or one at random on request (`ondemand`), and pages open chosen files as `'file:///' + path` in both web engines. A page stays on the wallpaper, as in Wallpaper Engine: it can't load another website in its place, while embedded players (YouTube, Vimeo) still play.
 
 ### Audio
 - The audio spectrum is computed the way Wallpaper Engine computes it, in stereo.
@@ -118,6 +118,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Per-display user properties, with "Sync properties across displays".
 - A wallpaper shown on several displays renders once and is presented on each.
 - Quality settings: Render Resolution (Your Display, 4K, Full) with Upscaling (Render Scale 50–75 %), Texture Resolution, Effect Detail (Match Display), reflections, shadows and volumetrics.
+- **Wallpaper Not Found** — a display without a wallpaper (none chosen yet, or the one it showed was deleted or skipped by safe restart) shows a placeholder video, dark while macOS is in Dark Mode, and it follows the appearance.
 - **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
 - **Report a Problem** (Help menu, Settings › Diagnostics, and offered on the launch after a crash) — a plain-text report with the app's log from just before the crash, macOS's crash report and the wallpapers that were showing, with your user name, Mac's name and home folder removed. Nothing is sent: you read it, then save it or attach it to the filled-in GitHub bug report it opens.
 - **Caches** (Settings › Performance) — the app's caches clean up what has been unused for 60 days, and **Clear Caches…** deletes them except what the wallpapers on screen use.
