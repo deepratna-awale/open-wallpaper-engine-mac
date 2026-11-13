@@ -7,5 +7,5 @@ import Foundation
 /// depend on which runner took the job.
 enum OwnerMachine {
     static let volume: String = ProcessInfo.processInfo.environment["OWE_HERMETIC"] == "1"
-        ? "/nonexistent/owe-hermetic" : "\(OwnerMachine.volume)"
+        ? "/nonexistent/owe-hermetic" : "/Volumes/980Pro"
 }
