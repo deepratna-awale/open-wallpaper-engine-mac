@@ -1,6 +1,6 @@
 # Open Wallpaper Engine — Privacy Policy
 
-**Version 1.3 · Effective date: 2026-10-29**
+**Version 1.4 · Effective date: 2026-11-15**
 
 ---
 
@@ -28,7 +28,7 @@ We want to be direct about this, because it is the most important part of this p
 
 - We operate **no servers** of our own. The app never contacts us.
 - There are **no accounts** with us. You never register or sign in with us.
-- There is **no analytics, telemetry, usage tracking or crash reporting**.
+- There is **no analytics, telemetry, usage tracking or crash reporting**. Report a Problem (section 3) makes a report only on your Mac, and only you can send it anywhere.
 - There is **no advertising** and no advertising identifiers.
 - We **do not sell, rent, share or disclose** personal data to anyone, because we never receive it.
 - We do not use cookies, fingerprinting or similar technologies.
@@ -46,6 +46,9 @@ OWE stores the following **only on your Mac**, under your control. None of it is
 | Caches (for example, decoded images and translated shaders that speed up loading) | The app's cache folders on your Mac |
 | A local copy of your own Wallpaper Engine assets, downloaded through your Steam account | Your storage folder |
 | Your Steam sign-in: your account name, SteamID and the refresh token Steam issues when you sign in | The macOS Keychain (see section 6) |
+| The app's recent log: its own messages about what it was doing (for example, which wallpapers loaded and what failed), from this run and the last, at most about 2 MB each | `~/Library/Caches/app.openwallpaperengine/Logs` |
+
+**Report a Problem** (Help › Report a Problem…, Settings › Diagnostics, and offered on the launch after the app crashes or is force-quit) builds a plain-text report from that log, the crash report macOS saved, the wallpapers that were showing and your Mac's model and macOS version. Your user name, your Mac's name and your home folder are taken out, and you read the report before anything else happens. The app never sends it: it leaves your Mac only if you save it and attach it to a GitHub issue yourself, and then it is public on GitHub, under GitHub's Privacy Statement (section 4.2).
 
 You can view, move or delete any of this at any time. Section 7 lists the locations.
 
