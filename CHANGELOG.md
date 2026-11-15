@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.18] - 2026-11-15
+
 ### Changed
 
 - **Privacy Policy 1.4** lists the app's recent log among what stays on your Mac, and says what a Report a Problem report holds and that it leaves the Mac only if you attach it to a GitHub issue yourself, so the setup notice shows once more. ([#584](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/584))
