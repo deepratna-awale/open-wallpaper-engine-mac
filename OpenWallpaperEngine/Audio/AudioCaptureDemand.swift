@@ -3,10 +3,7 @@ import Foundation
 /// Counts the consumers that need system audio (an audio-reactive scene or shader, a script's
 /// audio buffers, a web page's audio listener, a video's music sync), so capture runs only while
 /// one does. The first lease turns demand on at once; after the last one is released demand stays
-/// on for `idleGrace` seconds, so switching wallpapers doesn't tear down and rebuild the capture.
-/// The default grace outlasts a non-reactive wallpaper between two reactive ones: every new
-/// process tap makes coreaudiod re-scan its devices, which some headset drivers answer with
-/// seconds of errors and CPU. WE records the whole time.
+/// on for `idleGrace` seconds, so switching wallpapers doesn't tear down and rebuild the stream.
 ///
 /// Thread-safe: leases are taken and dropped on the main, render and script threads. `onChange`
 /// is always called through `schedule`, on the main actor in the app.
@@ -22,9 +19,7 @@ final class AudioCaptureDemand: @unchecked Sendable {
     private var token = 0
     private var onChange: ((Bool) -> Void)?
 
-    static let defaultIdleGrace: TimeInterval = 300
-
-    init(idleGrace: TimeInterval = AudioCaptureDemand.defaultIdleGrace, schedule: @escaping Schedule) {
+    init(idleGrace: TimeInterval = 5, schedule: @escaping Schedule) {
         self.idleGrace = idleGrace
         self.schedule = schedule
     }

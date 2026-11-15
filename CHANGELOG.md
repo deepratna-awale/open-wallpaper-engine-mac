@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- **Changing wallpapers no longer spikes coreaudiod.** System audio capture was rebuilt whenever a non-reactive wallpaper came between two audio-reactive ones, and each rebuild made coreaudiod spin for seconds with some headsets (a Logitech PRO X Wireless). Capture now stays up for five minutes after the last audio-reactive wallpaper. ([#580](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/580))
-
 ## [1.0.0-beta.17] - 2026-11-12
 
 ### Fixed
