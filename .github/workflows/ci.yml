@@ -2,12 +2,31 @@ name: CI
 
 # CI runs twice per change: on its pull request once it's out of draft or labelled "ready to merge"
 # (and up to date with main), and on main once it's merged. A draft without the label runs
-# nothing; a push to a ready or labelled one runs again.
+# nothing; a push to a ready or labelled one runs again. A change only to the documentation
+# paths below runs nothing; docs/legal and docs' JSON aren't among them, since tests read them.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'docs/*.md'
+      - 'docs/images/**'
+      - 'docs/media/**'
+      - 'resources/readme/**'
+      - 'site/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
   pull_request:
     types: [opened, ready_for_review, labeled, synchronize, reopened]
+    paths-ignore:
+      - '*.md'
+      - 'docs/*.md'
+      - 'docs/images/**'
+      - 'docs/media/**'
+      - 'resources/readme/**'
+      - 'site/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
   workflow_dispatch:
 
 # Every job only reads the repository (and the Actions cache and artifacts, which need no token scope).
