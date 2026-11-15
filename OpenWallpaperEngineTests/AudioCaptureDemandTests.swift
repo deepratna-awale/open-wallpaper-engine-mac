@@ -71,6 +71,28 @@ final class AudioCaptureDemandTests: XCTestCase {
         XCTAssertNotNil(lease)
     }
 
+    /// A non-reactive wallpaper shown for a while between two reactive ones keeps the capture:
+    /// each new process tap stalls coreaudiod.
+    func testDefaultGraceKeepsCaptureAcrossANonReactiveWallpaper() {
+        let clock = ManualClock()
+        let demand = AudioCaptureDemand(schedule: { clock.schedule($0, $1) })
+        var changes: [Bool] = []
+        demand.observe { changes.append($0) }
+        var lease: AudioCaptureLease? = demand.acquire()
+        clock.advance(by: 0)
+        lease = nil
+        clock.advance(by: 60)
+        XCTAssertTrue(demand.isDemanded)
+        lease = demand.acquire()
+        clock.advance(by: 0)
+        XCTAssertEqual(changes, [true])
+        lease = nil
+        clock.advance(by: AudioCaptureDemand.defaultIdleGrace)
+        XCTAssertFalse(demand.isDemanded, "capture still stops once nothing needs audio")
+        XCTAssertEqual(changes, [true, false])
+        XCTAssertNil(lease)
+    }
+
     /// Switching to an audio wallpaper after capture stopped starts it again.
     func testReacquireAfterStopRestartsCapture() {
         let clock = ManualClock()
