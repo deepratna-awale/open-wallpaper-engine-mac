@@ -28,6 +28,41 @@ final class MediaSessionTests: XCTestCase {
         XCTAssertEqual(state.initialChanges, [.status(true)], "properties need a title; a timeline needs a duration")
     }
 
+    // MARK: - Subscribers
+
+    /// A subscriber released during its own update unsubscribes from its `deinit` without deadlocking the source.
+    func testASubscriberReleasedDuringItsUpdateUnsubscribes() {
+        final class Box: @unchecked Sendable { var subscriber: Subscriber? }
+        final class Subscriber: @unchecked Sendable {
+            let source: MacMediaSessionSource
+            let unsubscribed: XCTestExpectation
+            var id: Int?
+            init(source: MacMediaSessionSource, box: Box, unsubscribed: XCTestExpectation) {
+                self.source = source
+                self.unsubscribed = unsubscribed
+                id = source.subscribe { [weak self] _ in
+                    guard self != nil else { return }
+                    box.subscriber = nil
+                }
+            }
+            deinit {
+                if let id { source.unsubscribe(id) }
+                unsubscribed.fulfill()
+            }
+        }
+        let source = MacMediaSessionSource(framework: nil)
+        let box = Box()
+        let unsubscribed = expectation(description: "the released subscriber unsubscribed")
+        box.subscriber = Subscriber(source: source, box: box, unsubscribed: unsubscribed)
+        wait(for: [unsubscribed], timeout: 5)
+
+        let delivered = expectation(description: "a later subscriber gets the state")
+        delivered.assertForOverFulfill = false
+        let id = source.subscribe { _ in delivered.fulfill() }
+        wait(for: [delivered], timeout: 5)
+        source.unsubscribe(id)
+    }
+
     // MARK: - MediaRemote mapping
 
     func testNowPlayingDictionaryMapsToWEsFields() {

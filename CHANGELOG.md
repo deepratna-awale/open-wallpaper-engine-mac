@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **The shader compile helper quits 30 seconds after its last shader** instead of after 5 minutes, which frees about 50 MB while a wallpaper plays. It starts again by itself the next time a shader needs compiling. ([#597](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/597))
+### Fixed
+
+- **A scene that follows what's playing (title, artwork or timeline) could stay on its loading picture.** When the scene's media listener was let go while a now-playing update was arriving (a reload during loading), the media session locked up, and the scene waiting on it never drew a frame. Updates now go out without holding the session's lock. ([#595](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/595))
 
 ## [1.0.0-beta.18] - 2026-11-15
 
