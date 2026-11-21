@@ -39,8 +39,8 @@ struct MediaBlocklistRow: View {
         }
         .help("Wallpapers don't see what a blocked app plays: no title, artist or album cover.")
         .onAppear {
-            // Subscribing keeps the source reading the session while the page shows. Updates arrive
-            // with the source's lock held, so the player is read afterwards, on the main actor.
+            // Subscribing keeps the source reading the session while the page shows; the player is
+            // read on the main actor.
             subscription = source.subscribe { _ in
                 Task { @MainActor in current = source.currentSessionPlayer }
             }

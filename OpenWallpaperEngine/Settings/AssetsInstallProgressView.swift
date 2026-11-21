@@ -35,11 +35,6 @@ struct AssetsInstallProgressView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
-        case .copying:
-            HStack {
-                ProgressView().controlSize(.small)
-                Text("Copying assets…")
-            }
         case .failed(let message):
             VStack(alignment: .leading, spacing: 6) {
                 Label(message, systemImage: "xmark.octagon.fill")

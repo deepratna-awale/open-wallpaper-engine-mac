@@ -3,14 +3,12 @@ import Combine
 
 /// Installs, updates and removes the Wallpaper Engine assets scenes need, and reports which copy
 /// is in use (`WallpaperEngineAssets`). The download is the parts of the user's own Steam copy the
-/// cache keeps, fetched through the Steam login; only its `assets` subset is kept and the rest is
-/// deleted.
+/// app reads, fetched through the Steam login into `<storage>/.owe-assets` and read there.
 @MainActor
 final class WallpaperEngineAssetsService: ObservableObject {
     enum Phase: Equatable {
         case idle
         case downloading(status: String, progress: WallpaperEngineAssetsDownload.Progress?)
-        case copying
         case failed(String)
     }
 
@@ -111,7 +109,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
             return .folderChosen
         }
         guard let cache = cacheDirectory else { return .storageUnavailable }
-        if WallpaperEngineAssets.isAssetTree(cache) { return .cached }
+        if WallpaperEngineAssets.isAssetTree(WallpaperEngineAssets.assetsFolder(of: cache)) { return .cached }
         if let account = defaults.string(forKey: Self.notOwnedAccountKey), account == workshopDownloads.steamUsername {
             return .notOwned
         }
@@ -137,7 +135,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
 
     var isBusy: Bool {
         switch phase {
-        case .downloading, .copying: return true
+        case .downloading: return true
         case .idle, .failed: return false
         }
     }
@@ -233,10 +231,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
         cancellation?.cancel()
     }
 
-    /// Downloads the parts of the user's Wallpaper Engine copy the cache keeps through the Steam
-    /// login, and keeps its assets in the cache. With `includingDefaultWallpapers`, the copy's default
-    /// wallpapers (never application ones) also move into the storage folder; without, they are
-    /// deleted with the rest of the download. A complete Steam copy is only downloaded again when
+    /// Downloads the parts of the user's Wallpaper Engine copy the app reads through the Steam
+    /// login, into the folder they're read from. With `includingDefaultWallpapers`, the copy's
+    /// default wallpapers (never application ones) also come down and move into the storage folder. A complete Steam copy is only downloaded again when
     /// Steam has a newer build, unless `force` (Re-download, to repair a damaged copy).
     func installFromSteam(includingDefaultWallpapers: Bool = true, force: Bool = false) {
         guard !isBusy else { return }
@@ -253,8 +250,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
         cancellation = token
         let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
         let installed = WallpaperEngineAssetsCache.readInfo(cache: cache)
+        let complete = { WallpaperEngineAssets.isAssetTree(WallpaperEngineAssets.assetsFolder(of: cache)) }
         let checksFirst = WallpaperEngineAssetsUpdateCheck.needsLookup(force: force, installed: installed,
-                                                                       assetsComplete: WallpaperEngineAssets.isAssetTree(cache))
+                                                                       assetsComplete: complete())
         phase = .downloading(status: checksFirst
                                 ? String(localized: "Checking for updates…", comment: "Assets update check status")
                                 : String(localized: "Authenticating…", comment: "Download status: logging in to Steam"),
@@ -272,7 +270,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
                 if checksFirst,
                    case .upToDate(let build) = WallpaperEngineAssetsUpdateCheck.decision(
                        installed: WallpaperEngineAssetsCache.readInfo(cache: cache),
-                       assetsComplete: WallpaperEngineAssets.isAssetTree(cache), currentBuild: build) {
+                       assetsComplete: complete(), currentBuild: build) {
                     return self.finishInstall(.success(.upToDate(build: build)), cancelled: false)
                 }
                 job.currentBuild = build
@@ -304,11 +302,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
 
     private func enqueue(_ job: InstallJob, cancellation token: ProcessCancellation) {
         workshopDownloads.enqueueSteamWork { [weak self] in
-            let result = job.run(
-                onProgress: { [weak self] progress in
-                    DispatchQueue.main.async { [weak self] in self?.showDownloadProgress(progress) }
-                },
-                onCopying: { DispatchQueue.main.async { [weak self] in self?.phase = .copying } })
+            let result = job.run(onProgress: { [weak self] progress in
+                DispatchQueue.main.async { [weak self] in self?.showDownloadProgress(progress) }
+            })
             DispatchQueue.main.async { [weak self] in self?.finishInstall(result, cancelled: token.isCancelled) }
         }
     }
@@ -363,15 +359,15 @@ final class WallpaperEngineAssetsService: ObservableObject {
     }
 }
 
-/// One install run, off the main thread: download the parts the cache keeps through the Steam
-/// login, copy the subset, delete the download.
+/// One install run, off the main thread: download the parts the app reads through the Steam
+/// login into the folder they're read from, and bring in the default wallpapers.
 private struct InstallJob {
     let login: SteamLogin
     let downloader: SteamHelperDownloading
     let storage: URL
     let includesDefaultWallpapers: Bool
     let cancellation: ProcessCancellation
-    /// Steam's current build, recorded with the cache.
+    /// Steam's current build, recorded with the download.
     var currentBuild: String?
 
     enum Outcome: Equatable {
@@ -379,21 +375,20 @@ private struct InstallJob {
         case upToDate(build: String)
     }
 
-    func run(onProgress: @escaping @Sendable (WallpaperEngineAssetsDownload.Progress) -> Void,
-             onCopying: () -> Void) -> Result<Outcome, Error> {
-        let download = WallpaperEngineAssetsDownload.downloadDirectory(in: storage)
-        // Only the assets are kept; the rest goes right away.
-        defer { WallpaperEngineAssetsCache.removeIfPresent(download) }
+    func run(onProgress: @escaping @Sendable (WallpaperEngineAssetsDownload.Progress) -> Void) -> Result<Outcome, Error> {
+        let download = WallpaperEngineAssets.cacheDirectory(in: storage)
+        let assets = download.appending(path: "assets", directoryHint: .isDirectory)
+        let previous = WallpaperEngineAssetsCache.readInfo(cache: download)?.defaultProjects ?? []
+        // A folder not laid out as the download is (no `assets`) is replaced, not added to.
+        if !FileManager.default.fileExists(atPath: assets.path) { WallpaperEngineAssetsCache.removeIfPresent(download) }
+        let hadAssets = WallpaperEngineAssets.isAssetTree(assets)
+        let defaultProjects = download.appending(path: "projects/defaultprojects", directoryHint: .isDirectory)
+        // The default wallpapers move into the library or aren't wanted: none stays in the download.
+        defer { WallpaperEngineAssetsCache.removeIfPresent(defaultProjects) }
         do {
-            WallpaperEngineAssetsCache.removeIfPresent(download)
             try FileManager.default.createDirectory(at: download, withIntermediateDirectories: true)
             try downloadWithSteamHelper(into: download, onProgress: onProgress)
-            onCopying()
-            let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
-            let previous = WallpaperEngineAssetsCache.readInfo(cache: cache)?.defaultProjects ?? []
-            var info = WallpaperEngineAssetsCache.Info(origin: .steam, installedAt: .now, steamBuildID: currentBuild)
-            try WallpaperEngineAssetsCache.fill(cache, from: download, info: info, isCancelled: { cancellation.isCancelled })
-            // The download is deleted next, so the default wallpapers move rather than copy.
+            var info = WallpaperEngineAssetsCache.Info(installedAt: .now, steamBuildID: currentBuild)
             var imported = WallpaperEngineDefaultProjects.ImportResult()
             if includesDefaultWallpapers {
                 imported = try WallpaperEngineDefaultProjects.importProjects(from: download, into: storage, move: true)
@@ -403,20 +398,24 @@ private struct InstallJob {
             }
             let kept = previous.filter { FileManager.default.fileExists(atPath: storage.appending(path: $0).path) }
             info.defaultProjects = kept + imported.imported.filter { !kept.contains($0) }
-            try WallpaperEngineAssetsCache.writeInfo(info, cache: cache)
+            try WallpaperEngineAssetsCache.writeInfo(info, cache: download)
             return .success(.installed)
         } catch {
+            // A first download that didn't finish leaves nothing behind.
+            if !hadAssets { WallpaperEngineAssetsCache.removeIfPresent(download) }
             return .failure(error)
         }
     }
 
-    /// Downloads the parts of Wallpaper Engine the cache keeps (`SteamHelperDownload.assetsFileList`)
-    /// into `download`.
+    /// Downloads the parts of Wallpaper Engine the app reads (`SteamHelperDownload.assetsFileList`)
+    /// into `download`. DepotDownloader checks the files already there and fetches only what changed.
     private func downloadWithSteamHelper(into download: URL,
                                          onProgress: @escaping @Sendable (WallpaperEngineAssetsDownload.Progress) -> Void) throws {
-        // Inside the download folder, so it goes with it; DepotDownloader only writes what the list names.
+        // DepotDownloader only writes what the list names.
         let fileList = download.appending(path: ".owe-filelist.txt")
-        try Data(SteamHelperDownload.assetsFileList.utf8).write(to: fileList)
+        defer { WallpaperEngineAssetsCache.removeIfPresent(fileList) }
+        let list = SteamHelperDownload.assetsFileList(includingDefaultProjects: includesDefaultWallpapers)
+        try Data(list.utf8).write(to: fileList)
         let run = downloader.run(arguments: SteamHelperDownload.assetsArguments(directory: download, fileList: fileList),
                                  login: login, cancellation: cancellation) { chunk in
             if let fraction = SteamHelperDownload.progress(in: chunk) {

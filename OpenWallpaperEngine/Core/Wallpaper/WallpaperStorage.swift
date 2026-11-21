@@ -85,7 +85,7 @@ enum WallpaperStorage {
     }
 
     /// Whether a storage item moves with the folder: the wallpapers, and the app's own hidden data
-    /// (`.owe-*`: the assets cache with its info file, the download staging, converted packages).
+    /// (`.owe-*`: the assets cache with its info file, the download staging).
     /// Other hidden files (`.DS_Store`, `._*`, `.Trashes`…) belong to the old folder, the dependency
     /// index is merged by `WorkshopDependencyIndex.carry`, and half-finished work (a download
     /// being unpacked, a staging copy) is left behind: it is rebuilt when needed.
@@ -93,7 +93,6 @@ enum WallpaperStorage {
         guard name.hasPrefix(".") else { return true }
         guard name.hasPrefix(".owe") else { return false }
         if name == WorkshopDependencyIndex.fileName { return false }
-        if name == WallpaperEngineAssetsDownload.downloadFolderName { return false }
         return !name.hasPrefix(".owe-incoming-") && !name.hasSuffix(".partial")
     }
 

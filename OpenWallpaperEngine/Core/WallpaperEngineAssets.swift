@@ -5,8 +5,8 @@ import Foundation
 /// looked up in this order:
 ///
 /// 1. the `assets` folder of a Wallpaper Engine install the user chose in Settings › Assets;
-/// 2. the copy the app keeps in the Wallpaper Storage folder (`<storage>/.owe-assets`), filled
-///    from the user's Steam copy (`WallpaperEngineAssetsInstaller`);
+/// 2. the parts of the user's Steam copy the app downloads into the Wallpaper Storage folder
+///    (`<storage>/.owe-assets`, laid out as the install is: `assets`, `locale`, …), read in place;
 /// 3. none: scenes then show that they need the assets, while video and web wallpapers still play.
 ///
 /// Under XCTest only `OWE_ASSETS` counts, so a test run never picks up a developer's own cache.
@@ -14,7 +14,7 @@ enum WallpaperEngineAssets {
     enum Source: Equatable {
         /// A Wallpaper Engine install (or its `assets` folder) the user chose.
         case chosenFolder
-        /// The copy in the Wallpaper Storage folder.
+        /// The Steam download in the Wallpaper Storage folder.
         case cache
         /// `OWE_ASSETS`, under XCTest.
         case testEnvironment
@@ -27,7 +27,7 @@ enum WallpaperEngineAssets {
 
     /// The defaults key of the chosen install; a path, or absent.
     static let chosenFolderKey = "WallpaperEngineAssetsDirectory"
-    /// The cache's folder inside the Wallpaper Storage folder. Hidden, so the library ignores it.
+    /// The Steam download's folder inside the Wallpaper Storage folder. Hidden, so the library ignores it.
     static let cacheFolderName = ".owe-assets"
     /// The environment variable naming an assets folder (or a WE install) for tests.
     static let testEnvironmentKey = "OWE_ASSETS"
@@ -37,7 +37,7 @@ enum WallpaperEngineAssets {
     }
 
     /// The asset tree of `folder`: a WE install's `assets` child when it has one, else the folder
-    /// itself (an `assets` folder, or a copy such as the cache).
+    /// itself (an `assets` folder).
     static func assetsFolder(of folder: URL, fileManager: FileManager = .default) -> URL {
         let root = folder.standardizedFileURL
         guard root.lastPathComponent.caseInsensitiveCompare("assets") != .orderedSame else { return root }
@@ -64,7 +64,7 @@ enum WallpaperEngineAssets {
             if isAssetTree(folder, fileManager: fileManager) { return Resolution(directory: folder, source: .chosenFolder) }
         }
         if let storage {
-            let cache = cacheDirectory(in: storage).standardizedFileURL
+            let cache = assetsFolder(of: cacheDirectory(in: storage), fileManager: fileManager)
             if isAssetTree(cache, fileManager: fileManager) { return Resolution(directory: cache, source: .cache) }
         }
         return nil

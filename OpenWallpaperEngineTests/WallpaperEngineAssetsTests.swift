@@ -1,8 +1,8 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Risk #19: the app ships no WE assets. They come from a chosen WE install, else the cache in the
-/// Wallpaper Storage folder, else nowhere; tests only ever use `OWE_ASSETS`.
+/// Risk #19: the app ships no WE assets. They come from a chosen WE install, else the Steam download
+/// in the Wallpaper Storage folder, else nowhere; tests only ever use `OWE_ASSETS`.
 final class WallpaperEngineAssetsTests: XCTestCase {
     private var scratch: URL!
 
@@ -35,7 +35,7 @@ final class WallpaperEngineAssetsTests: XCTestCase {
     func testAChosenInstallComesBeforeTheCache() throws {
         let install = scratch.appending(path: "wallpaper_engine"), storage = scratch.appending(path: "storage")
         try makeTree(install.appending(path: "assets"))
-        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage))
+        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage).appending(path: "assets"))
         let chosen = WallpaperEngineAssets.resolve(chosenPath: install.path, storage: storage, testOverride: nil, isTesting: false)
         XCTAssertEqual(chosen?.source, .chosenFolder)
         XCTAssertEqual(chosen?.directory.path, install.appending(path: "assets").standardizedFileURL.path)
@@ -44,16 +44,17 @@ final class WallpaperEngineAssetsTests: XCTestCase {
         XCTAssertEqual(assetsFolder?.directory.path, chosen?.directory.path)
     }
 
-    /// A chosen folder that isn't an install (or is gone) falls back to the cache, then to none.
+    /// A chosen folder that isn't an install (or is gone) falls back to the Steam download, read
+    /// where it was downloaded (its `assets`), then to none.
     func testTheCacheIsNextAndThenNothing() throws {
         let storage = scratch.appending(path: "storage")
         let missing = scratch.appending(path: "gone").path
         XCTAssertNil(WallpaperEngineAssets.resolve(chosenPath: missing, storage: storage, testOverride: nil, isTesting: false))
-        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage))
+        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage).appending(path: "assets"))
         let cache = WallpaperEngineAssets.resolve(chosenPath: missing, storage: storage, testOverride: nil, isTesting: false)
         XCTAssertEqual(cache?.source, .cache)
-        XCTAssertEqual(cache?.directory.lastPathComponent, ".owe-assets")
-        XCTAssertEqual(cache?.directory.deletingLastPathComponent().standardizedFileURL.path, storage.standardizedFileURL.path)
+        XCTAssertEqual(cache?.directory.lastPathComponent, "assets")
+        XCTAssertEqual(cache?.directory.deletingLastPathComponent().lastPathComponent, ".owe-assets")
     }
 
     /// Under XCTest only `OWE_ASSETS` counts: a developer's own install or cache never leaks in.

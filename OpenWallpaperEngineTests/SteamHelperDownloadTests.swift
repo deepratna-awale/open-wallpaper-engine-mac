@@ -83,8 +83,8 @@ final class SteamHelperDownloadTests: XCTestCase {
     }
 
     /// The file list's regexes, read the way DepotDownloader reads them (case-insensitive).
-    func testTheAssetsFileListTakesOnlyWhatTheCacheKeeps() throws {
-        let patterns = try SteamHelperDownload.assetsFileList.split(separator: "\n").map { line in
+    func testTheAssetsFileListTakesOnlyWhatTheAppReads() throws {
+        let patterns = try SteamHelperDownload.assetsFileList(includingDefaultProjects: true).split(separator: "\n").map { line in
             XCTAssertTrue(line.hasPrefix("regex:"), String(line))
             return try NSRegularExpression(pattern: String(line.dropFirst("regex:".count)), options: .caseInsensitive)
         }
@@ -92,13 +92,23 @@ final class SteamHelperDownloadTests: XCTestCase {
             patterns.contains { $0.firstMatch(in: path, range: NSRange(path.startIndex..., in: path)) != nil }
         }
         for path in ["assets/materials/white.tex", "locale/ui_en-us.json", "projects/templates/scene/project.json",
-                     "projects/defaultprojects/rain/project.json", "ui/dist/monaco/snippets/glsl.json"] {
+                     "projects/defaultprojects/rain/project.json", "ui/dist/monaco/snippets/glsl.json",
+                     "assets/effects/tint/effect.json", "assets/effects/tint/preview.jpg", "assets/shaders/common.h",
+                     "assets/shaders/effects/tint.frag", "assets/presets/rain/preset.json",
+                     "assets/presets/rain/particles/presets/rain.json", "assets/fonts/Roboto.ttf",
+                     "assets/scripts/jsclasses/baseclasses.js", "assets/zcompat/web/1.json",
+                     "assets/models/util/sphere.mdl", "assets/particles/fire.json"] {
             XCTAssertTrue(included(path), path)
         }
         for path in ["wallpaper64.exe", "bin/ui32.exe", "locale/steam_en-us.json", "ui/dist/index.js",
-                     "projects/myprojects/x/project.json", "notassets/x"] {
+                     "projects/myprojects/x/project.json", "notassets/x",
+                     "assets/effects/tint/preview/preview.jpg", "assets/effects/tint/previewdownpour/scene.json",
+                     "assets/presets/rain/previewdownpour/scene.json", "assets/shaders/HLSL/common.hlsl",
+                     "assets/shaders/editor/grid.frag", "assets/shaders/effects/editor/x.frag",
+                     "assets/scenes/particleeditor/scene.json"] {
             XCTAssertFalse(included(path), path)
         }
+        XCTAssertFalse(SteamHelperDownload.assetsFileList(includingDefaultProjects: false).contains("defaultprojects"))
     }
 
     func testTheOutcomeTellsLoginRemovedItemsOwnershipAndErrorsApart() {

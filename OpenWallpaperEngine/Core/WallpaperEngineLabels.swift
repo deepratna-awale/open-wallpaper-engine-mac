@@ -1,9 +1,8 @@
 import Foundation
 
 /// WE's own UI strings (`locale/ui_<language>.json`), which translate the localisation keys
-/// wallpapers and shaders use as labels (`ui_editor_properties_speed` → "Speed"). The assets cache
-/// carries WE's files in `.owe-assets/locale`; a WE install keeps them in `<install>/locale`,
-/// beside `<install>/assets`.
+/// wallpapers and shaders use as labels (`ui_editor_properties_speed` → "Speed"). A WE install and
+/// the Steam download keep them in `<install>/locale`, beside `<install>/assets`.
 ///
 /// A wallpaper's own translations (project.json `general.localization`) join them through
 /// `addingAuthorTranslations`, in the order WE's UI resolves a key: its language's table, where
@@ -82,10 +81,10 @@ struct WallpaperEngineLabels {
         return available.sorted().first { $0.hasPrefix("\(code)-") }
     }
 
-    /// `<assets>/locale` (the bundled tree) or `<assets>/../locale` (an install).
+    /// `<assets>/../locale`, beside the assets.
     private static func localeDirectory(assets: URL) -> URL? {
-        [assets.appending(path: "locale"), assets.deletingLastPathComponent().appending(path: "locale")]
-            .first { FileManager.default.fileExists(atPath: $0.appending(path: "ui_en-us.json").path) }
+        let locale = assets.deletingLastPathComponent().appending(path: "locale")
+        return FileManager.default.fileExists(atPath: locale.appending(path: "ui_en-us.json").path) ? locale : nil
     }
 
     private static func availableLanguages(in directory: URL) -> [String] {

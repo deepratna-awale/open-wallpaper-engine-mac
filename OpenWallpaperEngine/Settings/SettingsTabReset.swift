@@ -10,7 +10,6 @@ enum SettingsTabReset {
     /// Every `@AppStorage` key a Settings view uses is here or in `nonSettingViewKeys`.
     nonisolated static func preferenceKeys(of tab: SettingsTab) -> [String] {
         switch tab {
-        case .optimizations: return ["ReclaimOriginalPackages"]
         case .assets: return ["InstallsWallpaperEngineAssetsAfterLogin"]
         case .updates: return ["HidesReleaseNotesAfterUpdate", "ReceiveBetaUpdates"]
         default: return []

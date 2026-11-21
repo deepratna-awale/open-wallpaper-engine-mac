@@ -1,8 +1,8 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Dependency links and package extraction stay inside the wallpaper's folder and leave the
-/// `workshop/<id>/` paths to the dependency resolver.
+/// Dependency links stay inside the wallpaper's folder, and the `workshop/<id>/` paths a package
+/// names are found without unpacking it.
 final class WorkshopDependencyLinkTests: XCTestCase {
     private var root: URL!
     private var wallpaper: URL!
@@ -103,22 +103,16 @@ final class WorkshopDependencyLinkTests: XCTestCase {
         XCTAssertFalse(ContainedPath.isSymbolicLink(linkPath))
     }
 
-    func testConverterExtractsBundledWorkshopItemFiles() throws {
-        try package([("scene.json", Data("{}".utf8)),
+    func testFindsThePackagesWorkshopReferencesWithoutUnpackingIt() throws {
+        try package([("scene.json", Data(#"{"font": "fonts/workshop/4000000004/a.otf"}"#.utf8)),
                      ("materials/a.json", Data("{}".utf8)),
                      ("materials/workshop/2000000002/b.json", Data("{}".utf8)),
                      ("effects\\workshop\\3000000003\\e\\effect.json", Data("{}".utf8))])
             .write(to: wallpaper.appending(path: "scene.pkg"))
+        let before = try fm.contentsOfDirectory(atPath: wallpaper.path).sorted()
 
-        let manifest = try XCTUnwrap(WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: wallpaper))
-        // Wallpaper Engine reads the asset-pack files the package bundles, so they are extracted.
-        XCTAssertEqual(manifest.extractedFiles.sorted(),
-                       ["effects/workshop/3000000003/e/effect.json", "materials/a.json",
-                        "materials/workshop/2000000002/b.json", "scene.json"])
-        XCTAssertEqual(manifest.warnings, [])
-        XCTAssertEqual(manifest.dependencyEntries, [])
-        XCTAssertTrue(fm.fileExists(atPath: wallpaper.appending(path: "materials/workshop/2000000002/b.json").path))
-        XCTAssertTrue(fm.fileExists(atPath: wallpaper.appending(path: "effects/workshop/3000000003/e/effect.json").path))
-        XCTAssertEqual(WorkshopDependencyResolver.referencedWorkshopIds(inItemAt: wallpaper), ["2000000002", "3000000003"])
+        XCTAssertEqual(WorkshopDependencyResolver.referencedWorkshopIds(inItemAt: wallpaper),
+                       ["2000000002", "3000000003", "4000000004"])
+        XCTAssertEqual(try fm.contentsOfDirectory(atPath: wallpaper.path).sorted(), before, "nothing is written")
     }
 }

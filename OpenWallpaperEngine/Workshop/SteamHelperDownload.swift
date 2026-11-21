@@ -50,15 +50,23 @@ enum SteamHelperDownload {
     /// The assets depot (and everything else of the app), and the one with the UI strings.
     static let assetsDepots = ["431961", "431966"]
 
-    /// What the asset cache and the default wallpapers are made from (`WallpaperEngineAssetsCache`,
-    /// `WallpaperEngineDefaultProjects`); the rest of the app isn't downloaded.
-    static let assetsFileList = [
-        #"regex:^assets/"#,
-        #"regex:^locale/ui_[^/]*\.json$"#,
-        "regex:^\(NSRegularExpression.escapedPattern(for: WallpaperEngineAssetsCache.installTemplatesPath))/",
-        #"regex:^projects/defaultprojects/"#,
-        "regex:^\(NSRegularExpression.escapedPattern(for: WallpaperEngineAssetsCache.installSnippetsPath))/",
-    ].joined(separator: "\n") + "\n"
+    /// The parts of Wallpaper Engine the app reads in place (`WallpaperEngineAssetsCache`), and the
+    /// default wallpapers when they're wanted (`WallpaperEngineDefaultProjects`); the rest of the app
+    /// isn't downloaded. Of `assets`: the effects and presets without their editor preview projects
+    /// (`preview…/` folders), the shaders without the Direct3D and editor ones, and the folders
+    /// wallpapers and the editor read; WE's editor scenes aren't.
+    static func assetsFileList(includingDefaultProjects: Bool) -> String {
+        let lines: [String?] = [
+            #"regex:^assets/(fonts|materials|models|particles|scripts|zcompat)/"#,
+            #"regex:^assets/(effects|presets)/(?!([^/]+/)*preview[^/]*/)"#,
+            #"regex:^assets/shaders/(?!([^/]+/)*(hlsl|editor)/)"#,
+            #"regex:^locale/ui_[^/]*\.json$"#,
+            "regex:^\(NSRegularExpression.escapedPattern(for: WallpaperEngineAssetsCache.installTemplatesPath))/",
+            includingDefaultProjects ? #"regex:^projects/defaultprojects/"# : nil,
+            "regex:^\(NSRegularExpression.escapedPattern(for: WallpaperEngineAssetsCache.installSnippetsPath))/",
+        ]
+        return lines.compactMap { $0 }.joined(separator: "\n") + "\n"
+    }
 
     /// The first line of the helper's stdin.
     static func standardInput(for login: SteamLogin) throws -> Data {
@@ -72,7 +80,7 @@ enum SteamHelperDownload {
             + (validate ? ["-validate"] : [])
     }
 
-    /// The parts of Wallpaper Engine in `fileList` (a file holding `assetsFileList`), into `directory`.
+    /// The parts of Wallpaper Engine in `fileList` (a file holding an `assetsFileList`), into `directory`.
     static func assetsArguments(directory: URL, fileList: URL) -> [String] {
         ["-app", "\(WorkshopAPIService.wallpaperEngineAppId)"]
             + assetsDepots.flatMap { ["-depot", $0] }

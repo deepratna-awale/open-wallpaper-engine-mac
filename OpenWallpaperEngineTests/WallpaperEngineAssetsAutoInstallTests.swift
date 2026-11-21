@@ -52,7 +52,7 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
         let cancellable = service.$phase.sink { phase in
             switch phase {
             case .idle, .failed: finished.fulfill()
-            case .downloading, .copying: break
+            case .downloading: break
             }
         }
         wait(for: [finished], timeout: 10)
@@ -84,8 +84,8 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
         defaults.removeObject(forKey: WallpaperEngineAssets.chosenFolderKey)
 
         let cache: URL = WallpaperEngineAssets.cacheDirectory(in: scratch)
-        try write("x", to: "shaders/common.h", in: cache)
-        try write("{}", to: "effects/tint/effect.json", in: cache)
+        try write("x", to: "assets/shaders/common.h", in: cache)
+        try write("{}", to: "assets/effects/tint/effect.json", in: cache)
         XCTAssertEqual(service.automaticInstallDecision(), .cached)
     }
 
@@ -135,8 +135,8 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
         let source: URL = scratch.appending(path: "A"), destination: URL = scratch.appending(path: "B")
         let cache: URL = WallpaperEngineAssets.cacheDirectory(in: source)
         try write("x", to: "shaders/common.h", in: cache)
-        try WallpaperEngineAssetsCache.writeInfo(.init(origin: .steam, installedAt: .now, steamBuildID: "7"), cache: cache)
-        for path in ["123/project.json", ".owe-download/x", ".DS_Store", "._123", ".owe-assets-download/x",
+        try WallpaperEngineAssetsCache.writeInfo(.init(installedAt: .now, steamBuildID: "7"), cache: cache)
+        for path in ["123/project.json", ".owe-download/x", ".DS_Store", "._123",
                      ".owe-assets.partial/x", ".owe-incoming-1/x", "taken/mine"] {
             try write("s", to: path, in: source)
         }
@@ -148,7 +148,7 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
         let movedCache: URL = WallpaperEngineAssets.cacheDirectory(in: destination)
         XCTAssertTrue(FileManager.default.fileExists(atPath: movedCache.appending(path: "shaders/common.h").path))
         XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: movedCache)?.steamBuildID, "7")
-        for kept in [".DS_Store", "._123", ".owe-assets-download", ".owe-assets.partial", ".owe-incoming-1",
+        for kept in [".DS_Store", "._123", ".owe-assets.partial", ".owe-incoming-1",
                      WorkshopDependencyIndex.fileName, "taken"] {
             XCTAssertTrue(FileManager.default.fileExists(atPath: source.appending(path: kept).path), kept)
         }

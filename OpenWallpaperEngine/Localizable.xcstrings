@@ -1154,101 +1154,6 @@
         }
       }
     },
-    "%@ of originals can be removed" : {
-      "comment" : "%@ is a file size, e.g. 1.2 GB",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يمكن إزالة %@ من الملفات الأصلية"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ an Originalen können entfernt werden"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se pueden eliminar %@ de originales"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ d’originaux peuvent être supprimés"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ मूल फ़ाइलें हटाई जा सकती हैं"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Puoi rimuovere %@ di originali"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "オリジナルの%@を削除できます"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "원본 %@ 제거 가능"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oryginały do usunięcia: %@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ de originais podem ser removidos"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Можно удалить оригиналы: %@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Orijinal dosyalardan %@ kaldırılabilir"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Можна звільнити %@, видаливши оригінали"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可移除 %@ 的原始文件"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可移除 %@ 的原始檔案"
-          }
-        }
-      }
-    },
     "%@ on %@" : {
       "comment" : "Accessibility label of a display's wallpaper picture in Display Settings: wallpaper title on display name",
       "localizations" : {
@@ -22492,289 +22397,6 @@
         }
       }
     },
-    "Collecting logs…" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جارٍ جمع السجلات…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokolle werden gesammelt …"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recopilando registros…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collecte des journaux…"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "लॉग इकट्ठा किए जा रहे हैं…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raccolta dei log…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ログを収集中…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "로그 수집 중…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zbieranie dzienników…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coletando registros…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сбор журналов…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Günlükler toplanıyor…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Збирання журналів…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在收集日志…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在收集記錄⋯"
-          }
-        }
-      }
-    },
-    "Collects the app's recent log and the latest crash report into one file you can read before attaching it to a GitHub issue." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يجمع السجل الأخير للتطبيق وأحدث تقرير انهيار في ملف واحد يمكنك قراءته قبل إرفاقه بمشكلة على GitHub."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fasst das aktuelle Protokoll der App und den neuesten Absturzbericht in einer Datei zusammen, die Sie lesen können, bevor Sie sie an ein GitHub-Issue anhängen."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reúne el registro reciente de la app y el último informe de fallo en un archivo que puedes leer antes de adjuntarlo a una incidencia de GitHub."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regroupe le journal récent de l’app et le dernier rapport de plantage dans un seul fichier, que vous pouvez lire avant de le joindre à un ticket GitHub."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऐप के हाल के लॉग और नवीनतम क्रैश रिपोर्ट को एक फ़ाइल में इकट्ठा करता है, जिसे आप GitHub इशू में अटैच करने से पहले पढ़ सकते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raccoglie il log recente dell’app e l’ultimo resoconto dell’arresto anomalo in un unico file che puoi leggere prima di allegarlo a una segnalazione su GitHub."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリの最近のログと最新のクラッシュレポートを1つのファイルにまとめます。GitHub の Issue に添付する前に内容を確認できます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "앱의 최근 로그와 최신 충돌 보고서를 하나의 파일로 모읍니다. GitHub 이슈에 첨부하기 전에 내용을 읽어 볼 수 있습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zbiera ostatni dziennik aplikacji i najnowszy raport awarii w jednym pliku, który możesz przeczytać przed załączeniem go do zgłoszenia w GitHubie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reúne o registro recente do app e o relatório de falha mais recente em um arquivo que você pode ler antes de anexá-lo a um issue do GitHub."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Собирает недавний журнал приложения и последний отчёт о сбое в один файл, который можно прочитать перед тем, как прикрепить к обсуждению на GitHub."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uygulamanın son günlüğünü ve en son çökme raporunu, bir GitHub sorununa eklemeden önce okuyabileceğiniz tek bir dosyada toplar."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Збирає нещодавній журнал програми й останній звіт про збій в один файл, який можна прочитати, перш ніж прикріпити його до обговорення на GitHub."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将 App 的近期日志和最新的崩溃报告汇总到一个文件中，你可以在附加到 GitHub 议题前先阅读。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "將 App 的近期記錄和最新的當機報告彙整成一個檔案，你可以在附加到 GitHub 議題前先閱讀。"
-          }
-        }
-      }
-    },
-    "Comments" : {
-      "comment" : "Heading of the details panel's section that lists a Workshop wallpaper's Steam comments",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التعليقات"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kommentare"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comentarios"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commentaires"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "टिप्पणियाँ"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commenti"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "コメント"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "댓글"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Komentarze"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comentários"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Комментарии"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yorumlar"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коментарі"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "评论"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "留言"
-          }
-        }
-      }
-    },
     "CRT" : {
       "comment" : "Wallpaper transition",
       "localizations" : {
@@ -30628,6 +30250,100 @@
         }
       }
     },
+    "Collecting logs…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ جمع السجلات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolle werden gesammelt …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando registros…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collecte des journaux…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉग इकट्ठा किए जा रहे हैं…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccolta dei log…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログを収集中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그 수집 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbieranie dzienników…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coletando registros…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбор журналов…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlükler toplanıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирання журналів…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在收集日志…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在收集記錄⋯"
+          }
+        }
+      }
+    },
     "Collection Link or Number" : {
       "localizations" : {
         "ar" : {
@@ -30718,6 +30434,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收藏集連結或編號"
+          }
+        }
+      }
+    },
+    "Collects the app's recent log and the latest crash report into one file you can read before attaching it to a GitHub issue." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجمع السجل الأخير للتطبيق وأحدث تقرير انهيار في ملف واحد يمكنك قراءته قبل إرفاقه بمشكلة على GitHub."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fasst das aktuelle Protokoll der App und den neuesten Absturzbericht in einer Datei zusammen, die Sie lesen können, bevor Sie sie an ein GitHub-Issue anhängen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reúne el registro reciente de la app y el último informe de fallo en un archivo que puedes leer antes de adjuntarlo a una incidencia de GitHub."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regroupe le journal récent de l’app et le dernier rapport de plantage dans un seul fichier, que vous pouvez lire avant de le joindre à un ticket GitHub."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप के हाल के लॉग और नवीनतम क्रैश रिपोर्ट को एक फ़ाइल में इकट्ठा करता है, जिसे आप GitHub इशू में अटैच करने से पहले पढ़ सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccoglie il log recente dell’app e l’ultimo resoconto dell’arresto anomalo in un unico file che puoi leggere prima di allegarlo a una segnalazione su GitHub."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリの最近のログと最新のクラッシュレポートを1つのファイルにまとめます。GitHub の Issue に添付する前に内容を確認できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱의 최근 로그와 최신 충돌 보고서를 하나의 파일로 모읍니다. GitHub 이슈에 첨부하기 전에 내용을 읽어 볼 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbiera ostatni dziennik aplikacji i najnowszy raport awarii w jednym pliku, który możesz przeczytać przed załączeniem go do zgłoszenia w GitHubie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reúne o registro recente do app e o relatório de falha mais recente em um arquivo que você pode ler antes de anexá-lo a um issue do GitHub."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Собирает недавний журнал приложения и последний отчёт о сбое в один файл, который можно прочитать перед тем, как прикрепить к обсуждению на GitHub."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamanın son günlüğünü ve en son çökme raporunu, bir GitHub sorununa eklemeden önce okuyabileceğiniz tek bir dosyada toplar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирає нещодавній журнал програми й останній звіт про збій в один файл, який можна прочитати, перш ніж прикріпити його до обговорення на GitHub."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 App 的近期日志和最新的崩溃报告汇总到一个文件中，你可以在附加到 GitHub 议题前先阅读。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 App 的近期記錄和最新的當機報告彙整成一個檔案，你可以在附加到 GitHub 議題前先閱讀。"
           }
         }
       }
@@ -31098,6 +30908,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "指令"
+          }
+        }
+      }
+    },
+    "Comments" : {
+      "comment" : "Heading of the details panel's section that lists a Workshop wallpaper's Steam comments",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التعليقات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommentare"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentarios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commentaires"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टिप्पणियाँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commenti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コメント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "댓글"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komentarze"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentários"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Комментарии"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yorumlar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коментарі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "评论"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "留言"
           }
         }
       }
@@ -32047,100 +31952,6 @@
         }
       }
     },
-    "Converted Wallpapers" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الخلفيات المحوّلة"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Konvertierte Hintergrundbilder"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fondos de pantalla convertidos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fonds d’écran convertis"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "कन्वर्ट किए गए वॉलपेपर"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sfondi convertiti"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "変換済みの壁紙"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "변환된 배경화면"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skonwertowane tapety"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Imagens de Fundo Convertidas"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Конвертированные обои"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dönüştürülmüş Duvar Kâğıtları"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Конвертовані шпалери"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已转换的墙纸"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已轉換的背景圖片"
-          }
-        }
-      }
-    },
     "Converting wallpaper" : {
       "comment" : "Android export: Wallpaper Engine's own wording (ui_browse_mobile_transcoder_progress_converting_project)",
       "localizations" : {
@@ -32326,101 +32137,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已拷貝"
-          }
-        }
-      }
-    },
-    "Copied from a folder" : {
-      "comment" : "Settings › Assets source",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "منسوخة من مجلد"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus einem Ordner kopiert"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiados de una carpeta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiées depuis un dossier"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "फ़ोल्डर से कॉपी किए गए"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiate da una cartella"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "フォルダからコピー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "폴더에서 복사됨"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skopiowane z folderu"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiados de uma pasta"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопированы из папки"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir klasörden kopyalandı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопійовано з папки"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从文件夹拷贝"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "從檔案夾拷貝"
           }
         }
       }
@@ -33370,101 +33086,6 @@
         }
       }
     },
-    "Copying assets…" : {
-      "comment" : "Assets install status",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يجري نسخ الموارد…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Assets werden kopiert …"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiando recursos…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copie des ressources…"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऐसेट कॉपी किए जा रहे हैं…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copia delle risorse…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アセットをコピー中…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "에셋을 복사하는 중…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopiowanie zasobów…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiando recursos…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Копирование ресурсов…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varlıklar kopyalanıyor…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Копіювання ресурсів…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在拷贝资源…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在拷貝資源⋯"
-          }
-        }
-      }
-    },
     "Copying…" : {
       "localizations" : {
         "ar" : {
@@ -33840,101 +33461,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法檢查 Wallpaper Engine 更新，因此未下載任何內容：%@ 若仍要下載，請選擇「重新下載」。"
-          }
-        }
-      }
-    },
-    "Couldn't update %@ to the latest conversion. They keep working as before, and Open Wallpaper Engine will try again next launch." : {
-      "comment" : "Notice after launch; names is a list of wallpaper titles",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعذّر تحديث %@ إلى أحدث تحويل. ستظل تعمل كما كانت، وسيحاول Open Wallpaper Engine مجددًا عند التشغيل التالي."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ konnte nicht auf die neueste Konvertierung aktualisiert werden. Sie funktionieren weiter wie bisher; Open Wallpaper Engine versucht es beim nächsten Start erneut."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se pudo actualizar %@ a la conversión más reciente. Siguen funcionando como antes y Open Wallpaper Engine lo volverá a intentar en el próximo inicio."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de mettre à jour %@ vers la dernière conversion. Ils continuent de fonctionner comme avant, et Open Wallpaper Engine réessaiera au prochain lancement."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ को नवीनतम रूपांतरण में अपडेट नहीं किया जा सका। ये पहले की तरह काम करते रहेंगे, और Open Wallpaper Engine अगली बार शुरू होने पर फिर से कोशिश करेगा।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossibile aggiornare %@ all'ultima conversione. Continuano a funzionare come prima e Open Wallpaper Engine riproverà al prossimo avvio."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ を最新の変換に更新できませんでした。これまでどおり動作し、Open Wallpaper Engine は次回の起動時に再試行します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@을(를) 최신 변환으로 업데이트할 수 없습니다. 이전처럼 계속 작동하며, Open Wallpaper Engine이 다음 실행 시 다시 시도합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się zaktualizować %@ do najnowszej konwersji. Działają jak dotąd, a Open Wallpaper Engine spróbuje ponownie przy następnym uruchomieniu."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não foi possível atualizar %@ para a conversão mais recente. Eles continuam funcionando como antes, e o Open Wallpaper Engine tentará novamente na próxima abertura."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось обновить %@ до последней конвертации. Они продолжат работать как раньше, а Open Wallpaper Engine попробует снова при следующем запуске."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ en son dönüştürmeye güncellenemedi. Eskisi gibi çalışmaya devam ediyorlar; Open Wallpaper Engine bir sonraki açılışta yeniden deneyecek."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не вдалося оновити %@ до останньої конвертації. Вони працюватимуть як раніше, а Open Wallpaper Engine спробує знову під час наступного запуску."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法将 %@ 更新到最新转换。它们会照常运行，Open Wallpaper Engine 将在下次启动时重试。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法將 %@ 更新至最新轉換。它們會照常運作，Open Wallpaper Engine 將在下次啟動時重試。"
           }
         }
       }
@@ -37432,100 +36958,6 @@
         }
       }
     },
-    "Deletes a wallpaper's original package once it has converted and rendered cleanly, to save disk space. If a later converter update changes a Workshop wallpaper, it's downloaded again; a local import isn't updated." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يحذف الحزمة الأصلية للخلفية بعد تحويلها وعرضها دون أخطاء، لتوفير مساحة القرص. وإذا غيّر تحديث لاحق للمحوّل خلفية من الورشة، فستُنزَّل مجددًا؛ أما الاستيراد المحلي فلا يُحدَّث."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Löscht das Originalpaket eines Hintergrundbilds, sobald es fehlerfrei konvertiert und dargestellt wurde, um Speicherplatz zu sparen. Ändert ein späteres Konverter-Update ein Workshop-Hintergrundbild, wird es erneut geladen; ein lokaler Import wird nicht aktualisiert."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elimina el paquete original de un fondo de pantalla cuando se ha convertido y mostrado sin errores, para ahorrar espacio en disco. Si una actualización posterior del conversor cambia un fondo de pantalla de Workshop, se vuelve a descargar; una importación local no se actualiza."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprime le paquet d’origine d’un fond d’écran une fois converti et affiché sans erreur, pour gagner de l’espace disque. Si une mise à jour ultérieure du convertisseur modifie un fond d’écran du Workshop, il est retéléchargé ; une importation locale n’est pas mise à jour."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "वॉलपेपर के सही से कन्वर्ट और रेंडर होने के बाद, डिस्क स्पेस बचाने के लिए उसका मूल पैकेज डिलीट करता है। अगर बाद का कन्वर्टर अपडेट किसी Workshop वॉलपेपर को बदलता है, तो वह फिर से डाउनलोड होता है; लोकल इंपोर्ट अपडेट नहीं होता।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elimina il pacchetto originale di uno sfondo dopo che è stato convertito e visualizzato senza errori, per risparmiare spazio su disco. Se un aggiornamento successivo del convertitore modifica uno sfondo del Workshop, viene scaricato di nuovo; un’importazione locale non viene aggiornata."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "壁紙が問題なく変換・描画されたら元のパッケージを削除し、ディスク容量を節約します。後のコンバータのアップデートでワークショップの壁紙が変わる場合は再ダウンロードされますが、ローカルから読み込んだものは更新されません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "배경화면이 오류 없이 변환되고 렌더링되면 원본 패키지를 삭제해 디스크 공간을 절약합니다. 이후 변환기 업데이트로 창작마당 배경화면이 바뀌면 다시 다운로드되며, 로컬에서 가져온 항목은 업데이트되지 않습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usuwa oryginalny pakiet tapety, gdy zostanie bezbłędnie przekonwertowana i wyrenderowana, aby oszczędzić miejsce na dysku. Jeśli późniejsza aktualizacja konwertera zmieni tapetę z Warsztatu, zostanie pobrana ponownie; lokalny import nie jest aktualizowany."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apaga o pacote original de uma imagem de fundo depois que ela é convertida e renderizada sem erros, para economizar espaço em disco. Se uma atualização posterior do conversor alterar uma imagem de fundo da Oficina, ela é baixada de novo; uma importação local não é atualizada."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удаляет исходный пакет обоев, когда они без ошибок преобразованы и отрисованы, чтобы сэкономить место на диске. Если более позднее обновление конвертера изменит обои из Мастерской, они загрузятся снова; локально импортированные не обновляются."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir duvar kâğıdı sorunsuz dönüştürülüp işlendiğinde, disk alanından tasarruf için özgün paketini siler. Sonraki bir dönüştürücü güncellemesi bir Atölye duvar kâğıdını değiştirirse yeniden indirilir; yerel içe aktarma güncellenmez."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видаляє оригінальний пакет шпалери, щойно її без помилок перетворено й відтворено, щоб заощадити місце на диску. Якщо пізніше оновлення конвертера змінить шпалеру з Майстерні, її буде викачано знову; локальний імпорт не оновлюється."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "墙纸成功转换并正常渲染后，删除其原始包以节省磁盘空间。如果之后的转换器更新改变了创意工坊墙纸，它会被重新下载；本地导入的墙纸不会更新。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "背景圖片成功轉換並正常渲染後，刪除其原始套件以節省磁碟空間。若之後的轉換器更新改變了工作坊背景圖片，會重新下載；本機輸入的項目不會更新。"
-          }
-        }
-      }
-    },
     "Deletes the caches now, except what the wallpapers on screen use. Wallpapers load slower once while their caches are made again." : {
       "comment" : "Settings › Performance › Caches: help of the Clear Caches button",
       "localizations" : {
@@ -37617,100 +37049,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "立即刪除快取，螢幕上的背景圖片正在使用的除外。重新建立快取期間，背景圖片的載入會慢一次。"
-          }
-        }
-      }
-    },
-    "Deletes the originals that are ready now, without waiting for the next launch." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يحذف النسخ الأصلية الجاهزة الآن دون انتظار التشغيل التالي."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Löscht die Originale, die jetzt bereit sind, ohne auf den nächsten Start zu warten."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elimina ahora los originales que están listos, sin esperar al próximo inicio."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprime dès maintenant les originaux prêts, sans attendre le prochain lancement."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "अगले लॉन्च का इंतज़ार किए बिना, अभी तैयार मूल फ़ाइलें डिलीट करता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elimina ora gli originali pronti, senza attendere il prossimo avvio."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "次回の起動を待たずに、準備ができているオリジナルを今すぐ削除します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "다음 실행을 기다리지 않고 지금 준비된 원본을 삭제합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usuwa gotowe oryginały teraz, bez czekania na następne uruchomienie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apaga agora os originais que estão prontos, sem esperar a próxima abertura."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удаляет готовые к удалению оригиналы сейчас, не дожидаясь следующего запуска."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hazır olan orijinalleri bir sonraki açılışı beklemeden şimdi siler."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видаляє готові оригінали зараз, не чекаючи наступного запуску."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "立即删除已准备好的原始文件，无需等到下次启动。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "立即刪除已準備好的原始檔案，無須等到下次啟動。"
           }
         }
       }
@@ -90605,100 +89943,6 @@
         }
       }
     },
-    "No originals ready to remove" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا توجد ملفات أصلية جاهزة للإزالة"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Originale zum Entfernen bereit"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No hay originales listos para eliminar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun original prêt à être supprimé"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "हटाने के लिए कोई मूल फ़ाइल तैयार नहीं"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun originale da rimuovere"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "削除できるオリジナルはありません"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "제거할 원본 없음"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Brak oryginałów do usunięcia"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nenhum original pronto para remover"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет оригиналов для удаления"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaldırılmaya hazır orijinal yok"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Немає оригіналів для видалення"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有可移除的原始文件"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "沒有可移除的原始檔案"
-          }
-        }
-      }
-    },
     "No playlist has a shortcut yet." : {
       "localizations" : {
         "ar" : {
@@ -113982,100 +113226,6 @@
         }
       }
     },
-    "Reclaim Now" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استرداد المساحة الآن"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jetzt freigeben"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Liberar ahora"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Libérer maintenant"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "अभी खाली करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recupera ora"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "今すぐ解放"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지금 확보"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zwolnij miejsce"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Liberar Agora"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Освободить"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Şimdi Boşalt"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Звільнити зараз"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "立即回收"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "立即釋放空間"
-          }
-        }
-      }
-    },
     "Record Shortcut" : {
       "localizations" : {
         "ar" : {
@@ -117191,100 +116341,6 @@
         }
       }
     },
-    "Remove original packages after conversion" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إزالة الحزم الأصلية بعد التحويل"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Originalpakete nach der Konvertierung entfernen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eliminar los paquetes originales tras la conversión"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprimer les paquets originaux après la conversion"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "कन्वर्ज़न के बाद मूल पैकेज हटाएँ"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rimuovi i pacchetti originali dopo la conversione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "変換後にオリジナルのパッケージを削除"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "변환 후 원본 패키지 제거"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usuwaj oryginalne pakiety po konwersji"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remover os pacotes originais após a conversão"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удалять исходные пакеты после конвертации"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dönüştürmeden sonra orijinal paketleri kaldır"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видаляти оригінальні пакети після конвертації"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "转换后移除原始包"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轉換後移除原始套件"
-          }
-        }
-      }
-    },
     "Remove the assets?" : {
       "comment" : "Confirmation title",
       "localizations" : {
@@ -117376,334 +116432,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "要移除資源嗎？"
-          }
-        }
-      }
-    },
-    "Removed %lld original packages." : {
-      "localizations" : {
-        "ar" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "تمت إزالة %lld حزم أصلية."
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "تمت إزالة %lld حزمة أصلية."
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "تمت إزالة حزمة أصلية واحدة."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "تمت إزالة %lld حزمة أصلية."
-                }
-              },
-              "two" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "تمت إزالة حزمتين أصليتين."
-                }
-              },
-              "zero" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "لم تتم إزالة أي حزمة أصلية."
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Originalpaket entfernt."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Originalpakete entfernt."
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Removed %lld original package."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Removed %lld original packages."
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Se ha eliminado %lld paquete original."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Se han eliminado %lld paquetes originales."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paquet original supprimé."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paquets originaux supprimés."
-                }
-              }
-            }
-          }
-        },
-        "hi" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld मूल पैकेज हटाया गया."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld मूल पैकेज हटाए गए."
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Rimosso %lld pacchetto originale."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Rimossi %lld pacchetti originali."
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld個のオリジナルパッケージを削除しました。"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "원본 패키지 %lld개를 제거했습니다."
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Usunięto %lld oryginalne pakiety."
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Usunięto %lld oryginalnych pakietów."
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Usunięto %lld oryginalny pakiet."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Usunięto %lld oryginalnego pakietu."
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld pacote original removido."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld pacotes originais removidos."
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Удалено %lld исходных пакета."
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Удалено %lld исходных пакетов."
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Удалён %lld исходный пакет."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Удалено %lld исходных пакетов."
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld orijinal paket kaldırıldı."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld orijinal paket kaldırıldı."
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Видалено %lld оригінальні пакети."
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Видалено %lld оригінальних пакетів."
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Видалено %lld оригінальний пакет."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Видалено %lld оригінального пакета."
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "已移除 %lld 个原始包。"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "已移除 %lld 個原始套件。"
-                }
-              }
-            }
           }
         }
       }
@@ -174190,100 +172918,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背景圖片"
-          }
-        }
-      }
-    },
-    "Wallpapers are unpacked into plain files when imported. The original package is kept until the wallpaper has rendered from those files, reported no conversion warnings, and no other wallpaper depends on it." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُفك حزم الخلفيات إلى ملفات عادية عند استيرادها. وتُحفظ الحزمة الأصلية إلى أن تُعرض الخلفية من تلك الملفات دون أي تحذيرات تحويل، وألا تعتمد عليها أي خلفية أخرى."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hintergrundbilder werden beim Import in normale Dateien entpackt. Das Originalpaket bleibt erhalten, bis das Hintergrundbild aus diesen Dateien dargestellt wurde, keine Konvertierungswarnungen gemeldet hat und kein anderes Hintergrundbild davon abhängt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Al importarlos, los fondos de pantalla se descomprimen en archivos normales. El paquete original se conserva hasta que el fondo de pantalla se haya renderizado a partir de esos archivos, no haya dado avisos de conversión y ningún otro fondo de pantalla dependa de él."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les fonds d’écran sont décompressés en fichiers ordinaires lors de l’importation. Le paquet d’origine est conservé jusqu’à ce que le fond d’écran ait été rendu à partir de ces fichiers sans avertissement de conversion, et qu’aucun autre fond d’écran n’en dépende."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "इंपोर्ट करते समय वॉलपेपर को सामान्य फ़ाइलों में अनपैक किया जाता है. मूल पैकेज तब तक रखा जाता है, जब तक वॉलपेपर उन फ़ाइलों से रेंडर न हो जाए, कन्वर्ज़न की कोई चेतावनी न आए, और कोई अन्य वॉलपेपर उस पर निर्भर न हो."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gli sfondi vengono estratti in file semplici durante l’importazione. Il pacchetto originale viene conservato finché lo sfondo non è stato visualizzato da quei file senza avvisi di conversione e nessun altro sfondo dipende da esso."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "壁紙は読み込み時に通常のファイルに展開されます。オリジナルのパッケージは、壁紙がそれらのファイルからレンダリングされ、変換の警告がなく、ほかの壁紙から依存されていないことが確認されるまで保持されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "배경화면은 가져올 때 일반 파일로 압축 해제됩니다. 원본 패키지는 배경화면이 해당 파일로 렌더링되고, 변환 경고가 보고되지 않으며, 다른 배경화면이 이에 의존하지 않을 때까지 유지됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Podczas importu tapety są rozpakowywane do zwykłych plików. Oryginalny pakiet jest zachowywany, dopóki tapeta nie zostanie wyrenderowana z tych plików bez ostrzeżeń o konwersji i dopóki żadna inna tapeta od niego nie zależy."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As imagens de fundo são descompactadas em arquivos comuns ao serem importadas. O pacote original é mantido até que a imagem de fundo tenha sido renderizada a partir desses arquivos, sem avisos de conversão, e nenhuma outra imagem de fundo dependa dele."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "При импорте обои распаковываются в обычные файлы. Исходный пакет сохраняется, пока обои не отобразятся из этих файлов без предупреждений о конвертации и пока от него не зависят другие обои."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duvar kâğıtları içe aktarılırken düz dosyalara açılır. Orijinal paket; duvar kâğıdı bu dosyalardan işlenene, dönüştürme uyarısı bildirilmeyene ve başka hiçbir duvar kâğıdı ona bağımlı olmayana kadar saklanır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Під час імпорту шпалери розпаковуються у звичайні файли. Оригінальний пакет зберігається, доки шпалера не відрендериться з цих файлів без попереджень про конвертацію і доки від нього не залежить жодна інша шпалера."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导入时，墙纸会被解包为普通文件。原始包会一直保留，直到墙纸已从这些文件成功渲染、未报告转换警告，且没有其他墙纸依赖它。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "輸入背景圖片時會將其解開為一般檔案。原始套件會保留到背景圖片已從這些檔案成功渲染、未回報轉換警告，且沒有其他背景圖片依賴它為止。"
           }
         }
       }
