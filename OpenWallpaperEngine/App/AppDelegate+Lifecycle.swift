@@ -96,6 +96,18 @@ extension AppDelegate {
         // Log on to Steam with the saved login, if any. The Steam helper ends with the app: its
         // input closes when the app exits.
         Task { await contentViewModel.steamAccount.restore() }
+
+        // Wallpapers an earlier version unpacked get their package back, in the background.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let bundles = UnpackedBundle.scan(storage: FileManager.default.wallpapersDirectory)
+                .map { (bundle: $0, packageOnDisk: $0.packageOnDisk()) }
+            guard !bundles.isEmpty else { return }
+            OWELog.info(.importer, "Unpacked wallpapers: \(bundles.count) to give their package back")
+            // Later, so the Steam login restored at launch has had its turn.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+                self?.restoreUnpackedBundles(bundles)
+            }
+        }
     }
     
     func screenSaverSessionChanged(_ running: Bool) {
@@ -136,6 +148,18 @@ extension AppDelegate {
                 OWELog.info(.app, "Live screen saver: a window opened; the copy launched for the screen saver keeps running")
             }
         }
+    }
+
+    private func restoreUnpackedBundles(_ bundles: [(bundle: UnpackedBundle, packageOnDisk: URL?)]) {
+        let restorer = UnpackedBundleRestorer(
+            downloader: contentViewModel.workshopDownloads,
+            isShown: { [weak self] directory in
+                self?.wallpaperViewModel.wallpapers.values.contains {
+                    $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
+                } ?? false
+            })
+        unpackedBundleRestorer = restorer
+        restorer.run(bundles)
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {

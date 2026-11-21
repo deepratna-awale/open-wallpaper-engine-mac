@@ -214,6 +214,43 @@ class WorkshopDownloadService: ObservableObject {
         }
     }
 
+    /// Downloads a Workshop item again only for its package: the downloaded `packageName` is
+    /// copied to `destination` (a hidden file beside the installed item's files), which nothing else
+    /// of the installed item changes. Runs after other downloads at background priority;
+    /// `completion` runs on the main queue with whether the package landed.
+    func fetchPackage(workshopId: String, packageName: String, to destination: URL,
+                      completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+        guard let login = steamLogin,
+              !packageName.contains("/"), !packageName.contains("\\"), !packageName.hasPrefix(".") else {
+            return completion(false)
+        }
+        downloadQueue.async(qos: .background) { [weak self] in
+            guard let self else { return }
+            let landed: Bool
+            do {
+                let storage = try self.storageDirectory()
+                let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
+                defer { WorkshopItemInstaller.removeStaging(staging) }
+                try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+                let package = try self.helperDownload(workshopId, login: login, into: staging, validate: true)
+                    .appending(path: packageName)
+                guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
+                    throw DownloadError.failed("\(packageName) isn't in the download")
+                }
+                // Copied beside the destination, then renamed in: a half-copied package never counts.
+                let incoming = destination.deletingLastPathComponent().appending(path: ".owe-incoming-" + UUID().uuidString)
+                try FileManager.default.copyItem(at: package, to: incoming)
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.moveItem(at: incoming, to: destination)
+                landed = true
+            } catch {
+                OWELog.error(.workshop, "Workshop item \(workshopId): its package didn't download: \(error.localizedDescription)")
+                landed = false
+            }
+            DispatchQueue.main.async { completion(landed) }
+        }
+    }
+
     /// Downloads into a staging folder inside the storage folder and moves the finished item to
     /// `<storage>/<id>`, or, `replacing`, in place of the installed one. Call on `downloadQueue`:
     /// downloads share the one staging folder.
