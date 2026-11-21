@@ -6,7 +6,7 @@ import Foundation
 /// Generation plugin's model and the exports are not caches and are not listed.
 struct CacheFolder: Equatable, Sendable {
     enum ID: String, CaseIterable, Sendable {
-        case textures, loadingSnapshots, editorPreviews, videoTextures, repairedVideos
+        case textures, loadingSnapshots, editorPreviews, repairedVideos
         case displayPictures, shaderVariants, pipelineArchives
 
         /// The id `caches_get` reports (MCP).
@@ -15,7 +15,6 @@ struct CacheFolder: Equatable, Sendable {
             case .textures: return "textures"
             case .loadingSnapshots: return "loading_snapshots"
             case .editorPreviews: return "editor_previews"
-            case .videoTextures: return "video_textures"
             case .repairedVideos: return "repaired_videos"
             case .displayPictures: return "display_pictures"
             case .shaderVariants: return "shader_variants"

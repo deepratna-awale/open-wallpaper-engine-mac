@@ -10,7 +10,6 @@ extension CacheFolder {
             CacheFolder(id: .textures, root: textureRoot, expires: true),
             CacheFolder(id: .loadingSnapshots, root: SceneLoadingSnapshotStore.root(in: location.cachesDirectory), expires: true),
             CacheFolder(id: .editorPreviews, root: caches.appending(path: "EditorPreviews", directoryHint: .isDirectory), expires: true),
-            CacheFolder(id: .videoTextures, root: EmbeddedVideoFiles.folder(in: location.cachesDirectory), expires: true),
             CacheFolder(id: .repairedVideos, root: RepairedVideoCache.root(in: location.cachesDirectory), expires: true),
             CacheFolder(id: .displayPictures, root: caches.appending(path: "DisplayPictures", directoryHint: .isDirectory), expires: false),
             CacheFolder(id: .shaderVariants, root: location.appCachesDirectory.appending(path: "shader-variants", directoryHint: .isDirectory),

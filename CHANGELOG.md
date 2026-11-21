@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Scene video textures play in place.** A scene's videos were first copied byte for byte into the caches (`VideoTextures`, 214 MB for a scene such as Elaina day/night). They now play straight from the wallpaper's own files, so nothing is written. `caches_get` no longer lists `video_textures`; an old `~/Library/Caches/Open Wallpaper Engine/VideoTextures` folder can be deleted. ([#592](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/592))
+
 ## [1.0.0-beta.18] - 2026-11-15
 
 ### Changed

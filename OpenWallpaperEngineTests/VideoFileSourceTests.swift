@@ -62,6 +62,27 @@ final class VideoFileSourceTests: XCTestCase {
         withExtendedLifetime(source) {}
     }
 
+    /// A scene's video texture plays from a slice of bytes held elsewhere (a package's), in place.
+    func testABytesSourcePlaysASliceInPlace() async throws {
+        let url = try VideoClipFixture.make(frames: 30, in: directory)
+        let movie = try Data(contentsOf: url)
+        let package = Data(repeating: 0xAB, count: 333) + movie + Data(repeating: 0xCD, count: 77)
+        let slice = package[333..<(333 + movie.count)]
+        let source = VideoFileSource(bytes: slice, name: "video-texture.mp4")
+        XCTAssertTrue(source.isInMemory)
+        XCTAssertEqual(source.url.scheme, MemoryVideoLoader.scheme)
+        let asset = source.makeAsset()
+        let duration = try await asset.load(.duration)
+        let diskDuration = try await AVURLAsset(url: url).load(.duration)
+        XCTAssertEqual(duration, diskDuration)
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+        let image = try await generator.image(at: CMTime(value: 29, timescale: 30)).image
+        XCTAssertEqual(image.width, 64)
+        withExtendedLifetime(source) {}
+    }
+
     func testTheLoaderServesTheFilesBytes() throws {
         let bytes = Data((0..<5000).map { UInt8(truncatingIfNeeded: $0 * 7) })
         let loader = MemoryVideoLoader(data: bytes, contentType: "public.mpeg-4")

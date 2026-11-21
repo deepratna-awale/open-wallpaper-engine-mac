@@ -1,5 +1,4 @@
 import AVFoundation
-import CryptoKit
 import CoreVideo
 import Metal
 import QuartzCore
@@ -54,7 +53,7 @@ final class VideoTextureStream {
     private static let rateEpsilon: Float = 0.01
     private static let audioSmoothing = 0.25
     /// The file is in use while the stream plays it: Clear Caches and the cache expiry keep it.
-    private let fileLease: CacheLease
+    private let fileLease: CacheLease?
     /// The file the players read, kept while they do: from memory, it owns the bytes.
     private let file: VideoFileSource
 
@@ -66,7 +65,7 @@ final class VideoTextureStream {
     /// linear light, and falls back to SDR (logged) when its conversion can't be made.
     init?(file: VideoFileSource, device: MTLDevice, dynamicRange: VideoDynamicRange = .sdr) {
         self.file = file
-        fileLease = CacheLeases.current.lease(file.url)
+        fileLease = file.url.isFileURL ? CacheLeases.current.lease(file.url) : nil
         var cache: CVMetalTextureCache?
         guard CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &cache) == kCVReturnSuccess,
               let cache else { return nil }
@@ -234,10 +233,11 @@ final class VideoTextureStream {
     // MARK: - Video textures in scenes
 
     /// A scene image's video texture: muted (WE's video textures are pictures), playing and
-    /// looping from the start. Scripts drive it through `perform(_:)`.
+    /// looping from the start. Scripts drive it through `perform(_:)`. It plays `data` where it is
+    /// (`VideoFileSource(bytes:name:)`).
     static func embedded(mp4 data: Data, device: MTLDevice) -> VideoTextureStream? {
-        guard let url = EmbeddedVideoFiles.url(for: data) else { return nil }
-        guard let stream = VideoTextureStream(url: url, device: device) else { return nil }
+        guard let stream = VideoTextureStream(file: VideoFileSource(bytes: data, name: "video-texture.mp4"), device: device)
+        else { return nil }
         stream.setAudio(enabled: false, volume: 0)
         stream.setVideoRate(1)
         return stream
@@ -309,32 +309,5 @@ final class HeldVideoFrame: @unchecked Sendable {
     deinit {
         texture = nil
         withExtendedLifetime(cache) {}
-    }
-}
-
-/// The MP4 files of scene video textures, written once per content into the caches folder
-/// (`<Caches>/Open Wallpaper Engine/VideoTextures/<SHA-256>.mp4`, or the isolated copy's) so
-/// AVFoundation can open them by URL. Serving one marks it used (`CacheEntryUse`).
-enum EmbeddedVideoFiles {
-    static func folder(in cachesDirectory: URL) -> URL {
-        cachesDirectory.appending(path: "Open Wallpaper Engine/VideoTextures", directoryHint: .isDirectory)
-    }
-
-    static func url(for data: Data, cachesDirectory: URL = AppStorageLocation.current.cachesDirectory) -> URL? {
-        let digest = Digest.hex(SHA256.hash(data: data))
-        let folder = folder(in: cachesDirectory)
-        let url = folder.appendingPathComponent(digest).appendingPathExtension("mp4")
-        if FileManager.default.fileExists(atPath: url.path) {
-            CacheEntryUse.markUsed(url)
-            return url
-        }
-        do {
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            try data.write(to: url, options: .atomic)
-            return url
-        } catch {
-            OWELog.error(.scene, "Could not write a video texture: \(error)")
-            return nil
-        }
     }
 }
