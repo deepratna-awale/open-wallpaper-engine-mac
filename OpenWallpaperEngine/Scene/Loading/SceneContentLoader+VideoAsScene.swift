@@ -17,9 +17,9 @@ extension SceneContentLoader {
     /// Wallpaper Engine's own `scenes/videoplayer` does.
     func videoContent() -> SceneMetalContent? {
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
-        // Runs on the content queue: a video AVFoundation refuses as it is plays from its repaired
-        // copy, made here on first play when the import didn't make it.
-        let url = videoStream == nil ? RepairedVideoCache.current.playableURL(for: currentWallpaper.mediaURL) : currentWallpaper.mediaURL
+        // Runs on the content queue: a video AVFoundation refuses as it is plays repaired, read
+        // from its `moov` here (`VideoFileSource`).
+        let url = currentWallpaper.mediaURL
         let dynamicRange = videoDynamicRange(of: url)
         // The stream decodes for one range: a change of the setting reopens it.
         if let videoStream, videoStream.dynamicRange != dynamicRange {

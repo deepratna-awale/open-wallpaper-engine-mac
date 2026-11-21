@@ -78,7 +78,7 @@ final class CacheSweeperTests: XCTestCase {
     // MARK: - In use
 
     func testEntriesInUseAreKept() throws {
-        let textures = folder(.textures), snapshots = folder(.loadingSnapshots), videos = folder(.repairedVideos)
+        let textures = folder(.textures), snapshots = folder(.loadingSnapshots), videos = folder(.editorPreviews)
         let blob = try entry("aa-l0.owetex", in: textures, daysAgo: 300)
         let snapshot = try entry("r1/wallpaper-1/key-3840x2160.heic", in: snapshots, daysAgo: 300)
         let copy = try entry("r1/0123/42-1.mp4", in: videos, daysAgo: 300)

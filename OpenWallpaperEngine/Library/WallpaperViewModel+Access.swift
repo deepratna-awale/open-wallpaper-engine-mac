@@ -282,9 +282,6 @@ extension WallpaperViewModel {
                     try fileManager.copyItem(at: url, to: folder.appending(path: fileName))
                     if let previewData { try previewData.write(to: folder.appending(path: "preview.jpg"), options: .atomic) }
                     try JSONEncoder().encode(project).write(to: WEProject.url(in: folder), options: .atomic)
-                    DispatchQueue.global(qos: .utility).async {
-                        WallpaperPreparation.prepareVideo(wallpaperDirectory: folder)
-                    }
                 } catch {
                     OWELog.error(.importer, "Failed to import video: \(error.localizedDescription)")
                 }

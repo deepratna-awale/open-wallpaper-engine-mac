@@ -75,20 +75,22 @@ final class ScreenSaverStillPublisher {
     }
 
     /// A video wallpaper's picture: its first frame filling `pixels` (aspect kept, centred), read
-    /// by the hardware decoder from its file (a file that keeps its parameter sets in band from
-    /// its repaired copy, `RepairedVideoCache`); its preview when the frame can't be read. Nothing
+    /// by the hardware decoder from its file (a file that keeps its parameter sets in band
+    /// repaired as it is read, `VideoFileSource`); its preview when the frame can't be read. Nothing
     /// is kept once `isCurrent` says another wallpaper was picked meanwhile.
     func publishFirstFrame(of wallpaper: WEWallpaper, filling pixels: SIMD2<Int>,
                            isCurrent: @escaping @MainActor () -> Bool = { true }) {
         let source = wallpaper.mediaURL
         Task { [weak self] in
             let image = await Task.detached(priority: .utility) { () -> CGImage? in
-                let url = RepairedVideoCache.current.playableURL(for: source)
-                let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+                let file = VideoFileSource(url: source, mode: .fromDisk)
+                let generator = AVAssetImageGenerator(asset: file.makeAsset())
                 generator.appliesPreferredTrackTransform = true
                 generator.requestedTimeToleranceBefore = .zero
                 generator.requestedTimeToleranceAfter = .positiveInfinity
-                guard let frame = try? await generator.image(at: .zero).image else { return nil } // Optional: falls back to the preview.
+                let frame = try? await generator.image(at: .zero).image // Optional: falls back to the preview.
+                withExtendedLifetime(file) {}
+                guard let frame else { return nil }
                 return Self.filled(frame, pixels: pixels)
             }.value
             guard let self, isCurrent() else { return }

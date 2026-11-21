@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Scene video textures play in place.** A scene's videos were first copied byte for byte into the caches (`VideoTextures`, 214 MB for a scene such as Elaina day/night). They now play straight from the wallpaper's own files, so nothing is written. `caches_get` no longer lists `video_textures`; an old `~/Library/Caches/Open Wallpaper Engine/VideoTextures` folder can be deleted. ([#592](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/592))
+- **Videos AVFoundation can't open as they are play without a repaired copy.** A video that keeps its parameter sets in band (`hev1`, `avc3`) used to be copied whole into the caches with its header fixed (`RepairedVideos`, 277 MB for one video). The fix is now applied as the video is read: the player gets the file's own bytes with the fixed header served in place of the original, so nothing is written and there's no "Preparing video…" wait on first play. `caches_get` no longer lists `repaired_videos`; an old `~/Library/Caches/Open Wallpaper Engine/RepairedVideos` folder can be deleted. ([#593](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/593))
 
 ## [1.0.0-beta.18] - 2026-11-15
 

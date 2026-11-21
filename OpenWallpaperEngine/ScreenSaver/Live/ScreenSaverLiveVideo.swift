@@ -42,6 +42,8 @@ final class ScreenSaverLiveVideo {
     private var itemObservation: NSKeyValueObservation?
     private var endObserver: NSObjectProtocol?
     private var preparation: Task<Void, Never>?
+    /// The file its own player reads, kept while it does (`VideoFileSource`).
+    private var file: VideoFileSource?
     private var output: AVPlayerItemVideoOutput?
     /// The item `output` reads.
     private weak var outputItem: AVPlayerItem?
@@ -109,14 +111,15 @@ final class ScreenSaverLiveVideo {
             player.actionAtItemEnd = .none
             player.automaticallyWaitsToMinimizeStalling = false
             self.player = player
-            // A file that keeps its parameter sets in band plays from its repaired copy, as on the
-            // desktop (`RepairedVideoCache`; made once, off the main thread).
+            // A file that keeps its parameter sets in band plays repaired, as on the desktop
+            // (`VideoFileSource`; its `moov` read off the main thread).
             preparation = Task { [weak self] in
-                let playable = await Task.detached(priority: .userInitiated) {
-                    RepairedVideoCache.current.playableURL(for: url)
+                let file = await Task.detached(priority: .userInitiated) {
+                    VideoFileSource(url: url, mode: .fromDisk)
                 }.value
                 guard let self, !Task.isCancelled else { return }
-                let item = AVPlayerItem(url: playable)
+                self.file = file
+                let item = AVPlayerItem(asset: file.makeAsset())
                 self.attachOutput(to: item)
                 player.replaceCurrentItem(with: item)
                 self.endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item,

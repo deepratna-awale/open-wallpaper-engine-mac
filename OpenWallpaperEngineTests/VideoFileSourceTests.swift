@@ -86,8 +86,8 @@ final class VideoFileSourceTests: XCTestCase {
     func testTheLoaderServesTheFilesBytes() throws {
         let bytes = Data((0..<5000).map { UInt8(truncatingIfNeeded: $0 * 7) })
         let loader = VideoBytesLoader(data: bytes, contentType: "public.mpeg-4")
-        XCTAssertEqual(loader.bytes(100..<300), bytes.subdata(in: 100..<300))
-        XCTAssertEqual(loader.bytes(0..<0), Data())
+        XCTAssertEqual(try loader.bytes(100..<300), bytes.subdata(in: 100..<300))
+        XCTAssertEqual(try loader.bytes(0..<0), Data())
         XCTAssertEqual(VideoBytesLoader.range(offset: 4000, length: 2000, toEnd: false, fileLength: 5000), 4000..<5000)
         XCTAssertEqual(VideoBytesLoader.range(offset: 10, length: 2, toEnd: true, fileLength: 5000), 10..<5000)
         XCTAssertNil(VideoBytesLoader.range(offset: 5001, length: 2, toEnd: false, fileLength: 5000))
@@ -97,7 +97,7 @@ final class VideoFileSourceTests: XCTestCase {
 
     func testBytesHandedOutOutliveTheLoader() throws {
         var loader: VideoBytesLoader? = VideoBytesLoader(data: Data(repeating: 9, count: 64), contentType: "public.mpeg-4")
-        let slice = try XCTUnwrap(loader?.bytes(8..<16))
+        let slice = try XCTUnwrap(try loader?.bytes(8..<16))
         loader = nil
         XCTAssertEqual(slice, Data(repeating: 9, count: 8))
     }
