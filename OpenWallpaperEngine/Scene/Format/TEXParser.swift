@@ -40,23 +40,12 @@ struct TEXCompressedTexture {
     /// The stored mipmaps after `data`'s, each half the one before (as Metal lays out a mipmapped
     /// texture), uploaded with it.
     var mipmaps: [Data] = []
-    /// Every level, mapped from a prepared blob (`TexturePreparation`), in place of `data` and
-    /// `mipmaps`.
-    var storedLevels: [Data]? = nil
-    /// The prepared blob's key, which identical textures share (one upload serves them all).
-    var sourceKey: String? = nil
-    /// The layer analysis's class and opacity, recorded when the texture was prepared.
-    var contentClass: SceneLayerContentClass? = nil
-    var opaque: Bool? = nil
-
-    /// The `.tex` format number a prepared BC7 texture reports.
-    static let bc7Format: UInt32 = 12
 
     /// Bytes per 4×4 block of a block-compressed `.tex` format (DXT1 8, the others 16).
     static func bytesPerBlock(format: UInt32) -> Int { format == 7 ? 8 : 16 }
 
-    /// Every level to upload: `storedLevels`, else `data` followed by `mipmaps`.
-    var levels: [Data] { storedLevels ?? ([Data(data)] + mipmaps) }
+    /// Every level to upload: `data` followed by `mipmaps`.
+    var levels: [Data] { [Data(data)] + mipmaps }
 }
 
 class TEXParser {
@@ -258,17 +247,6 @@ class TEXParser {
             if mipmap.width == 1, mipmap.height == 1 { break }
         }
         return levels
-    }
-
-    /// Whether the first image is stored raw (no FreeImage container) inside an allocation larger
-    /// than the image: it is uploaded padded (`TEXRawImageRep.makeAllocationTexture`), so it isn't
-    /// replaced by a cropped prepared texture (`TexturePreparation`).
-    func isPaddedRawImage() -> Bool {
-        guard let header = containerReader()?.header, ![UInt32(4), 6, 7].contains(header.format) else { return false }
-        let padded = header.imageWidth > 0 && header.imageHeight > 0
-            && (header.textureWidth > header.imageWidth || header.textureHeight > header.imageHeight)
-        // From TEXB0003, FreeImage format -1: the mipmaps are raw texels, not an embedded PNG or JPEG.
-        return padded && (header.containerVersion < 3 || header.freeImageFormat == -1)
     }
 
     /// How many mipmaps the first image stores; nil for a file that isn't a TEX container.

@@ -327,9 +327,6 @@ struct GlobalSettings: Codable, Equatable {
     var qualityEfficiency = QualityEfficiency.defaultStop
     /// The particle budget per scene (`ParticleBudget`).
     var particleBudget = GSParticleBudget.medium
-    /// "Optimise textures" (`TexturePreparation`): scenes' colour images are compressed once to
-    /// BC7 in the background and load from that cache after. On by default.
-    var optimiseTextures = true
     /// Web wallpapers render at 1 point per pixel on Retina displays (`WebPageScale`): a quarter
     /// of the pixels for pages that size their canvas by `devicePixelRatio`. Off by default.
     var webStandardResolution = false
@@ -436,7 +433,7 @@ struct GlobalSettings: Codable, Equatable {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep, applicationRules
         case batteryQuality, batteryQualityPreset, batteryFrameRateCap
-        case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
+        case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
         case antiAliasing = "msaa"
@@ -502,7 +499,6 @@ extension GlobalSettings {
         read(.qualityEfficiency, &qualityEfficiency)
         qualityEfficiency = QualityEfficiency(stop: qualityEfficiency).stop
         read(.particleBudget, &particleBudget)
-        read(.optimiseTextures, &optimiseTextures)
         read(.webStandardResolution, &webStandardResolution)
         read(.reducedResolutionParticles, &reducedResolutionParticles)
         read(.autoStart, &autoStart)

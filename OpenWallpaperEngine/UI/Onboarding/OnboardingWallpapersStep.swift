@@ -47,9 +47,6 @@ final class OnboardingImports: ObservableObject {
     static func didImport(_ folders: [URL], contentViewModel: ContentViewModel) {
         for folder in folders {
             DownloadedWallpaperIndex.shared.insert(folder.lastPathComponent)
-            DispatchQueue.global(qos: .utility).async {
-                WallpaperPreparation.prepare(wallpaperDirectory: folder)
-            }
             AppDelegate.shared.workshopDependencies.ensureDependencies(ofItemAt: folder)
         }
         contentViewModel.refresh()

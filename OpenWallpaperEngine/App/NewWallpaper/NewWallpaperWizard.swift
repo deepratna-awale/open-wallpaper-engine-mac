@@ -30,10 +30,9 @@ extension AppDelegate {
         window.beginSheet(panel)
     }
 
-    /// A wallpaper the sheet made: prepared as an imported one, and a scene opened for editing.
+    /// A wallpaper the sheet made: a scene opens for editing.
     private func newWallpaperCreated(_ folder: URL, isScene: Bool) {
         OWELog.info(.library, "New wallpaper \(folder.path)")
-        DispatchQueue.global(qos: .utility).async { WallpaperPreparation.prepare(wallpaperDirectory: folder) }
         guard isScene else { return }
         do {
             let project = try WEProject.read(in: folder)
@@ -44,15 +43,14 @@ extension AppDelegate {
     }
 }
 
-/// WE's project templates: the assets cache's copy (`templates`), or a WE install's
-/// `projects/templates` beside its `assets`.
+/// WE's project templates: `projects/templates` beside the `assets` of a WE install or of the
+/// Steam download.
 enum NewWallpaperTemplates {
     static func templates(assets: URL? = WallpaperEngineAssets.directory, fileManager: FileManager = .default) -> [WallpaperTemplate] {
         guard let assets else { return [] }
-        let folders = [assets.appending(path: WallpaperEngineAssetsCache.templatesFolder, directoryHint: .isDirectory),
-                       assets.deletingLastPathComponent().appending(path: WallpaperEngineAssetsCache.installTemplatesPath,
-                                                                   directoryHint: .isDirectory)]
-        guard let folder = folders.first(where: { fileManager.fileExists(atPath: $0.path) }) else { return [] }
+        let folder = assets.deletingLastPathComponent().appending(path: WallpaperEngineAssetsCache.installTemplatesPath,
+                                                                  directoryHint: .isDirectory)
+        guard fileManager.fileExists(atPath: folder.path) else { return [] }
         return WallpaperTemplate.templates(in: folder, fileManager: fileManager)
     }
 }

@@ -197,8 +197,7 @@ extension SceneContentLoader {
             return layer
         }
         guard let textureName = material.passes?.first?.textures?.first ?? nil,
-              let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
-                                            colour: true) else {
+              let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
             return nil
         }
         let sceneInput = textureName == "_rt_FullFrameBuffer" || textureName == "_rt_MipMappedFrameBuffer"

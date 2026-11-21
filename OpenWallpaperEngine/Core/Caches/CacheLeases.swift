@@ -1,6 +1,6 @@
 import Foundation
 
-/// The cache files and folders this process uses right now: a texture blob a scene loaded, the
+/// The cache files and folders this process uses right now: the
 /// video a player has open, the loading snapshots of a scene on screen, the pipeline archive in
 /// use. `CacheSweeper` never deletes a leased path, a file inside a leased folder, or a folder
 /// holding a leased file.

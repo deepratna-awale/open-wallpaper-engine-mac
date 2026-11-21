@@ -43,14 +43,14 @@ final class CacheSweeperTests: XCTestCase {
     // MARK: - The 60-day rule
 
     func testEntriesUnusedFor60DaysExpire() throws {
-        let textures = folder(.textures), snapshots = folder(.loadingSnapshots), shaders = folder(.shaderVariants, expires: false)
-        let old = try entry("aa-l0.owetex", in: textures, daysAgo: 61)
-        let recent = try entry("bb-l0.owetex", in: textures, daysAgo: 59)
+        let previews = folder(.editorPreviews), snapshots = folder(.loadingSnapshots), shaders = folder(.shaderVariants, expires: false)
+        let old = try entry("aa.heic", in: previews, daysAgo: 61)
+        let recent = try entry("bb.heic", in: previews, daysAgo: 59)
         let oldSnapshot = try entry("r1/wallpaper-1/key-1920x1080.heic", in: snapshots, daysAgo: 90)
         let keptSnapshot = try entry("r1/wallpaper-2/key-1920x1080.heic", in: snapshots, daysAgo: 1)
         let oldShader = try entry("v1/variant.metal", in: shaders, daysAgo: 400)
 
-        let result = sweep(CacheSweeper(folders: [textures, snapshots, shaders], leases: CacheLeases()))
+        let result = sweep(CacheSweeper(folders: [previews, snapshots, shaders], leases: CacheLeases()))
         XCTAssertEqual(result.removedFiles, 2)
         XCTAssertFalse(exists(old))
         XCTAssertTrue(exists(recent))
@@ -58,14 +58,14 @@ final class CacheSweeperTests: XCTestCase {
         XCTAssertFalse(exists(oldSnapshot.deletingLastPathComponent()), "an emptied wallpaper folder goes")
         XCTAssertTrue(exists(keptSnapshot))
         XCTAssertTrue(exists(oldShader), "translated shaders only go with Clear Caches")
-        XCTAssertTrue(exists(textures.root), "a cache's root stays")
+        XCTAssertTrue(exists(previews.root), "a cache's root stays")
     }
 
     func testServingAnEntryMarksItUsed() throws {
-        let textures = folder(.textures)
-        let url = try entry("aa-l0.owetex", in: textures, daysAgo: 90)
+        let previews = folder(.editorPreviews)
+        let url = try entry("aa.heic", in: previews, daysAgo: 90)
         CacheEntryUse.markUsed(url, now: now)
-        XCTAssertEqual(sweep(CacheSweeper(folders: [textures], leases: CacheLeases())).removedFiles, 0)
+        XCTAssertEqual(sweep(CacheSweeper(folders: [previews], leases: CacheLeases())).removedFiles, 0)
         XCTAssertTrue(exists(url))
 
         // A recent mark isn't written again: one stat per use.
@@ -78,8 +78,8 @@ final class CacheSweeperTests: XCTestCase {
     // MARK: - In use
 
     func testEntriesInUseAreKept() throws {
-        let textures = folder(.textures), snapshots = folder(.loadingSnapshots), videos = folder(.editorPreviews)
-        let blob = try entry("aa-l0.owetex", in: textures, daysAgo: 300)
+        let previews = folder(.editorPreviews), snapshots = folder(.loadingSnapshots), videos = folder(.displayPictures)
+        let blob = try entry("aa.heic", in: previews, daysAgo: 300)
         let snapshot = try entry("r1/wallpaper-1/key-3840x2160.heic", in: snapshots, daysAgo: 300)
         let copy = try entry("r1/0123/42-1.mp4", in: videos, daysAgo: 300)
         let record = try entry("r1/0123/.source", in: videos, daysAgo: 300)
@@ -90,7 +90,7 @@ final class CacheSweeperTests: XCTestCase {
         let copyLease = leases.lease(copy)
 
         for clear in [false, true] {
-            let result = sweep(CacheSweeper(folders: [textures, snapshots, videos], leases: leases), clear: clear)
+            let result = sweep(CacheSweeper(folders: [previews, snapshots, videos], leases: leases), clear: clear)
             XCTAssertEqual(result.removedFiles, 0)
             XCTAssertTrue(exists(blob) && exists(snapshot) && exists(copy) && exists(record))
         }
@@ -98,7 +98,7 @@ final class CacheSweeperTests: XCTestCase {
         blobLease.release()
         set.hold(root.appending(path: "elsewhere"), scope: root.appending(path: "another wallpaper"))
         withExtendedLifetime(copyLease) {
-            let result = sweep(CacheSweeper(folders: [textures, snapshots, videos], leases: leases))
+            let result = sweep(CacheSweeper(folders: [previews, snapshots, videos], leases: leases))
             XCTAssertEqual(result.removedFiles, 2, "released leases no longer protect")
             XCTAssertFalse(exists(blob) || exists(snapshot))
             XCTAssertTrue(exists(copy))
@@ -107,7 +107,7 @@ final class CacheSweeperTests: XCTestCase {
 
     func testAReleasedOrDroppedLeaseFreesItsPath() throws {
         let leases = CacheLeases()
-        let url = root.appending(path: "a/b.owetex")
+        let url = root.appending(path: "a/b.heic")
         var lease: CacheLease? = leases.lease(url)
         let second = leases.lease(url)
         XCTAssertTrue(leases.isLeased(url))
@@ -138,9 +138,9 @@ final class CacheSweeperTests: XCTestCase {
     // MARK: - Clear Caches
 
     func testClearCachesDeletesEverythingButWhatIsInUse() throws {
-        let textures = folder(.textures), shaders = folder(.shaderVariants, expires: false)
+        let previews = folder(.editorPreviews), shaders = folder(.shaderVariants, expires: false)
         let archives = folder(.pipelineArchives, expires: false)
-        try entry("aa-l0.owetex", in: textures, daysAgo: 0, bytes: 5000)
+        try entry("aa.heic", in: previews, daysAgo: 0, bytes: 5000)
         try entry("v1/variant.metal", in: shaders, daysAgo: 0)
         let archive = try entry("gpu--key.binarchive", in: archives, daysAgo: 0)
         let leases = CacheLeases()
@@ -149,7 +149,7 @@ final class CacheSweeperTests: XCTestCase {
 
         var result: CacheMaintenance.ClearResult?
         _ = expectThreadGuardViolations {
-            result = CacheMaintenance.clear(folders: [textures, shaders, archives], metal: metal, protected: [], leases: leases)
+            result = CacheMaintenance.clear(folders: [previews, shaders, archives], metal: metal, protected: [], leases: leases)
         }
         XCTAssertEqual(result?.removed.removedFiles, 2)
         XCTAssertGreaterThan(result?.removed.removedBytes ?? 0, 0)

@@ -28,7 +28,7 @@ final class FolderImportTests: XCTestCase {
         XCTAssertTrue(FolderImport.sources(in: [chosen.appending(path: "notes")]).isEmpty)
 
         let library = root.appending(path: "library")
-        let outcome = FolderImport.importWallpapers(sources, into: library, prepare: { _ in })
+        let outcome = FolderImport.importWallpapers(sources, into: library)
         XCTAssertEqual(outcome.imported.map(\.lastPathComponent), ["one"])
         XCTAssertEqual(outcome.skipped.map(\.reason), [.alreadyInLibrary])
         XCTAssertTrue(FileManager.default.fileExists(atPath: library.appending(path: "one/project.json").path))

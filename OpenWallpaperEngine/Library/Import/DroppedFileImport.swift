@@ -42,9 +42,7 @@ enum DroppedFileImport {
 
     /// Copies the wallpaper folders and zips among `urls` (videos left out) into `library` and
     /// returns what wasn't imported. Blocking file IO: call off the main thread.
-    static func importWallpapers(_ urls: [URL], into library: URL, fileManager: FileManager = .default,
-                                 prepare: @escaping @Sendable (URL) -> Void = { WallpaperPreparation.prepare(wallpaperDirectory: $0) })
-    -> [Problem] {
+    static func importWallpapers(_ urls: [URL], into library: URL, fileManager: FileManager = .default) -> [Problem] {
         var problems: [Problem] = []
         var sources = FolderImport.Sources()
         for url in urls where !videoExtensions.contains(url.pathExtension.lowercased()) {
@@ -61,7 +59,7 @@ enum DroppedFileImport {
             sources.folders += found.folders
             sources.zips += found.zips
         }
-        let outcome = FolderImport.importWallpapers(sources, into: library, fileManager: fileManager, prepare: prepare)
+        let outcome = FolderImport.importWallpapers(sources, into: library, fileManager: fileManager)
         for skip in outcome.skipped {
             let name = skip.source.lastPathComponent
             switch skip.reason {

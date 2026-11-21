@@ -15,7 +15,6 @@ enum SettingsAnchor {
     static let playback = "playback"
     static let quality = "quality"
     static let caches = "caches"
-    static let converted = "converted"
     static let displays = "displays"
     static let video = "video"
     static let audio = "audio"
@@ -105,8 +104,6 @@ struct SettingsSearch {
             entry("Cache Size", .performance, SettingsAnchor.caches),
             entry("Clear Caches", .performance, SettingsAnchor.caches),
 
-            entry("Converted Wallpapers", .optimizations, SettingsAnchor.converted),
-            entry("Remove original packages after conversion", .optimizations, SettingsAnchor.converted),
             entry("Displays", .optimizations, SettingsAnchor.displays),
             entry("Sync properties across displays", .optimizations, SettingsAnchor.displays),
             entry("Video Framework", .optimizations, SettingsAnchor.video),
@@ -121,7 +118,6 @@ struct SettingsSearch {
             entry("Rendering", .optimizations, SettingsAnchor.rendering),
             entry("Process Priority", .optimizations, SettingsAnchor.rendering),
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
-            entry("Optimise textures", .optimizations, SettingsAnchor.rendering),
             entry("Cheaper shadows", .optimizations, SettingsAnchor.rendering),
             entry("Render web wallpapers at standard resolution", .optimizations, SettingsAnchor.rendering),
             entry("Draw large glowing particles at half resolution", .optimizations, SettingsAnchor.rendering),

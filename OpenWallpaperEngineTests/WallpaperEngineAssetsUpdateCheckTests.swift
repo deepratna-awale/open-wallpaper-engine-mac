@@ -20,8 +20,8 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
     // MARK: Skip or update
 
     func testTheDecisionSkipsOnlyACompleteCopyOfTheCurrentBuild() {
-        let steam = WallpaperEngineAssetsCache.Info(origin: .steam, installedAt: .now, steamBuildID: "100")
-        let folder = WallpaperEngineAssetsCache.Info(origin: .folder, installedAt: .now)
+        let steam = WallpaperEngineAssetsCache.Info(installedAt: .now, steamBuildID: "100")
+        let folder = WallpaperEngineAssetsCache.Info(installedAt: .now)
         XCTAssertEqual(Check.decision(installed: steam, assetsComplete: true, currentBuild: "100"), .upToDate(build: "100"))
         XCTAssertEqual(Check.decision(installed: steam, assetsComplete: true, currentBuild: "101"), .download)
         XCTAssertEqual(Check.decision(installed: steam, assetsComplete: false, currentBuild: "100"), .download)
@@ -105,7 +105,7 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
         for folder in ["shaders", "effects"] {
             try FileManager.default.createDirectory(at: cache.appending(path: folder), withIntermediateDirectories: true)
         }
-        try WallpaperEngineAssetsCache.writeInfo(.init(origin: .steam, installedAt: .now, steamBuildID: build), cache: cache)
+        try WallpaperEngineAssetsCache.writeInfo(.init(installedAt: .now, steamBuildID: build), cache: cache)
     }
 
     @MainActor

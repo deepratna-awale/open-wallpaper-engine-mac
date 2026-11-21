@@ -23,7 +23,7 @@ final class EditorScriptToolsTests: XCTestCase {
         try Data(text.utf8).write(to: url)
     }
 
-    func testSnippetsAreReadFromAnInstallOrTheCache() throws {
+    func testSnippetsAreReadFromBesideTheAssets() throws {
         let install = scratch.appending(path: "wallpaper_engine")
         try write("// rainbow", to: "ui/dist/monaco/snippets/script_vec3_color_rainbow.js", in: install)
         try write("{}", to: "assets/shaders/common.h", in: install)
@@ -34,12 +34,6 @@ final class EditorScriptToolsTests: XCTestCase {
         XCTAssertNil(EditorShaderSnippets.snippet(named: "../../../../etc/passwd", assets: assets), "a file name only")
         XCTAssertNil(EditorShaderSnippets.snippet(named: "script_vec3_color_rainbow", assets: nil))
 
-        // The cache keeps a copy, so a cache filled from the install has them too.
-        let cache = WallpaperEngineAssets.cacheDirectory(in: scratch.appending(path: "storage"))
-        let info = WallpaperEngineAssetsCache.Info(origin: .folder, installedAt: .now, steamBuildID: nil)
-        try WallpaperEngineAssetsCache.fill(cache, from: install, info: info)
-        XCTAssertEqual(EditorShaderSnippets.snippet(named: "script_vec3_color_rainbow", assets: cache), "// rainbow")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: cache.appending(path: "snippets/script_vec3_color_rainbow.js").path))
     }
 
     /// WE's own snippets (`ui/dist/monaco/snippets`, beside the assets of `OWE_ASSETS`, or the
