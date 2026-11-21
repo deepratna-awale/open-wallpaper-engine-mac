@@ -15,7 +15,6 @@ struct SettingsTransfer: Codable, Equatable {
     /// The on/off preferences kept in `UserDefaults.app` outside `GlobalSettings` that travel
     /// with the settings. Nothing secret is stored under these keys.
     static let preferenceKeys: [String] = [
-        "ReclaimOriginalPackages",
         "HidesReleaseNotesAfterUpdate",
         "ReceiveBetaUpdates",
     ]

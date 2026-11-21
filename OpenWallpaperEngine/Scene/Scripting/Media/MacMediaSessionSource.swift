@@ -36,8 +36,8 @@ final class MacMediaSessionSource: MediaSessionSource, @unchecked Sendable {
     /// The icon of the app with this bundle id, or nil.
     private let playerIcon: (String) -> CGImage?
 
-    /// Owns `subscribers`, `nextID` and `latest`. Held while delivering a state, so `unsubscribe`
-    /// waits at most for one delivery in progress (subscribers only queue it), never for fetching.
+    /// Owns `subscribers`, `nextID` and `latest`. Never held while a subscriber runs: a callback can
+    /// drop the last reference to its subscriber, whose `deinit` unsubscribes.
     private let lock = NSLock()
     private var subscribers: [Int: (MediaSessionState) -> Void] = [:]
     private var nextID = 0
@@ -183,8 +183,10 @@ final class MacMediaSessionSource: MediaSessionSource, @unchecked Sendable {
 
     private func deliverLatest(to id: Int) {
         lock.lock()
-        defer { lock.unlock() }
-        guard let latest, let update = subscribers[id] else { return }
+        let latest = self.latest
+        let update = subscribers[id]
+        lock.unlock()
+        guard let latest, let update else { return }
         update(latest)
     }
 
@@ -235,8 +237,9 @@ final class MacMediaSessionSource: MediaSessionSource, @unchecked Sendable {
     private func deliver(_ state: MediaSessionState) {
         lock.lock()
         latest = state
-        for update in subscribers.values { update(state) }
+        let updates = Array(subscribers.values)
         lock.unlock()
+        for update in updates { update(state) }
     }
 
     /// Decodes the artwork once per image; for an item without any, the player's icon once per player.

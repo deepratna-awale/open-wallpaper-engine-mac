@@ -278,7 +278,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.workshopDependencies.ensureDependencies(for: wallpaper)
             }
             // After the change is applied, so the old wallpaper counts as no longer shown.
-            DispatchQueue.main.async { self?.staleBundleRefresher?.shownWallpapersChanged() }
+            DispatchQueue.main.async { self?.unpackedBundleRestorer?.shownWallpapersChanged() }
         }
 
         libraryFolderWatcher.watch(LibraryFolders().folders)
@@ -449,7 +449,5 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     var windowOpenedObserver: NSObjectProtocol?
 
-    var staleBundleRefresher: StaleBundleRefresher?
-
-    var staleBundleNotice: SafeRestartNotice?
+    var unpackedBundleRestorer: UnpackedBundleRestorer?
 }
