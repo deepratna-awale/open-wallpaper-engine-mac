@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The shader compile helper quits 30 seconds after its last shader** instead of after 5 minutes, which frees about 50 MB while a wallpaper plays. It starts again by itself the next time a shader needs compiling. ([#597](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/597))
+
 ## [1.0.0-beta.18] - 2026-11-15
 
 ### Changed
