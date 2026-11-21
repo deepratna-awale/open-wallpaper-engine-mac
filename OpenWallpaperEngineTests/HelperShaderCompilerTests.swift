@@ -160,6 +160,13 @@ final class HelperShaderCompilerTests: XCTestCase {
         XCTAssertEqual(launcher.launches, 3)
     }
 
+    func testTheAppRetiresAnIdleHelperBeforeItExits() {
+        let server = ShaderCompileHelperServer.self
+        XCTAssertGreaterThan(server.retireMargin, server.idleCheckInterval)
+        XCTAssertGreaterThan(server.idleTimeout, server.retireMargin)
+        XCTAssertLessThanOrEqual(server.idleTimeout, 60, "an idle helper's memory goes soon after a scene compiled")
+    }
+
     func testHelperEnvironmentKeepsIsolationAndDropsTestInjection() {
         let environment = ShaderCompileHelperProcess.environment(
             ["PATH": "/usr/bin", "XCTestConfigurationFilePath": "/x", "DYLD_INSERT_LIBRARIES": "/y"], isolationTag: "dev")
