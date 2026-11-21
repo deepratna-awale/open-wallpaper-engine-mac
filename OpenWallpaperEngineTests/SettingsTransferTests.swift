@@ -31,7 +31,6 @@ final class SettingsTransferTests: XCTestCase {
     /// What goes out comes back, and no secret goes out: an API key or Steam account under those
     /// names in the defaults is never read.
     func testExportImportRoundTripWithoutSecrets() throws {
-        defaults.set(true, forKey: "ReclaimOriginalPackages")
         defaults.set(true, forKey: "HidesReleaseNotesAfterUpdate")
         defaults.set(false, forKey: "ReceiveBetaUpdates")
         defaults.set("SECRET-API-KEY-0123456789", forKey: "SteamWebAPIKey")
@@ -51,13 +50,13 @@ final class SettingsTransferTests: XCTestCase {
         XCTAssertEqual(imported, exported)
         XCTAssertEqual(imported.settings, changedSettings())
         XCTAssertEqual(imported.updates, updates)
-        XCTAssertEqual(imported.preferences, ["ReclaimOriginalPackages": true, "HidesReleaseNotesAfterUpdate": true, "ReceiveBetaUpdates": false])
+        XCTAssertEqual(imported.preferences, ["HidesReleaseNotesAfterUpdate": true, "ReceiveBetaUpdates": false])
 
         let other = try XCTUnwrap(UserDefaults(suiteName: suite + ".other"))
         defer { other.removePersistentDomain(forName: suite + ".other") }
         imported.applyPreferences(to: other)
-        XCTAssertTrue(other.bool(forKey: "ReclaimOriginalPackages"))
         XCTAssertTrue(other.bool(forKey: "HidesReleaseNotesAfterUpdate"))
+        XCTAssertFalse(other.bool(forKey: "ReceiveBetaUpdates"))
         XCTAssertNil(other.object(forKey: "SteamWebAPIKey"))
     }
 
@@ -141,14 +140,14 @@ final class SettingsTransferTests: XCTestCase {
         let viewModel = GlobalSettingsViewModel()
         let saved = viewModel.settings
         defer { viewModel.settings = saved }
-        defaults.set(true, forKey: "ReclaimOriginalPackages")
+        defaults.set(false, forKey: "InstallsWallpaperEngineAssetsAfterLogin")
         defaults.set(true, forKey: "HidesReleaseNotesAfterUpdate")
-        XCTAssertTrue(SettingsTabReset.hasChanges(.optimizations, settings: GlobalSettings(), defaults: defaults))
+        XCTAssertTrue(SettingsTabReset.hasChanges(.assets, settings: GlobalSettings(), defaults: defaults))
 
-        SettingsTabReset.reset(.optimizations, viewModel: viewModel, defaults: defaults, updater: nil)
-        XCTAssertNil(defaults.object(forKey: "ReclaimOriginalPackages"))
+        SettingsTabReset.reset(.assets, viewModel: viewModel, defaults: defaults, updater: nil)
+        XCTAssertNil(defaults.object(forKey: "InstallsWallpaperEngineAssetsAfterLogin"))
         XCTAssertTrue(defaults.bool(forKey: "HidesReleaseNotesAfterUpdate"), "another tab's preference stays")
-        XCTAssertFalse(SettingsTabReset.hasChanges(.optimizations, settings: GlobalSettings(), defaults: defaults))
+        XCTAssertFalse(SettingsTabReset.hasChanges(.assets, settings: GlobalSettings(), defaults: defaults))
 
         var fast = GlobalSettings()
         fast.fps = 90

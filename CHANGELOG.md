@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Scenes play from their package as downloaded.** A scene's `scene.pkg` is no longer unpacked into loose files when it's imported or downloaded (or at launch for the library), so a new scene takes no extra disk space and nothing more is written for it. The package isn't moved into `.owe-source` any more, and Settings › Optimizations' "Remove original packages after conversion" and Reclaim Now are gone with it, as is the background re-download of wallpapers unpacked by an older version. Wallpapers already unpacked keep playing from their loose files. ([#590](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/590))
 - **The shader compile helper quits 30 seconds after its last shader** instead of after 5 minutes, which frees about 50 MB while a wallpaper plays. It starts again by itself the next time a shader needs compiling. ([#597](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/597))
 ### Fixed
 

@@ -214,49 +214,6 @@ class WorkshopDownloadService: ObservableObject {
         }
     }
 
-    /// Downloads a Workshop item again only to restore the package a converted bundle was made from:
-    /// the package goes into `<wallpaperDirectory>/.owe-source/`, the live files stay untouched.
-    /// Runs after other downloads at background priority; `completion` runs on the main queue.
-    func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
-                              completion: @escaping @MainActor @Sendable (Bool) -> Void) {
-        guard let login = steamLogin,
-              !packageName.contains("/"), !packageName.contains("\\"), !packageName.hasPrefix(".") else {
-            return completion(false)
-        }
-        downloadQueue.async(qos: .background) { [weak self] in
-            guard let self else { return }
-            let landed: Bool
-            do {
-                let storage = try self.storageDirectory()
-                let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
-                defer { WorkshopItemInstaller.removeStaging(staging) }
-                try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
-                let package = try self.helperDownload(workshopId, login: login, into: staging, validate: true)
-                    .appending(path: packageName)
-                guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
-                    throw DownloadError.failed("\(packageName) isn't in the download")
-                }
-                guard ContainedPath.hasNoLinks(below: wallpaperDirectory,
-                                               relativePath: WallpaperPackageConverter.sourceFolderName) else {
-                    throw DownloadError.failed("\(WallpaperPackageConverter.sourceFolderName) is a symbolic link")
-                }
-                let folder = wallpaperDirectory.appending(path: WallpaperPackageConverter.sourceFolderName)
-                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-                // Copied beside the destination, then renamed in: a half-copied package never counts.
-                let incoming = folder.appending(path: ".incoming-" + UUID().uuidString)
-                try FileManager.default.copyItem(at: package, to: incoming)
-                let destination = folder.appending(path: packageName)
-                try? FileManager.default.removeItem(at: destination)
-                try FileManager.default.moveItem(at: incoming, to: destination)
-                landed = true
-            } catch {
-                OWELog.error(.workshop, "Workshop item \(workshopId) package refresh failed: \(error.localizedDescription)")
-                landed = false
-            }
-            DispatchQueue.main.async { completion(landed) }
-        }
-    }
-
     /// Downloads into a staging folder inside the storage folder and moves the finished item to
     /// `<storage>/<id>`, or, `replacing`, in place of the installed one. Call on `downloadQueue`:
     /// downloads share the one staging folder.
@@ -296,13 +253,10 @@ class WorkshopDownloadService: ObservableObject {
 
     /// For an update, a copy of the installed item where the download goes: DepotDownloader checks
     /// the files already there against Steam's manifest and fetches only the chunks that changed.
-    /// Not for a converted bundle (`WallpaperPackageConverter`), whose files no longer match the
-    /// Workshop's; that downloads in full. On APFS the copy is a clone.
+    /// On APFS the copy is a clone.
     nonisolated static func stageInstalledCopy(of workshopId: String, from storage: URL, into staging: URL) throws {
         let installed = storage.appending(path: workshopId, directoryHint: .isDirectory)
-        let manifest = installed.appending(path: WallpaperPackageConverter.manifestName)
-        guard FileManager.default.fileExists(atPath: installed.path),
-              !FileManager.default.fileExists(atPath: manifest.path) else { return }
+        guard FileManager.default.fileExists(atPath: installed.path) else { return }
         let item = WorkshopItemInstaller.contentDirectory(in: staging, workshopId: workshopId)
         try FileManager.default.createDirectory(at: item.deletingLastPathComponent(), withIntermediateDirectories: true)
         try FileManager.default.copyItem(at: installed, to: item)
