@@ -138,10 +138,6 @@ enum HelperRunCommand {
             prepare.loadingSnapshots = .current
             prepare.snapshotDisplays = displays.values.sorted { $0.drawableSize.x * $0.drawableSize.y > $1.drawableSize.x * $1.drawableSize.y }
             report = prepare.run(targets)
-            // The texture blobs the loads scheduled.
-            var idle = false
-            PreparationPool.shared.whenIdle { idle = true }
-            while !idle { RunLoop.main.run(until: Date().addingTimeInterval(0.1)) }
         } else {
             report = ShaderPrewarm(defaults: .app).run()
         }

@@ -1,8 +1,8 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Installing the assets from the user's Steam copy through the Steam login: the subset kept in the
-/// cache, the default wallpapers, and the service's states. The Steam helper is always a fake.
+/// Installing the assets from the user's Steam copy through the Steam login: the download read in
+/// place, the default wallpapers, and the service's states. The Steam helper is always a fake.
 final class WallpaperEngineAssetsInstallTests: XCTestCase {
     private var scratch: URL!
     private var suites: [String] = []
@@ -27,66 +27,6 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         let url = directory.appending(path: path)
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data(text.utf8).write(to: url)
-    }
-
-    // MARK: Cache layout
-
-    /// The same subset `Scripts/fill-assets-cache.sh` takes: no preview projects (of effects and
-    /// presets), no HLSL or editor shaders, the presets the editor offers, the locale's `ui_*.json`
-    /// from beside `assets`, and nothing else of the install.
-    func testTheCacheKeepsOnlyTheAssetsSubset() throws {
-        let install = scratch.appending(path: "download")
-        let assets = install.appending(path: "assets")
-        for path in ["effects/tint/effect.json", "effects/tint/preview/preview.jpg", "shaders/common.h",
-                     "shaders/HLSL/common.hlsl", "shaders/editor/grid.frag", "materials/util/white.json",
-                     "models/util/sphere.mdl", "particles/fire.json", "scripts/jsclasses/baseclasses.js",
-                     "zcompat/web/1.json", "fonts/Roboto.ttf", "fonts/SIL Open Font License.txt",
-                     "presets/rain/preset.json", "presets/rain/particles/presets/rain.json",
-                     "presets/rain/previewdownpour/scene.json", "scenes/particleeditor/scene.json",
-                     "effects/tint/.DS_Store"] {
-            try write(path, to: path, in: assets)
-        }
-        try write("{}", to: "locale/ui_en-us.json", in: install)
-        try write("{}", to: "locale/other.json", in: install)
-        try write("exe", to: "wallpaper64.exe", in: install)
-
-        let cache = WallpaperEngineAssets.cacheDirectory(in: scratch.appending(path: "storage"))
-        let info = WallpaperEngineAssetsCache.Info(origin: .steam, installedAt: Date(timeIntervalSince1970: 1_800_000_000),
-                                                   steamBuildID: "7")
-        let copied = try WallpaperEngineAssetsCache.fill(cache, from: install, info: info)
-
-        let files = try Set(FileManager.default.subpathsOfDirectory(atPath: cache.path).filter {
-            var isDirectory: ObjCBool = false
-            FileManager.default.fileExists(atPath: cache.appending(path: $0).path, isDirectory: &isDirectory)
-            return !isDirectory.boolValue
-        })
-        XCTAssertEqual(files, ["effects/tint/effect.json", "shaders/common.h", "materials/util/white.json",
-                               "models/util/sphere.mdl", "particles/fire.json", "scripts/jsclasses/baseclasses.js",
-                               "zcompat/web/1.json", "fonts/Roboto.ttf", "fonts/SIL Open Font License.txt",
-                               "presets/rain/preset.json", "presets/rain/particles/presets/rain.json",
-                               "locale/ui_en-us.json", ".owe-assets-info.json"])
-        XCTAssertEqual(copied, 12)
-        XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: cache), info)
-        XCTAssertTrue(WallpaperEngineAssets.isAssetTree(cache))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: cache.path + ".partial"))
-    }
-
-    /// A folder that isn't an install is refused, and a cancelled copy keeps the previous cache.
-    func testAFailedOrCancelledFillKeepsThePreviousCache() throws {
-        let cache = WallpaperEngineAssets.cacheDirectory(in: scratch)
-        try write("old", to: "shaders/common.h", in: cache)
-        try write("{}", to: "effects/old/effect.json", in: cache)
-        let info = WallpaperEngineAssetsCache.Info(origin: .folder, installedAt: .now, steamBuildID: nil)
-        XCTAssertThrowsError(try WallpaperEngineAssetsCache.fill(cache, from: scratch.appending(path: "nothing"), info: info))
-
-        let install = scratch.appending(path: "install")
-        try write("new", to: "assets/shaders/common.h", in: install)
-        try write("{}", to: "assets/effects/new/effect.json", in: install)
-        XCTAssertThrowsError(try WallpaperEngineAssetsCache.fill(cache, from: install, info: info, isCancelled: { true })) {
-            XCTAssertTrue($0 is CancellationError)
-        }
-        XCTAssertEqual(try String(contentsOf: cache.appending(path: "shaders/common.h"), encoding: .utf8), "old")
-        XCTAssertFalse(FileManager.default.fileExists(atPath: cache.path + ".partial"))
     }
 
     // MARK: Default wallpapers
@@ -182,7 +122,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         let cancellable = service.$phase.dropFirst().sink { phase in
             switch phase {
             case .idle, .failed: finished.fulfill()
-            case .downloading, .copying: break
+            case .downloading: break
             }
         }
         await fulfillment(of: [finished], timeout: 10)
@@ -202,7 +142,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         XCTAssertFalse(service.isBusy)
     }
 
-    /// The account doesn't own the app: the user is told so, and the download folder is gone afterwards.
+    /// The account doesn't own the app: the user is told so, and a first download leaves nothing behind.
     @MainActor
     func testANotOwnedAppIsReportedAndTheDownloadRemoved() async throws {
         let scratch: URL = self.scratch
@@ -215,23 +155,31 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         await waitUntilFinished(service)
         XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.notOwned.errorDescription ?? ""))
         XCTAssertEqual(helper.arguments.count, 1)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: WallpaperEngineAssetsDownload.downloadDirectory(in: scratch).path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: WallpaperEngineAssets.cacheDirectory(in: scratch).path))
     }
 
-    /// The install with and without the default wallpapers: the assets land in the cache either
-    /// way; the default wallpapers only when asked, and never an application one.
+    /// The install with and without the default wallpapers: the assets are read where they're
+    /// downloaded either way; the default wallpapers are asked for and come in only when wanted,
+    /// never an application one, and none stays in the download.
     @MainActor
     func testDefaultWallpapersComeInOnlyWhenAsked() async throws {
         for includes in [true, false] {
             let storage = scratch.appending(path: "storage-\(includes)")
             try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
+            let helper = AssetsHelper()
             let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await Self.makeClient(),
-                                                       helperDownloads: AssetsHelper(), storageDirectory: { storage },
+                                                       helperDownloads: helper, storageDirectory: { storage },
                                                        defaults: makeDefaults())
             service.installFromSteam(includingDefaultWallpapers: includes)
             await waitUntilFinished(service)
             XCTAssertEqual(service.phase, .idle)
-            XCTAssertTrue(WallpaperEngineAssets.isAssetTree(WallpaperEngineAssets.cacheDirectory(in: storage)))
+            let download = WallpaperEngineAssets.cacheDirectory(in: storage)
+            let resolved = WallpaperEngineAssets.resolve(chosenPath: nil, storage: storage, testOverride: nil, isTesting: false)
+            XCTAssertEqual(resolved?.directory.path, download.appending(path: "assets").standardizedFileURL.path)
+            XCTAssertEqual(resolved?.source, .cache)
+            XCTAssertEqual(helper.fileLists.first?.contains("defaultprojects") ?? false, includes)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: download.appending(path: "projects/defaultprojects").path))
+            XCTAssertFalse(FileManager.default.fileExists(atPath: download.appending(path: ".owe-filelist.txt").path))
             XCTAssertEqual(FileManager.default.fileExists(atPath: storage.appending(path: "aurora/project.json").path), includes)
             XCTAssertFalse(FileManager.default.fileExists(atPath: storage.appending(path: "game").path))
             XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: WallpaperEngineAssets.cacheDirectory(in: storage))?.defaultProjects ?? [],
@@ -253,13 +201,30 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         await waitUntilFinished(service)
         XCTAssertEqual(service.phase, .idle)
         let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
-        XCTAssertTrue(WallpaperEngineAssets.isAssetTree(cache))
+        XCTAssertTrue(WallpaperEngineAssets.isAssetTree(cache.appending(path: "assets")))
         XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: cache)?.steamBuildID, "20112233")
         XCTAssertTrue(FileManager.default.fileExists(atPath: storage.appending(path: "aurora/project.json").path))
         let arguments = try XCTUnwrap(helper.arguments.first)
         XCTAssertEqual(Array(arguments.prefix(6)), ["-app", "431960", "-depot", "431961", "-depot", "431966"])
         XCTAssertTrue(arguments.contains("-filelist"))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: WallpaperEngineAssetsDownload.downloadDirectory(in: storage).path))
+        XCTAssertEqual(arguments[try XCTUnwrap(arguments.firstIndex(of: "-dir")) + 1], cache.path, "downloaded where it's read")
+    }
+
+    /// A folder left from before, not laid out as the download (no `assets`), is replaced by it.
+    @MainActor
+    func testAnEarlierCopyIsReplacedByTheDownload() async throws {
+        let storage = scratch.appending(path: "storage-earlier")
+        let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
+        try write("old", to: "shaders/common.h", in: cache)
+        try write("{}", to: "effects/old/effect.json", in: cache)
+        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await Self.makeClient(),
+                                                   helperDownloads: AssetsHelper(), storageDirectory: { storage },
+                                                   defaults: makeDefaults())
+        service.installFromSteam(includingDefaultWallpapers: false)
+        await waitUntilFinished(service)
+        XCTAssertEqual(service.phase, .idle)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: cache.appending(path: "shaders").path))
+        XCTAssertTrue(WallpaperEngineAssets.isAssetTree(cache.appending(path: "assets")))
     }
 
     /// Steam no longer accepts the login: the install fails asking for a new one, and the account
@@ -294,11 +259,21 @@ private final class AssetsHelper: SteamHelperDownloading, @unchecked Sendable {
         answer = output.map { ProcessRun(output: $0, exitCode: exitCode) }
     }
 
+    private var lists: [String] = []
+
     var arguments: [[String]] { lock.withLock { runs } }
+    /// The file list each run was given.
+    var fileLists: [String] { lock.withLock { lists } }
 
     func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
              onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
-        lock.withLock { runs.append(arguments) }
+        let list = arguments.firstIndex(of: "-filelist").flatMap { index in
+            try? String(contentsOfFile: arguments[index + 1], encoding: .utf8)
+        }
+        lock.withLock {
+            runs.append(arguments)
+            lists.append(list ?? "")
+        }
         if let answer { return answer }
         guard let index = arguments.firstIndex(of: "-dir"), index + 1 < arguments.count else {
             return ProcessRun(output: "no -dir", exitCode: 2)

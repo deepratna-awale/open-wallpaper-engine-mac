@@ -170,7 +170,6 @@ final class AppLibraryControlService: LibraryControlService {
         case "audio_output": return .bool(settings.audioOutput)
         case "reload_on_output_device_change": return .bool(settings.reloadWhenChangingOutputDevice)
         case "media_integration": return .bool(settings.mediaIntegration)
-        case "optimise_textures": return .bool(settings.optimiseTextures)
         case "cheaper_shadows": return .bool(settings.cheaperShadows)
         case "web_standard_resolution": return .bool(settings.webStandardResolution)
         case "reduced_resolution_particles": return .bool(settings.reducedResolutionParticles)
@@ -226,7 +225,6 @@ final class AppLibraryControlService: LibraryControlService {
         case "audio_output": viewModel.settings.audioOutput = flag
         case "reload_on_output_device_change": viewModel.settings.reloadWhenChangingOutputDevice = flag
         case "media_integration": viewModel.settings.mediaIntegration = flag
-        case "optimise_textures": viewModel.settings.optimiseTextures = flag
         case "cheaper_shadows": viewModel.settings.cheaperShadows = flag
         case "web_standard_resolution": viewModel.settings.webStandardResolution = flag
         case "reduced_resolution_particles": viewModel.settings.reducedResolutionParticles = flag

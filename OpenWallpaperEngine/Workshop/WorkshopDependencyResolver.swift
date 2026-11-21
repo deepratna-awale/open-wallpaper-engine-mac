@@ -30,12 +30,6 @@ enum WorkshopDependencyResolver {
                 ids.formUnion(WorkshopAssetResolver.referencedIds(in: String(decoding: data, as: UTF8.self)))
             }
         }
-        if let manifest = WallpaperPackageConverter.manifest(in: directory) {
-            // Converted wallpapers no longer have the archive; the manifest lists its paths.
-            for path in manifest.extractedFiles + (manifest.dependencyEntries ?? []) {
-                ids.formUnion(WorkshopAssetResolver.referencedIds(in: path))
-            }
-        }
         ids.formUnion(looseReferences(in: directory))
         ids.formUnion(projectDependencies(inItemAt: directory))
         ids.remove(directory.lastPathComponent)

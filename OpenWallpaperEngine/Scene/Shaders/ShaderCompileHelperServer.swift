@@ -15,10 +15,14 @@ enum ShaderCompileHelperServer {
     static let argument = "--shader-compile-helper"
     /// Exit status after a hung compile.
     static let stuckStatus: Int32 = 3
-    /// The helper exits after this long without a request; the app starts a new one on demand
-    /// (`HelperShaderCompiler` retires its side a little earlier, so it never sends to a helper
-    /// that is about to go).
-    static let idleTimeout: TimeInterval = 300
+    /// The helper exits after this long without a request, so its memory goes once a scene has
+    /// compiled; the app starts a new one on demand (`HelperShaderCompiler` retires its side
+    /// `retireMargin` earlier, so it never sends to a helper that is about to go).
+    static let idleTimeout: TimeInterval = 30
+    /// How often the helper checks whether it has been idle for `idleTimeout`.
+    static let idleCheckInterval: TimeInterval = 5
+    /// More than `idleCheckInterval`, so the app's side always retires before the helper exits.
+    static let retireMargin: TimeInterval = 10
 
     /// Uptime of the last request's end (0 while one runs).
     private static let lastActivity = OSAllocatedUnfairLock(initialState: DispatchTime.now().uptimeNanoseconds)
@@ -83,7 +87,7 @@ enum ShaderCompileHelperServer {
         parentWatch.setEventHandler { exit(0) }
         parentWatch.resume()
         let idle = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
-        idle.schedule(deadline: .now() + 30, repeating: 30)
+        idle.schedule(deadline: .now() + idleCheckInterval, repeating: idleCheckInterval)
         idle.setEventHandler {
             let last = lastActivity.withLock { $0 }
             guard last != 0, Double(DispatchTime.now().uptimeNanoseconds - last) / 1e9 > idleTimeout else { return }

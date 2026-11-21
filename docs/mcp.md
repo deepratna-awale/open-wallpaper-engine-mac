@@ -436,7 +436,7 @@ view models, so a change saves and applies as it does from the app. Every result
 | `display_settings_set` | `display`, `enabled` | Display Settings' Enabled switch: shows wallpapers on the display, or the desktop picture. |
 | `settings_get` | `keys?` | Each allow-listed setting: `key`, `value`, `type` (`boolean`, `integer`, `choice`, `action`), `values` or `minimum`/`maximum`, and `description`. |
 | `settings_set` | `key`, `value` (text; a JSON number or boolean works too) | Sets one allow-listed setting through Settings' own model, as its control does. Returns the setting as `settings_get` lists it. |
-| `caches_get` | none | Settings › Performance › Caches: `total_bytes`, the space Open Wallpaper Engine's caches take on disk, and each cache's `id` and `bytes` (`textures`, `loading_snapshots`, `editor_previews`, `repaired_videos`, `display_pictures`, `shader_variants`, `pipeline_archives`, and `metal_shader_cache`, the GPU shader cache macOS keeps for the app). Entries unused for 60 days are deleted automatically. |
+| `caches_get` | none | Settings › Performance › Caches: `total_bytes`, the space Open Wallpaper Engine's caches take on disk, and each cache's `id` and `bytes` (`loading_snapshots`, `editor_previews`, `repaired_videos`, `display_pictures`, `shader_variants`, `pipeline_archives`, and `metal_shader_cache`, the GPU shader cache macOS keeps for the app). Entries unused for 60 days are deleted automatically. |
 | `caches_clear` | `confirm` | Clear Caches: deletes every cache entry except what the wallpapers on screen use (and the editor's previews while the Wallpaper Editor runs), and clears the GPU shader cache at the app's next launch. Returns `removed_entries`, `removed_bytes` and `metal_shader_cache_cleared_at_next_launch`. Wallpapers load slower once afterwards. Needs `confirm: true`. |
 | `plugin_status` | none | Settings › Plugins' entries: `id`, `name`, `installed`, `enabled` (the Screen Saver's toggle; null otherwise), `version`, `update_available`, `detail`. Status only. |
 
@@ -467,7 +467,7 @@ return the playlist as `list_playlists` writes it, plus `change_when_video_ends`
 | `sync_properties_across_displays` | boolean | Optimizations › Sync properties across displays |
 | `video_framework` | `avkit`, `metal` | Video Framework |
 | `audio_output`, `reload_on_output_device_change`, `media_integration` | boolean | Audio Output, Reload when changing output device, Media integration support |
-| `optimise_textures`, `cheaper_shadows`, `web_standard_resolution`, `reduced_resolution_particles` | boolean | Optimise textures, Cheaper shadows, Render web wallpapers at standard resolution, Draw large glowing particles at half resolution |
+| `cheaper_shadows`, `web_standard_resolution`, `reduced_resolution_particles` | boolean | Cheaper shadows, Render web wallpapers at standard resolution, Draw large glowing particles at half resolution |
 | `process_priority` | `normal`, `below_normal` | Process Priority |
 | `pause_on_vram_exhausted` | boolean | Pause when VRAM is exhausted |
 | `appearance` | `light`, `dark`, `follow_system` | General › Theme |

@@ -27,7 +27,7 @@ final class NewWallpaperWizardTests: XCTestCase {
         try Data(text.utf8).write(to: url)
     }
 
-    func testTemplatesComeFromAnInstallOrTheCache() throws {
+    func testTemplatesComeFromBesideTheAssets() throws {
         let install = scratch.appending(path: "wallpaper_engine")
         try write("{}", to: "assets/shaders/common.h", in: install)
         try write("{}", to: "assets/effects/tint/effect.json", in: install)
@@ -36,10 +36,6 @@ final class NewWallpaperWizardTests: XCTestCase {
         try write(#"{"objects": []}"#, to: "projects/templates/gif/gifscene.json", in: install)
         XCTAssertEqual(NewWallpaperTemplates.templates(assets: install.appending(path: "assets")).map(\.name), ["Animated GIF"])
 
-        let cache = WallpaperEngineAssets.cacheDirectory(in: scratch.appending(path: "storage"))
-        let info = WallpaperEngineAssetsCache.Info(origin: .folder, installedAt: .now, steamBuildID: nil)
-        try WallpaperEngineAssetsCache.fill(cache, from: install, info: info)
-        XCTAssertEqual(NewWallpaperTemplates.templates(assets: cache).map(\.name), ["Animated GIF"])
         XCTAssertEqual(NewWallpaperTemplates.templates(assets: nil), [])
     }
 

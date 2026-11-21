@@ -2,12 +2,10 @@ import Foundation
 
 /// The app's caches, in the order Settings and `caches_get` list them.
 extension CacheFolder {
-    /// OWE's caches for the store `location` and the texture blobs in `textureRoot`
-    /// (`TexturePreparation.root`, in the wallpaper storage folder).
-    static func ownCaches(location: AppStorageLocation, textureRoot: URL) -> [CacheFolder] {
+    /// OWE's caches for the store `location`.
+    static func ownCaches(location: AppStorageLocation) -> [CacheFolder] {
         let caches = location.cachesDirectory.appending(path: "Open Wallpaper Engine", directoryHint: .isDirectory)
         return [
-            CacheFolder(id: .textures, root: textureRoot, expires: true),
             CacheFolder(id: .loadingSnapshots, root: SceneLoadingSnapshotStore.root(in: location.cachesDirectory), expires: true),
             CacheFolder(id: .editorPreviews, root: caches.appending(path: "EditorPreviews", directoryHint: .isDirectory), expires: true),
             CacheFolder(id: .repairedVideos, root: RepairedVideoCache.root(in: location.cachesDirectory), expires: true),
@@ -21,6 +19,6 @@ extension CacheFolder {
 
     /// This process's caches.
     static var current: [CacheFolder] {
-        ownCaches(location: .current, textureRoot: TexturePreparation.root)
+        ownCaches(location: .current)
     }
 }

@@ -5,19 +5,9 @@ import OWEInspectorKit
 /// renders. New optional optimizations are listed here.
 struct OptimizationsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
-    @AppStorage("ReclaimOriginalPackages", store: .app) private var reclaimOriginalPackages = false
-    @State private var reclaimableBytes: Int64 = 0
-    @State private var reclaimedCount: Int?
-    @State private var isReclaiming = false
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
-    }
-
-    private var reclaimableDescription: String {
-        guard reclaimableBytes > 0 else { return String(localized: "No originals ready to remove") }
-        let formatted = ByteCountFormatter.string(fromByteCount: reclaimableBytes, countStyle: .file)
-        return String(localized: "\(formatted) of originals can be removed", comment: "%@ is a file size, e.g. 1.2 GB")
     }
 
     var body: some View {
@@ -26,41 +16,6 @@ struct OptimizationsPage: SettingsPage {
                 Text("Optional optimizations. Any added later are listed here too.")
                     .foregroundStyle(.secondary)
             }
-            // MARK: Converted Wallpapers
-            Section {
-                Toggle("Remove original packages after conversion", isOn: $reclaimOriginalPackages)
-                    .changedFromDefault(reclaimOriginalPackages)
-                    .help("Deletes a wallpaper's original package once it has converted and rendered cleanly, to save disk space. If a later converter update changes a Workshop wallpaper, it's downloaded again; a local import isn't updated.")
-                HStack {
-                    Text(reclaimableDescription)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Reclaim Now") {
-                        isReclaiming = true
-                        DispatchQueue.global(qos: .utility).async {
-                            let removed = WallpaperPackageConverter.reclaimEligibleSources()
-                            let remaining = WallpaperPackageConverter.reclaimableBytes()
-                            DispatchQueue.main.async {
-                                reclaimedCount = removed
-                                reclaimableBytes = remaining
-                                isReclaiming = false
-                            }
-                        }
-                    }
-                    .disabled(isReclaiming || reclaimableBytes == 0)
-                    .help("Deletes the originals that are ready now, without waiting for the next launch.")
-                }
-                if let reclaimedCount {
-                    Text("Removed \(reclaimedCount) original packages.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            } header: {
-                Label("Converted Wallpapers", systemImage: "arrow.triangle.2.circlepath")
-            } footer: {
-                Text("Wallpapers are unpacked into plain files when imported. The original package is kept until the wallpaper has rendered from those files, reported no conversion warnings, and no other wallpaper depends on it.")
-            }
-            .settingsAnchor(SettingsAnchor.converted)
             // MARK: Displays
             Section {
                 Toggle("Sync properties across displays", isOn: $viewModel.settings.syncPropertiesAcrossDisplays)
@@ -139,9 +94,6 @@ struct OptimizationsPage: SettingsPage {
             .settingsAnchor(SettingsAnchor.audio)
             // MARK: Rendering
             Section {
-                Toggle("Optimise textures", isOn: $viewModel.settings.optimiseTextures)
-                    .changedFromDefault(viewModel.isChanged(\.optimiseTextures))
-                    .help("Compresses wallpaper images once in the background so they use about a third of the GPU memory. Images that would lose visible detail stay as they are.")
                 Toggle("Cheaper shadows", isOn: $viewModel.settings.cheaperShadows)
                     .changedFromDefault(viewModel.isChanged(\.cheaperShadows))
                     .help("Draws shadow maps at half size, a quarter of the shadow work; the edges stay soft. Off draws them as Wallpaper Engine does.")
@@ -168,12 +120,6 @@ struct OptimizationsPage: SettingsPage {
             }
             .settingsAnchor(SettingsAnchor.rendering)
             WebDevtoolsSection(devtools: AppDelegate.shared.webDevtools)
-        }
-        .onAppear {
-            DispatchQueue.global(qos: .utility).async {
-                let bytes = WallpaperPackageConverter.reclaimableBytes()
-                DispatchQueue.main.async { reclaimableBytes = bytes }
-            }
         }
     }
 }

@@ -18,20 +18,6 @@ final class ImportedFolderLinksTests: XCTestCase {
         try fm.removeItem(at: root)
     }
 
-    /// A PKGV archive holding `files`.
-    private func package(_ files: [(String, Data)]) -> Data {
-        func u32(_ value: Int) -> Data { withUnsafeBytes(of: UInt32(value).littleEndian) { Data($0) } }
-        let magic = Data("PKGV0001".utf8)
-        var header = u32(magic.count) + magic + u32(files.count)
-        var body = Data()
-        for (path, contents) in files {
-            let name = Data(path.utf8)
-            header += u32(name.count) + name + u32(body.count) + u32(contents.count)
-            body += contents
-        }
-        return header + body
-    }
-
     private func symlinks(under folder: URL) -> [String] {
         let enumerator = fm.enumerator(at: folder, includingPropertiesForKeys: [.isSymbolicLinkKey])
         return (enumerator?.allObjects as? [URL] ?? []).filter {
@@ -44,23 +30,6 @@ final class ImportedFolderLinksTests: XCTestCase {
         try fm.createDirectory(at: folder, withIntermediateDirectories: true)
         try Data(#"{"file":"scene.json","title":"T","type":"scene"}"#.utf8).write(to: folder.appending(path: "project.json"))
         return folder
-    }
-
-    func testPackageEntriesAreNotWrittenThroughLinks() throws {
-        let wallpaper = try makeWallpaper("100", in: root)
-        try fm.createSymbolicLink(at: wallpaper.appending(path: "materials"), withDestinationURL: outside)
-        try fm.createSymbolicLink(at: wallpaper.appending(path: "keep.txt"),
-                                  withDestinationURL: outside.appending(path: "keep.txt"))
-        try package([("scene.json", Data("{}".utf8)),
-                     ("materials/new.txt", Data("x".utf8)),
-                     ("keep.txt", Data("replaced".utf8))])
-            .write(to: wallpaper.appending(path: "scene.pkg"))
-
-        let manifest = try XCTUnwrap(WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: wallpaper))
-        XCTAssertEqual(manifest.extractedFiles, ["scene.json"])
-        XCTAssertEqual(manifest.warnings.count, 2)
-        XCTAssertFalse(fm.fileExists(atPath: outside.appending(path: "new.txt").path))
-        XCTAssertEqual(try String(contentsOf: outside.appending(path: "keep.txt"), encoding: .utf8), "original")
     }
 
     func testRemovesEveryLinkInAnImportedFolder() throws {

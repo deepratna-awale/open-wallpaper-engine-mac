@@ -5,7 +5,7 @@ import Foundation
 ///
 /// - **Unused entries expire.** `launchDelay` after launch, then about once a day in the
 ///   background (`NSBackgroundActivityScheduler`, which runs it when the Mac is idle enough), every
-///   entry unused for 60 days goes (`CacheSweeper.expire`): texture blobs, loading snapshots,
+///   entry unused for 60 days goes (`CacheSweeper.expire`): loading snapshots,
 ///   editor previews, scene video textures and repaired videos. What the wallpapers on screen use
 ///   is leased (`CacheLeases`) and stays; so do the previews of the WE assets in use, which the
 ///   background pre-warm (`EditorPreviewPrewarm`) would only render again.

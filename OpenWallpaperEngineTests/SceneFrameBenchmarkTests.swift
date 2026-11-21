@@ -78,11 +78,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
     /// texture reduction), `match` (Effect Detail Match Display), the render resolutions as the app
     /// draws them, without the authored-size floor (`yourdisplay`: the drawable's pixels, `uhd4k`:
     /// 4K at its shape, `authored`: Full, the scene's authored size), `scale50` (drawn at 50% and
-    /// upscaled; `scale67`, `scale75` likewise), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`),
+    /// upscaled; `scale67`, `scale75` likewise),
     /// the quality presets (`ultra`, `high`, `medium`, `low`), Ultra lowered on battery (`battery-medium`, …), and
     /// `+` joins them (`yourdisplay+scale50`). With the variable set, only these and `full` are drawn.
-    /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
-    /// show the setting off (`full`) and on.
     /// The settings a quality preset sets, by its name.
     private static func preset(_ name: String) -> GlobalSettings {
         let quality: GSQuality = switch name {
@@ -114,7 +112,6 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 case "scale50", "scale67", "scale75":
                     settings.upscaling = .bilinear
                     settings.renderScale = part == "scale50" ? .percent50 : part == "scale67" ? .percent67 : .percent75
-                case "textures": settings.optimiseTextures = true
                 case "ultra", "high", "medium", "low":
                     // A quality preset as the app draws it (`GlobalSettingsViewModel.applying`).
                     settings = SceneRenderSettings(Self.preset(String(part)))
@@ -187,9 +184,6 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 variants += Self.renderModes(modes)
             } else {
                 if effects > 0 { variants.append(.withoutEffects) }
-            }
-            if environment["OWE_SCENE_BENCH_TEXTURES"] == "1", environment["OWE_SCENE_BENCH_MODES"]?.isEmpty ?? true {
-                variants += Self.renderModes("textures")
             }
             if environment["OWE_SCENE_BENCH_MODES"]?.isEmpty ?? true, !content.particleSystems.isEmpty {
                 variants += [.withoutParticles, .particlesOnly]
