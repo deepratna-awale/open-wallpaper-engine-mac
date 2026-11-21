@@ -139,6 +139,7 @@ groups:
     - "Steam*"
     - "ImportedFolder*"
     - "FolderImport*"
+    - "UnpackedBundle*"
     - "FilterResults*"
     - "SortBy*"
     - "UserProperty*"

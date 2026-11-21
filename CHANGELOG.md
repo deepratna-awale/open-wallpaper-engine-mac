@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Scenes play from their package as downloaded.** A scene's `scene.pkg` is no longer unpacked into loose files when it's imported or downloaded (or at launch for the library), so a new scene takes no extra disk space and nothing more is written for it. The package isn't moved into `.owe-source` any more, and Settings › Optimizations' "Remove original packages after conversion" and Reclaim Now are gone with it, as is the background re-download of wallpapers unpacked by an older version. Wallpapers already unpacked keep playing from their loose files. ([#590](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/590))
+- **Wallpapers an earlier version unpacked get their package back.** After updating, each Workshop wallpaper that was unpacked into loose files is downloaded again in the background through your Steam login (or takes back the original package an earlier version kept), and its loose copy is deleted once the package is in place and holds the scene. A wallpaper on screen waits until it isn't shown. Without a Steam login, for a local import, or when the item is gone from the Workshop or the download fails, the loose copy stays and is tried again on a later launch. ([#596](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/596))
 
 ## [1.0.0-beta.18] - 2026-11-15
 
