@@ -22397,289 +22397,6 @@
         }
       }
     },
-    "Collecting logs…" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جارٍ جمع السجلات…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokolle werden gesammelt …"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recopilando registros…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collecte des journaux…"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "लॉग इकट्ठा किए जा रहे हैं…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raccolta dei log…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ログを収集中…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "로그 수집 중…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zbieranie dzienników…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coletando registros…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сбор журналов…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Günlükler toplanıyor…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Збирання журналів…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在收集日志…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在收集記錄⋯"
-          }
-        }
-      }
-    },
-    "Collects the app's recent log and the latest crash report into one file you can read before attaching it to a GitHub issue." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يجمع السجل الأخير للتطبيق وأحدث تقرير انهيار في ملف واحد يمكنك قراءته قبل إرفاقه بمشكلة على GitHub."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fasst das aktuelle Protokoll der App und den neuesten Absturzbericht in einer Datei zusammen, die Sie lesen können, bevor Sie sie an ein GitHub-Issue anhängen."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reúne el registro reciente de la app y el último informe de fallo en un archivo que puedes leer antes de adjuntarlo a una incidencia de GitHub."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regroupe le journal récent de l’app et le dernier rapport de plantage dans un seul fichier, que vous pouvez lire avant de le joindre à un ticket GitHub."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऐप के हाल के लॉग और नवीनतम क्रैश रिपोर्ट को एक फ़ाइल में इकट्ठा करता है, जिसे आप GitHub इशू में अटैच करने से पहले पढ़ सकते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raccoglie il log recente dell’app e l’ultimo resoconto dell’arresto anomalo in un unico file che puoi leggere prima di allegarlo a una segnalazione su GitHub."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリの最近のログと最新のクラッシュレポートを1つのファイルにまとめます。GitHub の Issue に添付する前に内容を確認できます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "앱의 최근 로그와 최신 충돌 보고서를 하나의 파일로 모읍니다. GitHub 이슈에 첨부하기 전에 내용을 읽어 볼 수 있습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zbiera ostatni dziennik aplikacji i najnowszy raport awarii w jednym pliku, który możesz przeczytać przed załączeniem go do zgłoszenia w GitHubie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reúne o registro recente do app e o relatório de falha mais recente em um arquivo que você pode ler antes de anexá-lo a um issue do GitHub."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Собирает недавний журнал приложения и последний отчёт о сбое в один файл, который можно прочитать перед тем, как прикрепить к обсуждению на GitHub."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uygulamanın son günlüğünü ve en son çökme raporunu, bir GitHub sorununa eklemeden önce okuyabileceğiniz tek bir dosyada toplar."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Збирає нещодавній журнал програми й останній звіт про збій в один файл, який можна прочитати, перш ніж прикріпити його до обговорення на GitHub."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将 App 的近期日志和最新的崩溃报告汇总到一个文件中，你可以在附加到 GitHub 议题前先阅读。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "將 App 的近期記錄和最新的當機報告彙整成一個檔案，你可以在附加到 GitHub 議題前先閱讀。"
-          }
-        }
-      }
-    },
-    "Comments" : {
-      "comment" : "Heading of the details panel's section that lists a Workshop wallpaper's Steam comments",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التعليقات"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kommentare"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comentarios"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commentaires"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "टिप्पणियाँ"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commenti"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "コメント"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "댓글"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Komentarze"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comentários"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Комментарии"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yorumlar"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коментарі"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "评论"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "留言"
-          }
-        }
-      }
-    },
     "CRT" : {
       "comment" : "Wallpaper transition",
       "localizations" : {
@@ -30533,6 +30250,100 @@
         }
       }
     },
+    "Collecting logs…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ جمع السجلات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolle werden gesammelt …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilando registros…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collecte des journaux…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉग इकट्ठा किए जा रहे हैं…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccolta dei log…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログを収集中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그 수집 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbieranie dzienników…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coletando registros…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбор журналов…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlükler toplanıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирання журналів…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在收集日志…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在收集記錄⋯"
+          }
+        }
+      }
+    },
     "Collection Link or Number" : {
       "localizations" : {
         "ar" : {
@@ -30623,6 +30434,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "收藏集連結或編號"
+          }
+        }
+      }
+    },
+    "Collects the app's recent log and the latest crash report into one file you can read before attaching it to a GitHub issue." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجمع السجل الأخير للتطبيق وأحدث تقرير انهيار في ملف واحد يمكنك قراءته قبل إرفاقه بمشكلة على GitHub."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fasst das aktuelle Protokoll der App und den neuesten Absturzbericht in einer Datei zusammen, die Sie lesen können, bevor Sie sie an ein GitHub-Issue anhängen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reúne el registro reciente de la app y el último informe de fallo en un archivo que puedes leer antes de adjuntarlo a una incidencia de GitHub."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regroupe le journal récent de l’app et le dernier rapport de plantage dans un seul fichier, que vous pouvez lire avant de le joindre à un ticket GitHub."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप के हाल के लॉग और नवीनतम क्रैश रिपोर्ट को एक फ़ाइल में इकट्ठा करता है, जिसे आप GitHub इशू में अटैच करने से पहले पढ़ सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccoglie il log recente dell’app e l’ultimo resoconto dell’arresto anomalo in un unico file che puoi leggere prima di allegarlo a una segnalazione su GitHub."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリの最近のログと最新のクラッシュレポートを1つのファイルにまとめます。GitHub の Issue に添付する前に内容を確認できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱의 최근 로그와 최신 충돌 보고서를 하나의 파일로 모읍니다. GitHub 이슈에 첨부하기 전에 내용을 읽어 볼 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbiera ostatni dziennik aplikacji i najnowszy raport awarii w jednym pliku, który możesz przeczytać przed załączeniem go do zgłoszenia w GitHubie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reúne o registro recente do app e o relatório de falha mais recente em um arquivo que você pode ler antes de anexá-lo a um issue do GitHub."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Собирает недавний журнал приложения и последний отчёт о сбое в один файл, который можно прочитать перед тем, как прикрепить к обсуждению на GitHub."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamanın son günlüğünü ve en son çökme raporunu, bir GitHub sorununa eklemeden önce okuyabileceğiniz tek bir dosyada toplar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирає нещодавній журнал програми й останній звіт про збій в один файл, який можна прочитати, перш ніж прикріпити його до обговорення на GitHub."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 App 的近期日志和最新的崩溃报告汇总到一个文件中，你可以在附加到 GitHub 议题前先阅读。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 App 的近期記錄和最新的當機報告彙整成一個檔案，你可以在附加到 GitHub 議題前先閱讀。"
           }
         }
       }
@@ -31003,6 +30908,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "指令"
+          }
+        }
+      }
+    },
+    "Comments" : {
+      "comment" : "Heading of the details panel's section that lists a Workshop wallpaper's Steam comments",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التعليقات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommentare"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentarios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commentaires"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टिप्पणियाँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commenti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コメント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "댓글"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komentarze"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentários"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Комментарии"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yorumlar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коментарі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "评论"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "留言"
           }
         }
       }
@@ -32235,101 +32235,6 @@
         }
       }
     },
-    "Copied from a folder" : {
-      "comment" : "Settings › Assets source",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "منسوخة من مجلد"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus einem Ordner kopiert"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiados de una carpeta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiées depuis un dossier"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "फ़ोल्डर से कॉपी किए गए"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiate da una cartella"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "フォルダからコピー"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "폴더에서 복사됨"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skopiowane z folderu"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiados de uma pasta"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопированы из папки"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir klasörden kopyalandı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скопійовано з папки"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从文件夹拷贝"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "從檔案夾拷貝"
-          }
-        }
-      }
-    },
     "Copied: %lld. Already there: %lld. Failed: %lld." : {
       "comment" : "Result of copying wallpapers from a Steam library; each %lld is a number of items",
       "localizations" : {
@@ -33271,101 +33176,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拷貝背景圖片檔案夾路徑\n%@"
-          }
-        }
-      }
-    },
-    "Copying assets…" : {
-      "comment" : "Assets install status",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يجري نسخ الموارد…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Assets werden kopiert …"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiando recursos…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copie des ressources…"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऐसेट कॉपी किए जा रहे हैं…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copia delle risorse…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アセットをコピー中…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "에셋을 복사하는 중…"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopiowanie zasobów…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiando recursos…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Копирование ресурсов…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varlıklar kopyalanıyor…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Копіювання ресурсів…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在拷贝资源…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在拷貝資源⋯"
           }
         }
       }
