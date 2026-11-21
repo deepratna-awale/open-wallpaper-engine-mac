@@ -41,7 +41,8 @@ extension SceneContentLoader {
             }
             // A video texture plays (`IVideoTexture`); its poster frame stays the fallback.
             if let video = parser.extractVideoData(), let device = MTLCreateSystemDefaultDevice(),
-               let stream = VideoTextureStream.embedded(mp4: video, device: device) {
+               let stream = VideoTextureStream.embedded(mp4: mappedVideo(video, of: data, path: path, wallpaperDir: wallpaperDir),
+                                                        device: device) {
                 embeddedVideoLock.withLock {
                     embeddedVideoStreams.add(stream)
                     stream.setHostRate(embeddedVideoRate)
@@ -54,6 +55,23 @@ extension SceneContentLoader {
         }
         guard let image = loadTexture(named: name, materialDir: materialDir, wallpaperDir: wallpaperDir) else { return nil }
         return cacheTexture(.image(image), for: cacheKey)
+    }
+
+    /// The movie of a loose `.tex` (`video`, a slice of the file's bytes `texture`) from the same
+    /// file mapped, so playing it pages the file in instead of keeping the bytes the scene read in
+    /// memory; `video` itself when it comes from the package (mapped already), an edit, or doesn't
+    /// match the file (a variant composed in).
+    private func mappedVideo(_ video: Data, of texture: Data, path: String, wallpaperDir: URL) -> Data {
+        guard pkgParser?.extractFile(named: path) == nil,
+              editorAssetsLock.withLock({ editorAssets[path] }) == nil,
+              let url = AssetPathResolver.fileURL(path, in: wallpaperDir),
+              let mapped = OWELog.attempt(.scene, "Mapping video texture \(path)", { try Data(contentsOf: url, options: .alwaysMapped) }),
+              mapped.count == texture.count else { return video }
+        let start = mapped.startIndex + (video.startIndex - texture.startIndex)
+        guard start >= mapped.startIndex, start + video.count <= mapped.endIndex else { return video }
+        let movie = mapped[start..<(start + video.count)]
+        guard movie.prefix(4096) == video.prefix(4096), movie.suffix(4096) == video.suffix(4096) else { return video }
+        return movie
     }
 
     /// Where a material's texture `name` may be, in the order they are tried.

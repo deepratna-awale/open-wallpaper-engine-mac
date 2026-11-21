@@ -267,12 +267,23 @@ class TEXParser {
     // MARK: - Private
 
     /// The MP4 file a video texture stores as its image (WE plays these as `IVideoTexture`), or nil
-    /// when the container holds a picture.
+    /// when the container holds a picture. A stored movie is a slice of the texture's own bytes (a
+    /// mapped package's, in place), never a copy.
     func extractVideoData() -> Data? {
-        guard let payload = firstImagePayload(reduction: 1) else { return nil }
-        let data = payload.data
-        guard data.count > 12, data[4..<8].elementsEqual("ftyp".utf8) else { return nil }
-        return Data(data)
+        guard var reader = containerReader(), reader.header.imageCount > 0, reader.header.variantCount == 0,
+              let mipmapCount = reader.word(), mipmapCount > 0,
+              let mipmap = reader.mipmap(accept: Self.isValidSize) else { return nil }
+        let video: Data
+        if mipmap.compression == 0 {
+            let start = data.startIndex + mipmap.stored.lowerBound
+            video = data[start..<(start + mipmap.stored.count)]
+        } else if let payload = firstImagePayload(reduction: 1) {
+            video = Data(payload.data)
+        } else {
+            return nil
+        }
+        guard video.count > 12, video.dropFirst(4).prefix(4).elementsEqual("ftyp".utf8) else { return nil }
+        return video
     }
 
     private struct ImagePayload {

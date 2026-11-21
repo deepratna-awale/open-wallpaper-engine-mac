@@ -10,6 +10,10 @@ import UniformTypeIdentifiers
 /// loader (`MemoryVideoLoader`): nothing is read from the disk after that, for the cost of the
 /// file's size in memory (about 200 MB for that video, against 18 MB from disk).
 ///
+/// A scene's video texture (the MP4 a `.tex` holds) plays from the texture's bytes in place, through
+/// the same loader: a slice of its mapped package, or of the file the scene read. Nothing is copied
+/// or written to disk.
+///
 /// The source must outlive its items: an asset holds its resource loader's delegate weakly.
 final class VideoFileSource: Sendable {
     let url: URL
@@ -33,6 +37,14 @@ final class VideoFileSource: Sendable {
         }
         OWELog.info(.library, "Video \(url.lastPathComponent) loaded into memory (\(data.count) bytes)")
         loader = MemoryVideoLoader(data: data, contentType: Self.contentType(of: url))
+    }
+
+    /// Plays `bytes`, a video held by something else (a scene's video texture), named `name` in its
+    /// asset's URL. The bytes are served where they are, never copied.
+    init(bytes: Data, name: String) {
+        let loader = MemoryVideoLoader(data: bytes, contentType: UTType.mpeg4Movie.identifier)
+        self.loader = loader
+        url = loader.assetURL(named: name)
     }
 
     /// Whether the items read from memory.
@@ -61,7 +73,7 @@ final class VideoFileSource: Sendable {
     }
 }
 
-/// Serves a video's bytes from memory to AVFoundation (`VideoFileSource`, in memory). Answers
+/// Serves a video's bytes from memory (or a mapped file) to AVFoundation (`VideoFileSource`). Answers
 /// each request at once and in full, so no request is ever pending; the bytes handed out share
 /// the file's memory instead of copying it, and keep it alive while AVFoundation holds them.
 final class MemoryVideoLoader: NSObject, AVAssetResourceLoaderDelegate, Sendable {
@@ -109,6 +121,7 @@ final class MemoryVideoLoader: NSObject, AVAssetResourceLoaderDelegate, Sendable
             information.contentType = contentType
             information.contentLength = Int64(byteCount)
             information.isByteRangeAccessSupported = true
+            information.isEntireLengthAvailableOnDemand = true
         }
         if let dataRequest = loadingRequest.dataRequest {
             guard let range = Self.range(of: dataRequest, length: byteCount) else {
