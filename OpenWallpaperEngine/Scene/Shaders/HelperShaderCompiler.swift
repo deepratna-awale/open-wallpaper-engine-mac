@@ -123,7 +123,8 @@ final class HelperShaderCompiler: ShaderCompiler {
     private func exchange(_ frame: Data, id: UInt64) throws -> ShaderCompileHelperMessage.Response {
         let current: ShaderCompileHelperChannel
         let now = DispatchTime.now().uptimeNanoseconds
-        if let idle = channel, Double(now - lastUsed) / 1e9 > ShaderCompileHelperServer.idleTimeout - 30 {
+        if let idle = channel,
+           Double(now - lastUsed) / 1e9 > ShaderCompileHelperServer.idleTimeout - ShaderCompileHelperServer.retireMargin {
             idle.close() // about to idle out on its own
             channel = nil
         }
