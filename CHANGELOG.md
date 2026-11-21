@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Optimise textures.** The setting compressed scene images in the background the first time a scene loaded, which took 10–15 CPU-seconds even when every image then stayed as it was, and saved GPU memory on few scenes. Scenes now load their images straight from the wallpaper's own files, as they did with the setting off. The setting is gone from Settings › Optimizations, from the control socket's settings (`optimise_textures`) and from `caches_get` (`textures`). The old cache folder, `.owe-cache/textures` in your wallpaper storage folder, is no longer used and can be deleted. ([#591](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/591))
+
 ## [1.0.0-beta.18] - 2026-11-15
 
 ### Changed
