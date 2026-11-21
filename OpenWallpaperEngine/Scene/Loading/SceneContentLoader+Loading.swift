@@ -19,7 +19,6 @@ extension SceneContentLoader {
         /// The parse's identity: the scene cache key's name (the files, edits, properties,
         /// displays and settings it was read for).
         let signature: String
-        let hasPackage: Bool
         var parser: PKGParser?
         var scene: WEScene?
         var document: SceneJSON?
@@ -105,7 +104,7 @@ extension SceneContentLoader {
         let request = preparationRequest(for: wallpaper, settingsKey: settingsKey)
         let key = request.key
         guard isCurrent() else { return nil }
-        var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
+        var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile)
         read.overlay = request.overlay
         read.editorAssets = request.overlay?.editorFileData() ?? [:]
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
@@ -194,9 +193,6 @@ extension SceneContentLoader {
             prepareSceneUserPropertyDefaults(for: wallpaper, scene: scene)
         }
         Self.log("Scene loaded: \(scene.objects.count) objects from \(wallpaper.project.file) [\(read.source)]")
-        if !read.hasPackage {
-            WallpaperPackageConverter.markVerified(wallpaperDirectory: dir, objectCount: scene.objects.count)
-        }
         setEditorAssets(read.editorAssets)
         loadedScene = scene
         loadedDocument = read.document.map { ($0, "\(dir.path)|\(read.signature)") }

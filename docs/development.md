@@ -36,7 +36,7 @@ Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL �
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — the Metal scene renderer and shader library
 - `OpenWallpaperEngine/Workshop/` — the Steam login (`SteamAccount.swift`, `SteamLogin.swift`, `SteamSignInView.swift`), the helper's client (`SteamHelperClient.swift`, `SteamHelperDownload.swift`), Workshop browsing and downloads (`WorkshopAPIService.swift`, `WorkshopDownloadService.swift`, `WorkshopViewModel.swift`), subscriptions, favourites, comments and update checks
 - `SteamHelper/` — `owe-steam-helper`, the .NET program the app runs for every Steam request (QR or password sign-in, Workshop queries, downloads, the assets); its protocol and licence (GPL-2.0-or-later) are in [SteamHelper/README.md](../SteamHelper/README.md). `Vendor/DepotDownloader/` is the download code it includes
-- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
+- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `Import/` — library storage and import (scenes play from their `.pkg` as downloaded)
 - `OpenWallpaperEngine/Library/DisplayLayout/` — display layouts, groups, splits and profiles ([docs/display-layouts.md](display-layouts.md))
 - `OpenWallpaperEngine/Editor/`, `Packages/OWEEditor/` — the Wallpaper Editor
 - `OpenWallpaperEngine/ScreenSaver/`, `OpenWallpaperEngineSaver/` — screen saver loops and the screen saver itself ([docs/screen-saver.md](screen-saver.md))

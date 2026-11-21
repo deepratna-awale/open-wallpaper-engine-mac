@@ -96,21 +96,6 @@ extension AppDelegate {
         // Log on to Steam with the saved login, if any. The Steam helper ends with the app: its
         // input closes when the app exits.
         Task { await contentViewModel.steamAccount.restore() }
-
-        // Installed packages are converted in the background.
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            WallpaperPackageConverter.convertInstalledLibrary()
-            if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
-                WallpaperPackageConverter.reclaimEligibleSources()
-            }
-            // Bundles left on an older conversion with no package to redo it from.
-            let stale = StaleBundleScanner.scan(storage: FileManager.default.wallpapersDirectory)
-            guard !stale.isEmpty else { return }
-            // Later, so the Steam login restored at launch has had its turn.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
-                self?.refreshStaleBundles(stale)
-            }
-        }
     }
     
     func screenSaverSessionChanged(_ running: Bool) {
@@ -151,29 +136,6 @@ extension AppDelegate {
                 OWELog.info(.app, "Live screen saver: a window opened; the copy launched for the screen saver keeps running")
             }
         }
-    }
-
-    private func refreshStaleBundles(_ stale: [StaleBundle]) {
-        let refresher = StaleBundleRefresher(
-            downloader: contentViewModel.workshopDownloads,
-            isShown: { [weak self] directory in
-                self?.wallpaperViewModel.wallpapers.values.contains {
-                    $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
-                } ?? false
-            },
-            notify: { [weak self] titles in
-                guard let self else { return }
-                self.staleBundleNotice?.close()
-                self.staleBundleNotice = SafeRestartNotice(
-                    message: StaleBundleRefresher.noticeMessage(for: titles), onRetry: nil,
-                    onDismiss: { [weak self] in
-                        self?.staleBundleNotice?.close()
-                        self?.staleBundleNotice = nil
-                    })
-                self.staleBundleNotice?.show()
-            })
-        staleBundleRefresher = refresher
-        refresher.run(stale)
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {

@@ -237,11 +237,9 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(service.downloadProgress["1000000001"], .completed)
     }
 
-    func testUpdateKeepsTheUserFilesOfAConvertedBundle() async throws {
+    func testUpdateKeepsTheUserFiles() async throws {
         _ = await download("1000000001")
         let item = storage.url.appending(path: "1000000001", directoryHint: .isDirectory)
-        try Data("{}".utf8).write(to: item.appending(path: WallpaperPackageConverter.manifestName))
-        try Data("converted".utf8).write(to: item.appending(path: "converted.tex"))
         let userFiles = item.appending(path: WebUserFiles.pathPrefix, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: userFiles, withIntermediateDirectories: true)
         try Data("mine".utf8).write(to: userFiles.appending(path: "photo.jpg"))
@@ -250,8 +248,6 @@ final class WorkshopStorageTests: XCTestCase {
         service.updateWorkshopItem(workshopId: "1000000001", title: "Item", previewURL: nil)
         try await sleepUntil("the update is in", timeout: 10) { @Sendable @MainActor in updated.ids == ["1000000001"] }
 
-        // A converted bundle's files aren't the Workshop's, so it downloads in full.
-        XCTAssertFalse(FileManager.default.fileExists(atPath: item.appending(path: "converted.tex").path))
         XCTAssertEqual(try String(contentsOf: userFiles.appending(path: "photo.jpg"), encoding: .utf8), "mine")
         XCTAssertEqual(try children(of: storage.url), ["1000000001"])
     }
