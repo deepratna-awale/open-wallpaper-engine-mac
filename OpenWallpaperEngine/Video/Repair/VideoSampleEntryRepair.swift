@@ -7,15 +7,14 @@ import Foundation
 /// Nothing is re-encoded. The parameter sets of the track's first sync sample go into its decoder
 /// configuration record, and the sample entry is renamed; the samples keep their own copies, which
 /// ISO/IEC 14496-15 allows for `hvc1` and `avc1` too. Only `moov` changes, so every other box is
-/// copied through unchanged (streamed, never loaded whole) and, when `moov` changes size, each
-/// chunk offset pointing past it moves by the same amount.
+/// read from the original where it is (`VideoBytes`: nothing is copied or written) and, when `moov`
+/// changes size, each chunk offset pointing past it moves by the same amount.
 enum VideoSampleEntryRepair {
     /// Sample entry types that may keep parameter sets in band, and what each becomes.
     static let repairedTypes = ["hev1": "hvc1", "avc3": "avc1"]
     /// A movie box larger than this is not a wallpaper's; reading it whole would cost too much.
     static let maximumMovieBoxSize: UInt64 = 256 << 20
     static let maximumSampleSize = 64 << 20
-    private static let copyBufferSize = 4 << 20
     private static let trackTablePath = ["mdia", "minf", "stbl"]
 
     /// Whether some video track of the file at `url` has an in-band sample entry. Reads the
@@ -45,11 +44,32 @@ enum VideoSampleEntryRepair {
         }
     }
 
-    /// Writes the repaired copy of `source` to `destination`; a file already there (the same copy,
-    /// made by a concurrent caller) is kept. Returns false, writing nothing, when no track needs repair.
-    @discardableResult
-    static func repair(_ source: URL, to destination: URL) throws -> Bool {
-        let handle = try FileHandle(forReadingFrom: source)
+    /// Containers the repair reads; anything else (WebM) is played as it is.
+    static let repairableExtensions: Set<String> = ["mp4", "m4v", "mov"]
+
+    /// Whether `source` is a local file the repair could apply to.
+    static func mayNeedRepair(_ source: URL) -> Bool {
+        source.isFileURL && repairableExtensions.contains(source.pathExtension.lowercased())
+    }
+
+    /// A file's repair: its `moov` (at `movie`) replaced by `moov`. Every other byte stays where
+    /// it is in the original, the repaired `moov`'s chunk offsets already moved for its new size,
+    /// so the repaired file is the original's bytes with `moov` swapped in (`VideoBytes`).
+    struct RepairedMovie: Sendable {
+        let fileSize: UInt64
+        /// The original `moov`'s byte range.
+        let movie: Range<UInt64>
+        /// The repaired `moov`.
+        let moov: Data
+
+        /// The repaired file's size.
+        var repairedSize: UInt64 { fileSize - UInt64(movie.count) + UInt64(moov.count) }
+    }
+
+    /// The repair of the file at `url`, or nil when no track needs it. Reads the top-level box
+    /// headers, `moov` and each repaired track's first sync sample.
+    static func repairedMovie(_ url: URL) throws -> RepairedMovie? {
+        let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() } // Closing a read-only handle has nothing to report.
         let fileSize = try handle.seekToEnd()
         let movie = try locateMovieBox(handle, fileSize: fileSize)
@@ -57,13 +77,12 @@ enum VideoSampleEntryRepair {
         guard var moov = try repairedMovieBox(original, readSample: { offset, size in
             guard offset + UInt64(size) <= fileSize else { throw VideoRepairError.malformed("sample past the end of the file") }
             return try read(handle, at: offset, count: size)
-        }) else { return false }
+        }) else { return nil }
 
         let movieEnd = movie.offset + movie.size
         let delta = Int64(moov.serialized.count) - Int64(movie.size)
         if delta != 0 { try shiftChunkOffsets(in: &moov, from: movieEnd, by: delta) }
-        try write(handle, fileSize: fileSize, replacing: movie, with: moov.serialized, to: destination)
-        return true
+        return RepairedMovie(fileSize: fileSize, movie: movie.offset..<movieEnd, moov: moov.serialized)
     }
 
     // MARK: - Movie box
@@ -183,53 +202,5 @@ enum VideoSampleEntryRepair {
         let data = try handle.read(upToCount: count) ?? Data()
         guard data.count == count else { throw VideoRepairError.malformed("file ends early at \(offset)") }
         return data
-    }
-
-    /// Writes `source` with the `movie` range replaced by `moov` to a partial file beside
-    /// `destination`, then moves it into place, so a reader never sees half a file.
-    private static func write(_ source: FileHandle, fileSize: UInt64, replacing movie: (offset: UInt64, size: UInt64),
-                              with moov: Data, to destination: URL) throws {
-        let fileManager = FileManager.default
-        let folder = destination.deletingLastPathComponent()
-        try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
-        let partial = folder.appending(path: ".\(destination.lastPathComponent).\(UUID().uuidString).partial")
-        guard fileManager.createFile(atPath: partial.path(percentEncoded: false), contents: nil) else {
-            throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: partial.path(percentEncoded: false)])
-        }
-        do {
-            let output = try FileHandle(forWritingTo: partial)
-            do {
-                try copy(source, from: 0, count: movie.offset, to: output)
-                try output.write(contentsOf: moov)
-                let movieEnd = movie.offset + movie.size
-                try copy(source, from: movieEnd, count: fileSize - movieEnd, to: output)
-                try output.close()
-            } catch {
-                try? output.close() // The write already failed; that error is the one reported.
-                throw error
-            }
-            // A copy another caller finished meanwhile is the same bytes, and a player may have it open.
-            if fileManager.fileExists(atPath: destination.path(percentEncoded: false)) {
-                try fileManager.removeItem(at: partial)
-            } else {
-                try fileManager.moveItem(at: partial, to: destination)
-            }
-        } catch {
-            try? fileManager.removeItem(at: partial) // Best-effort cleanup of the partial copy.
-            throw error
-        }
-    }
-
-    private static func copy(_ source: FileHandle, from offset: UInt64, count: UInt64, to output: FileHandle) throws {
-        try source.seek(toOffset: offset)
-        var remaining = count
-        while remaining > 0 {
-            try autoreleasepool {
-                let chunk = try source.read(upToCount: Int(min(UInt64(copyBufferSize), remaining))) ?? Data()
-                guard !chunk.isEmpty else { throw VideoRepairError.malformed("file ends early while copying") }
-                try output.write(contentsOf: chunk)
-                remaining -= UInt64(chunk.count)
-            }
-        }
     }
 }

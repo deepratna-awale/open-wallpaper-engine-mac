@@ -31,7 +31,7 @@ While the screen saver runs and an Open Wallpaper Engine saver is showing:
   speed). Each frame is drawn once, at the video's own frame rate, and never larger than the video
   placed on the display (a 1080p video on a 5K display is drawn at 1080p and scaled up by the
   saver). No file is linked or copied into the screen saver's folder; a file that keeps its
-  parameter sets in band (`hev1`, `avc3`) plays from the repaired copy the desktop uses.
+  parameter sets in band (`hev1`, `avc3`) plays repaired as it is read, as on the desktop.
 - Application wallpapers can't be used.
 
 Each frame is shown as it is drawn, at the display's cadence, as on the desktop (60 fps on a

@@ -148,30 +148,6 @@ final class VideoSampleEntryRepairTests: XCTestCase {
                      layout: layout, largeOffsets: largeOffsets)
     }
 
-    /// Deleting a wallpaper removes the repaired copies of its videos (`InstalledLibraryModel
-    /// .forgetDeletedWallpaper`), and only those.
-    func testRepairedCopiesGoWithTheirWallpaper() throws {
-        let cache = RepairedVideoCache(cachesDirectory: root.appending(path: "Caches"))
-        let deleted = root.appending(path: "wallpapers/1234", directoryHint: .isDirectory)
-        let kept = root.appending(path: "wallpapers/12345", directoryHint: .isDirectory)
-        var copies: [URL] = []
-        for folder in [deleted, kept] {
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            let source = folder.appending(path: "video.mp4")
-            try hevcFile(layout: .movieFirst).build().write(to: source)
-            let copy = cache.playableURL(for: source)
-            XCTAssertNotEqual(copy, source)
-            let record = copy.deletingLastPathComponent().appending(path: RepairedVideoCache.sourceFileName)
-            XCTAssertEqual(try String(contentsOf: record, encoding: .utf8), source.standardizedFileURL.path(percentEncoded: false))
-            copies.append(copy)
-        }
-        try FileManager.default.removeItem(at: deleted)
-        _ = expectThreadGuardViolations { cache.removeCopies(forSourcesIn: deleted) }
-        XCTAssertFalse(FileManager.default.fileExists(atPath: copies[0].deletingLastPathComponent().path(percentEncoded: false)))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: copies[1].path(percentEncoded: false)),
-                      "a wallpaper whose folder name starts the same keeps its copy")
-    }
-
     // MARK: - Helpers
 
     private func write(_ data: Data, name: String) throws -> URL {
@@ -211,13 +187,22 @@ final class VideoSampleEntryRepairTests: XCTestCase {
         }
     }
 
+    /// The repaired file as the player reads it: the original's bytes with the repaired `moov`
+    /// served in its place (`VideoBytes`), from disk and from memory alike.
     private func repair(_ file: SyntheticMP4) throws -> (original: Data, repaired: Data) {
         let original = file.build()
         let source = try write(original, name: "source-\(UUID().uuidString).mp4")
-        let destination = root.appending(path: "repaired-\(UUID().uuidString).mp4")
         XCTAssertTrue(try VideoSampleEntryRepair.needsRepair(source))
-        XCTAssertTrue(try VideoSampleEntryRepair.repair(source, to: destination))
-        return (original, try Data(contentsOf: destination))
+        let repair = try XCTUnwrap(try VideoSampleEntryRepair.repairedMovie(source))
+        let fromDisk = VideoBytes(replacingMovieOf: .file(try VideoFileReader(url: source)), with: repair)
+        let fromMemory = VideoBytes(replacingMovieOf: .memory(original), with: repair)
+        XCTAssertEqual(fromDisk.count, Int(repair.repairedSize))
+        let repaired = try fromDisk.bytes(0..<fromDisk.count)
+        XCTAssertEqual(try fromMemory.bytes(0..<fromMemory.count), repaired)
+        // Any range reads as the same range of the whole, across the pieces.
+        let middle = (repaired.count / 3)..<(repaired.count * 2 / 3)
+        XCTAssertEqual(try fromDisk.bytes(middle), repaired.subdata(in: middle))
+        return (original, repaired)
     }
 
     // MARK: - Tests
@@ -294,10 +279,8 @@ final class VideoSampleEntryRepairTests: XCTestCase {
         var file = avcFile(layout: .movieFirst)
         file.entryType = "avc1"
         let source = try write(file.build(), name: "plain.mp4")
-        let destination = root.appending(path: "plain-repaired.mp4")
         XCTAssertFalse(try VideoSampleEntryRepair.needsRepair(source))
-        XCTAssertFalse(try VideoSampleEntryRepair.repair(source, to: destination))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path(percentEncoded: false)))
+        XCTAssertNil(try VideoSampleEntryRepair.repairedMovie(source))
     }
 
     func testSampleEntryTypesListEveryTrack() throws {
@@ -305,7 +288,6 @@ final class VideoSampleEntryRepairTests: XCTestCase {
         XCTAssertEqual(try VideoSampleEntryRepair.sampleEntryTypes(source), ["hev1"])
     }
 
-    /// A video wallpaper whose track is in band gets its repaired copy in the screen saver store.
     func testEmptyRecordTakesItsProfileFromTheSPS() throws {
         // profile_tier_level with emulation prevention bytes, then sps_id 0, chroma 4:2:0,
         // width and height 0, no conformance window, 10-bit luma and chroma.
@@ -320,41 +302,35 @@ final class VideoSampleEntryRepairTests: XCTestCase {
         XCTAssertEqual(try HEVCDecoderConfiguration.arrays(in: record).map(\.units), [[Self.vps], [sps], [Self.pps]])
     }
 
-    func testMissingParameterSetsFailWithoutWriting() throws {
+    func testMissingParameterSetsFail() throws {
         var file = hevcFile(layout: .movieFirst)
         file.samples[0] = Self.sample([Self.idrSlice])
         file.record = Self.hvcC(arrays: [])
         let source = try write(file.build(), name: "bare.mp4")
-        let destination = root.appending(path: "bare-repaired.mp4")
-        XCTAssertThrowsError(try VideoSampleEntryRepair.repair(source, to: destination))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path(percentEncoded: false)))
+        XCTAssertThrowsError(try VideoSampleEntryRepair.repairedMovie(source))
     }
 
-    func testCacheMakesOneCopyPerSourceVersionAndFallsBackToTheOriginal() throws {
-        let cache = RepairedVideoCache(cachesDirectory: root.appending(path: "Caches"))
+    /// A file that needs the repair plays it through the loader; one that doesn't, or can't be
+    /// repaired, plays as it is. Nothing is written.
+    func testSourcesPlayRepairedOnlyWhenTheFileNeedsIt() throws {
         let source = try write(hevcFile(layout: .movieFirst).build(), name: "wallpaper.mp4")
-
-        var announced = 0
-        let copy = cache.playableURL(for: source) { announced += 1 }
-        XCTAssertNotEqual(copy, source)
-        XCTAssertTrue(copy.path(percentEncoded: false).hasPrefix(cache.directory.path(percentEncoded: false)))
-        XCTAssertEqual(announced, 1)
-        XCTAssertEqual(cache.playableURL(for: source) { announced += 1 }, copy)
-        XCTAssertEqual(announced, 1, "an existing copy is reused")
-
-        // A changed source gets a new copy, and the old one goes.
-        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: 60)],
-                                              ofItemAtPath: source.path(percentEncoded: false))
-        let newer = cache.playableURL(for: source)
-        XCTAssertNotEqual(newer, copy)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: newer.path(percentEncoded: false)))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: copy.path(percentEncoded: false)))
+        for mode in [GSVideoReadMode.fromDisk, .inMemory] {
+            let file = VideoFileSource(url: source, mode: mode)
+            XCTAssertTrue(file.isRepaired)
+            XCTAssertEqual(file.isInMemory, mode == .inMemory)
+            XCTAssertEqual(file.makeAsset().url.scheme, VideoBytesLoader.scheme)
+        }
 
         let broken = try write(Data([0, 0, 0, 0x20]) + Data("ftyp".utf8), name: "broken.mp4")
-        XCTAssertEqual(cache.playableURL(for: broken), broken)
         var plain = avcFile(layout: .movieFirst)
         plain.entryType = "avc1"
         let plainURL = try write(plain.build(), name: "plain.mp4")
-        XCTAssertEqual(cache.playableURL(for: plainURL), plainURL)
+        for url in [broken, plainURL] {
+            let file = VideoFileSource(url: url, mode: .fromDisk)
+            XCTAssertFalse(file.isRepaired)
+            XCTAssertEqual(file.makeAsset().url, url)
+        }
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path(percentEncoded: false)).sorted(),
+                       ["broken.mp4", "plain.mp4", "wallpaper.mp4"])
     }
 }

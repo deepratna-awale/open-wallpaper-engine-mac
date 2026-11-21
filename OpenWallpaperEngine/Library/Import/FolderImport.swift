@@ -56,11 +56,9 @@ enum FolderImport {
         return sources
     }
 
-    /// Copies `sources` into `library` and starts preparing each copy in the background
-    /// (`WallpaperPreparation`, a zip's by `ZipImporter`). Blocking file IO.
+    /// Copies `sources` into `library` (a zip's through `ZipImporter`). Blocking file IO.
     @discardableResult
-    static func importWallpapers(_ sources: Sources, into library: URL, fileManager: FileManager = .default,
-                                 prepare: @escaping @Sendable (URL) -> Void = { WallpaperPreparation.prepare(wallpaperDirectory: $0) }) -> Outcome {
+    static func importWallpapers(_ sources: Sources, into library: URL, fileManager: FileManager = .default) -> Outcome {
         var outcome = Outcome()
         for url in sources.folders {
             let destination = library.appending(path: url.lastPathComponent)
@@ -76,7 +74,6 @@ enum FolderImport {
                 continue
             }
             outcome.imported.append(destination)
-            DispatchQueue.global(qos: .utility).async { prepare(destination) }
         }
         for url in sources.zips {
             let before = folderNames(in: library, fileManager: fileManager)

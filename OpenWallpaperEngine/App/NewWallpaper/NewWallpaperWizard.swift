@@ -30,10 +30,9 @@ extension AppDelegate {
         window.beginSheet(panel)
     }
 
-    /// A wallpaper the sheet made: prepared as an imported one, and a scene opened for editing.
+    /// A wallpaper the sheet made: a scene opens for editing.
     private func newWallpaperCreated(_ folder: URL, isScene: Bool) {
         OWELog.info(.library, "New wallpaper \(folder.path)")
-        DispatchQueue.global(qos: .utility).async { WallpaperPreparation.prepare(wallpaperDirectory: folder) }
         guard isScene else { return }
         do {
             let project = try WEProject.read(in: folder)

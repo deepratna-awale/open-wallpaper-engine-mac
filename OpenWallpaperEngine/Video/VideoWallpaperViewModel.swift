@@ -25,8 +25,6 @@ class VideoWallpaperViewModel: ObservableObject {
         }
     }
 
-    /// A copy of the video AVFoundation can play is being made (`RepairedVideoCache`).
-    @Published private(set) var isPreparingVideo = false
     /// The file the players read, kept while they do: from memory, it owns the bytes.
     private var videoFile: VideoFileSource?
     /// Finds the file the players open, off the main thread.
@@ -159,7 +157,6 @@ class VideoWallpaperViewModel: ObservableObject {
         preparation?.cancel()
         preparation = nil
         pendingPreparation = nil
-        isPreparingVideo = false
         cancellables.removeAll()
         musicSyncCaptureLease = nil
         teardown.setTimer(nil)
@@ -300,40 +297,27 @@ class VideoWallpaperViewModel: ObservableObject {
         })
     }
 
-    /// Opens the wallpaper's video in the players once the file to open is known: a video whose
-    /// track AVFoundation refuses as it is plays from its repaired copy, which is made first when
-    /// it doesn't exist yet (a few seconds, shown as "Preparing video…").
-    ///
-    /// WE's "Video loading" set to in memory reads the file into memory here too, off the main
-    /// thread (`VideoFileSource`).
+    /// Opens the wallpaper's video in the players once its source is made, off the main thread: a
+    /// video whose track AVFoundation refuses as it is plays repaired (`VideoSampleEntryRepair`,
+    /// read from its `moov`), and WE's "Video loading" set to in memory reads the file into memory
+    /// (`VideoFileSource`).
     private func preparePlayers(for wallpaper: WEWallpaper) {
         preparation?.cancel()
         pendingPreparation = nil
-        isPreparingVideo = false
         let source = wallpaper.mediaURL
         let readMode = wallpaperViewModel.videoReadMode
-        guard RepairedVideoCache.mayNeedRepair(source) || readMode == .inMemory else {
+        guard VideoSampleEntryRepair.mayNeedRepair(source) || readMode == .inMemory else {
             replacePlayers(with: VideoFileSource(url: source, mode: .fromDisk))
             return
         }
-        let cache = RepairedVideoCache.current
         let id = UUID()
         pendingPreparation = id
-        // Sendable, so the detached repair can call it: the view model is main-actor isolated.
-        let markPreparing: @Sendable () -> Void = { [weak self] in
-            Task { @MainActor [weak self] in
-                guard let self, self.pendingPreparation == id else { return }
-                self.isPreparingVideo = true
-            }
-        }
         preparation = Task { [weak self] in
             let file = await Task.detached(priority: .userInitiated) {
-                let url = cache.playableURL(for: source) { markPreparing() }
-                return VideoFileSource(url: url, mode: readMode)
+                VideoFileSource(url: source, mode: readMode)
             }.value
             guard let self, !Task.isCancelled, !self.stopped, self.pendingPreparation == id else { return }
             self.pendingPreparation = nil
-            self.isPreparingVideo = false
             self.replacePlayers(with: file)
         }
     }

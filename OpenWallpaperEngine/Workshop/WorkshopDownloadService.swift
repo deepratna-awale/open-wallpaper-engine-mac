@@ -315,11 +315,6 @@ class WorkshopDownloadService: ObservableObject {
         }
         let destination = outcome.directory
         let isNew = outcome.isNewInstall
-        if isNew {
-            DispatchQueue.global(qos: .utility).async {
-                WallpaperPreparation.prepare(wallpaperDirectory: destination)
-            }
-        }
         if isUpdate {
             // An update leaves the item as it was: the user's own download, or a dependency.
             updateIds.remove(workshopId)
@@ -428,11 +423,6 @@ class WorkshopDownloadService: ObservableObject {
         let workshopId = source.lastPathComponent
         let outcome = try WorkshopItemInstaller.install(itemAt: source, workshopId: workshopId, into: storageDirectory())
         let destination = outcome.directory
-        if outcome.isNewInstall {
-            DispatchQueue.global(qos: .utility).async {
-                WallpaperPreparation.prepare(wallpaperDirectory: destination)
-            }
-        }
         dependencyIndex.recordUserDownload(workshopId)
         downloadedIndex.insert(workshopId)
         itemInstalled.send(destination)

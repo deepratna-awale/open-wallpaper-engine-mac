@@ -26,7 +26,7 @@ final class FolderImportDropTests: XCTestCase {
         let library = root.appending(path: "library")
         XCTAssertEqual(DroppedFileImport.videos(in: dropped).map(\.lastPathComponent), ["clip.mov"])
 
-        let problems = DroppedFileImport.importWallpapers(dropped, into: library, prepare: { _ in })
+        let problems = DroppedFileImport.importWallpapers(dropped, into: library)
         XCTAssertTrue(FileManager.default.fileExists(atPath: library.appending(path: "one/project.json").path))
         XCTAssertEqual(Set(problems.map(\.message)), Set([
             DroppedFileImport.Problem.noWallpaper(name: "empty"),

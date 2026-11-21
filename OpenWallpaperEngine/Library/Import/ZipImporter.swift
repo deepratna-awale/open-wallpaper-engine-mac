@@ -43,9 +43,6 @@ enum ZipImporter {
             if !fm.fileExists(atPath: target.path) {
                 do {
                     try ImportedFolderLinks.copyWithoutLinks(from: url, to: target)
-                    DispatchQueue.global(qos: .utility).async {
-                        WallpaperPreparation.prepare(wallpaperDirectory: target)
-                    }
                     imported += 1
                 } catch {
                     OWELog.error(.importer, "Copy failed for \(url.lastPathComponent): \(error)")
