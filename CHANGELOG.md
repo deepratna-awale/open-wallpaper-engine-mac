@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Optimise textures.** The setting compressed scene images in the background the first time a scene loaded, which took 10–15 CPU-seconds even when every image then stayed as it was, and saved GPU memory on few scenes. Scenes now load their images straight from the wallpaper's own files, as they did with the setting off. The setting is gone from Settings › Optimizations, from the control socket's settings (`optimise_textures`) and from `caches_get` (`textures`). The old cache folder, `.owe-cache/textures` in your wallpaper storage folder, is no longer used and can be deleted. ([#591](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/591))
 ### Changed
 
 - **Wallpaper Engine's assets are read where they're downloaded.** Settings › Assets now downloads only the parts of your Wallpaper Engine copy the app reads (no editor previews, Direct3D shaders or editor scenes, and the default wallpapers only when you add them) straight into `<Wallpaper Storage>/.owe-assets`, laid out as the install is, and reads them there. The download is no longer copied into a second folder and deleted, so an install writes about 60 MB instead of about 90 MB plus a 60 MB copy (about 240 MB plus the copy with the default wallpapers), and an update fetches only the files that changed. A copy made by an earlier version keeps working and is replaced the next time the assets are downloaded. ([#594](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/594))

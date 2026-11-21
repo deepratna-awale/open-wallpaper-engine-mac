@@ -7,26 +7,19 @@
 
 import SwiftUI
 import CoreText
-import CryptoKit
 import OWESceneEditing
 
 extension SceneContentLoader {
-    /// `colour`: the texture is a layer's or particle's own image, which "Optimise textures" may
-    /// load as a prepared BC7 texture (`TexturePreparation`). Every other texture (masks, flow and
-    /// normal maps, anything a material reads as data) loads as stored.
-    func loadMetalTexture(named name: String, materialDir: String, wallpaperDir: URL,
-                                  colour: Bool = false) -> SceneMetalTextureSource? {
+    func loadMetalTexture(named name: String, materialDir: String, wallpaperDir: URL) -> SceneMetalTextureSource? {
         OWEPhaseTiming.measure(.texture) {
-            loadMetalTextureUntimed(named: name, materialDir: materialDir, wallpaperDir: wallpaperDir, colour: colour)
+            loadMetalTextureUntimed(named: name, materialDir: materialDir, wallpaperDir: wallpaperDir)
         }
     }
 
-    private func loadMetalTextureUntimed(named name: String, materialDir: String, wallpaperDir: URL,
-                                         colour: Bool) -> SceneMetalTextureSource? {
+    private func loadMetalTextureUntimed(named name: String, materialDir: String, wallpaperDir: URL) -> SceneMetalTextureSource? {
         // WE's texture reduction loads a smaller mipmap (`TextureReduction`), cached apart.
         let reduction = renderSettings.textureReduction
-        let optimise = colour && renderSettings.optimiseTextures && TexturePreparation.deviceSupportsBC7
-        let cacheKey = "\(materialDir)|\(name)" + (reduction > 1 ? "|reduced\(reduction)" : "") + (optimise ? "|bc7" : "")
+        let cacheKey = "\(materialDir)|\(name)" + (reduction > 1 ? "|reduced\(reduction)" : "")
         if let cached = cachedTexture(cacheKey) { return cached }
         OWEFrameMetrics.countTextureDecode()
         let signpost = OWESignpost.begin(OWESignpost.scene, "decodeTexture")
@@ -55,18 +48,7 @@ extension SceneContentLoader {
                 }
                 return cacheTexture(.video(stream), for: cacheKey)
             }
-            // A padded raw image keeps its allocation (`TEXRawImageRep.makeAllocationTexture`); a
-            // prepared texture holds only the image.
-            let prepares = optimise && !parser.isPaddedRawImage()
-            let mipmaps = prepares ? parser.firstImageMipmapCount() ?? 1 : 1
-            let level = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: mipmaps)
-            let preparedKey = prepares ? TexturePreparation.key(texData: data, level: level) : nil
-            if let preparedKey, let prepared = TexturePreparation.cachedTexture(key: preparedKey) {
-                cacheLeases.hold(TexturePreparation.url(key: preparedKey), scope: wallpaperDir)
-                return cacheTexture(.dxt(prepared), for: cacheKey)
-            }
             if let image = parser.extractImage(reduction: reduction) {
-                if let preparedKey { TexturePreparation.schedule(image, key: preparedKey, mipmaps: mipmaps - level) }
                 return cacheTexture(.image(image), for: cacheKey)
             }
         }

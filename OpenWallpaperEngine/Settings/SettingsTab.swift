@@ -107,7 +107,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.audioRecordingVolume),
                     SettingField(\.mediaIntegration), SettingField(\.mediaBlocklist), SettingField(\.processPiority),
                     SettingField(\.pauseOnVRAMExhausted), SettingField(\.restartAfterCrashing),
-                    SettingField(\.optimiseTextures), SettingField(\.cheaperShadows),
+                    SettingField(\.cheaperShadows),
                     SettingField(\.webStandardResolution),
                     SettingField(\.reducedResolutionParticles)]
         case .diagnostics:

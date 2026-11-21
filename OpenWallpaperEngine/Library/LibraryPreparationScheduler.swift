@@ -1,8 +1,8 @@
 import Foundation
 
 /// Prepares a wallpaper that just arrived in the library (a Workshop download or an import) so
-/// its first show is warm: the shader variant cache, the pipeline archive and the "Optimise
-/// textures" blobs. The work is the app's own helper run (`HelperRunCommand`,
+/// its first show is warm: the shader variant cache, the pipeline archive and the loading
+/// snapshots. The work is the app's own helper run (`HelperRunCommand`,
 /// `--prepare-wallpapers`), which loads and draws the scene offscreen the way showing it would,
 /// in its own process at background priority.
 ///

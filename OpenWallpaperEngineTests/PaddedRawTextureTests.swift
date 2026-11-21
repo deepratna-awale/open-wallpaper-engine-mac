@@ -20,7 +20,6 @@ final class PaddedRawTextureTests: XCTestCase {
 
     func testAPaddedRawImageKeepsItsAllocation() throws {
         let parser = TEXParser(data: Self.paddedTex())
-        XCTAssertTrue(parser.isPaddedRawImage())
         let image = try XCTUnwrap(parser.extractImage())
         let raw = try XCTUnwrap(TEXRawImageRep.of(image))
         XCTAssertTrue(raw.isPadded)
@@ -38,7 +37,6 @@ final class PaddedRawTextureTests: XCTestCase {
     func testAnUnpaddedRawImageIsUnchanged() throws {
         let bytes = [UInt8](repeating: 255, count: 8 * 4 * 4)
         let parser = TEXParser(data: TextureReductionTests.tex(format: 0, image: SIMD2(8, 4), mipmaps: [(SIMD2(8, 4), bytes)]))
-        XCTAssertFalse(parser.isPaddedRawImage())
         let image = try XCTUnwrap(parser.extractImage())
         XCTAssertNil(SceneMetalTextureSource.image(image).contentSize)
     }
