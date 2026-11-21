@@ -11,12 +11,10 @@ final class QualitySettingsTests: XCTestCase {
         XCTAssertTrue(settings.reflections)
         XCTAssertEqual(settings.shadows, .medium)
         XCTAssertEqual(settings.volumetrics, .medium)
-        // The app matches the scene's detail to the display, optimises textures and draws cheaper
-        // shadows by default (`GSSceneDetail`, `optimiseTextures`, `cheaperShadows`); a renderer
-        // without settings draws as WE does.
+        // The app matches the scene's detail to the display and draws cheaper shadows by default
+        // (`GSSceneDetail`, `cheaperShadows`); a renderer without settings draws as WE does.
         var drawn = SceneRenderSettings()
         drawn.sceneDetail = .matchDisplay
-        drawn.optimiseTextures = true
         drawn.cheaperShadows = true
         // Render Resolution alone sizes the app's scene target: the display's pixels by default.
         drawn.renderResolution = .yourDisplay

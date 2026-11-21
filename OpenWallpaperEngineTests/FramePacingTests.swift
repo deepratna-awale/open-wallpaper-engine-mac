@@ -218,10 +218,9 @@ final class FramePacingTests: XCTestCase {
         let stored = try JSONDecoder().decode(GlobalSettings.self, from: Data(#"{"qualityEfficiency": 12}"#.utf8))
         XCTAssertEqual(stored.qualityEfficiency, 5)
         XCTAssertTrue(SettingsTab.performance.fields.contains { $0.isChanged(settings) })
-        var textures = GlobalSettings()
-        textures.optimiseTextures = false
-        XCTAssertTrue(SettingsTab.optimizations.fields.contains { $0.isChanged(textures) })
-        XCTAssertTrue(GlobalSettings().optimiseTextures)
+        var shadows = GlobalSettings()
+        shadows.cheaperShadows.toggle()
+        XCTAssertTrue(SettingsTab.optimizations.fields.contains { $0.isChanged(shadows) })
     }
 
     // MARK: - Idle and wake

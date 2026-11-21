@@ -18,9 +18,6 @@ struct SceneRenderSettings: Equatable {
     /// WE's texture reduction (`TextureReduction`), 1 or 2: the user's setting resolved for the
     /// displays showing the scene and its size (`init(_:outputPixels:sceneSize:)`). Textures load for it.
     var textureReduction = 1
-    /// "Optimise textures" (`TexturePreparation`): colour images load as prepared BC7 textures.
-    /// Off without settings, so a settings-less renderer draws the images as they are.
-    var optimiseTextures = false
     /// Large additive particle systems of a scene without depth draw into a half-resolution target
     /// that is added back in their place: a quarter of their fragments, softer edges. Off by default.
     var reducedResolutionParticles = false
@@ -60,7 +57,6 @@ struct SceneRenderSettings: Equatable {
         upscaling = settings.upscaling
         renderScale = settings.renderScale
         antiAliasing = settings.antiAliasing
-        optimiseTextures = settings.optimiseTextures
         reducedResolutionParticles = settings.reducedResolutionParticles
         videoReadMode = settings.videoReadMode
     }

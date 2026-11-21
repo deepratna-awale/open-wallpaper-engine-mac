@@ -106,7 +106,7 @@ extension SceneContentLoader {
               let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
         if let blending { material.passes?[0].blending = blending.rawValue }
         guard let source = timing.measure(.texture, {
-            loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir, colour: true)
+            loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir)
         }) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(id)): "
                          + "texture \(textureName) of \(materialPath) not found")

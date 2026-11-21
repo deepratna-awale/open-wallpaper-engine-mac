@@ -95,7 +95,6 @@ struct LibrarySetting: Equatable {
                        "Reloads the wallpapers and their audio when the sound output changes."),
         LibrarySetting("media_integration", .bool,
                        "Lets wallpapers show the title, artist and cover of what is playing now."),
-        LibrarySetting("optimise_textures", .bool, "Compresses scenes' images once in the background to save GPU memory."),
         LibrarySetting("cheaper_shadows", .bool, "Draws shadow maps at half size."),
         LibrarySetting("web_standard_resolution", .bool,
                        "Draws web wallpapers at standard resolution, a quarter of the pixels on Retina."),

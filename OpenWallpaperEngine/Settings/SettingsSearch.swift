@@ -121,7 +121,6 @@ struct SettingsSearch {
             entry("Rendering", .optimizations, SettingsAnchor.rendering),
             entry("Process Priority", .optimizations, SettingsAnchor.rendering),
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
-            entry("Optimise textures", .optimizations, SettingsAnchor.rendering),
             entry("Cheaper shadows", .optimizations, SettingsAnchor.rendering),
             entry("Render web wallpapers at standard resolution", .optimizations, SettingsAnchor.rendering),
             entry("Draw large glowing particles at half resolution", .optimizations, SettingsAnchor.rendering),
