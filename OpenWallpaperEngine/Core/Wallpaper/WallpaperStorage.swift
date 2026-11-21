@@ -93,7 +93,6 @@ enum WallpaperStorage {
         guard name.hasPrefix(".") else { return true }
         guard name.hasPrefix(".owe") else { return false }
         if name == WorkshopDependencyIndex.fileName { return false }
-        if name == WallpaperEngineAssetsDownload.downloadFolderName { return false }
         return !name.hasPrefix(".owe-incoming-") && !name.hasSuffix(".partial")
     }
 

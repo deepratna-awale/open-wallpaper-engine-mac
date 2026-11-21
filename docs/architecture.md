@@ -161,7 +161,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 ### `Resources/`
 
 - `Assets.xcassets`, the app icon (`AppIcon.icon`), the legal documents (`Legal/`), SceneScript's JavaScript and media, and the Wallpaper Not Found placeholder videos a display without a wallpaper shows (`WallpaperNotFound.mp4`, and `WallpaperNotFoundDark.mp4` in Dark Mode, which `Scripts/make-wallpaper-not-found-dark.swift` draws; `AppBundleLayout`). `Localizable.xcstrings` is in `OpenWallpaperEngine/` itself.
-- No Wallpaper Engine files ship in the repository or the app. `Core/WallpaperEngineAssets` resolves them at runtime: a WE install the user chose, else the cache in the Wallpaper Storage folder (`<storage>/.owe-assets`, filled by `Workshop/WallpaperEngineAssetsService` from the user's Steam copy through the Steam helper), else none (scenes show that they need them). Tests read them only from `OWE_ASSETS`.
+- No Wallpaper Engine files ship in the repository or the app. `Core/WallpaperEngineAssets` resolves them at runtime: a WE install the user chose, else the parts of the user's Steam copy `Workshop/WallpaperEngineAssetsService` downloads through the Steam helper into the Wallpaper Storage folder (`<storage>/.owe-assets`, laid out as the install is and read there, with no second copy), else none (scenes show that they need them). Tests read them only from `OWE_ASSETS`.
 
 ## Scene data flow
 

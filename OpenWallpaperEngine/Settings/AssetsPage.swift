@@ -122,7 +122,7 @@ struct AssetsPage: SettingsPage {
     private func sourceName(_ source: WallpaperEngineAssets.Source) -> LocalizedStringKey {
         switch source {
         case .chosenFolder, .testEnvironment: return "Chosen folder"
-        case .cache: return status.info?.origin == .folder ? "Copied from a folder" : "Downloaded from Steam"
+        case .cache: return "Downloaded from Steam"
         }
     }
 

@@ -46,6 +46,6 @@ Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL �
 - `OpenWallpaperEngine/MCP/`, `Packages/OWEControl/`, `MCPServer/` — the MCP Server plugin: the app's control socket and the `owe-mcp` server ([docs/mcp.md](mcp.md))
 - `OWESaverBroker/`, `OpenWallpaperEngineSaverExtension/` — the live screen saver's launcher and extension; `OWEChromiumHelper/` — the Chromium web engine's XPC service; `EditorHelper/` — the Wallpaper Editor app's bundle files ([architecture](architecture.md#targets))
 - `Scripts/build-steam-helper.sh` — builds the Steam helper into `build/steam-helper/` (`--download` fetches CI's build instead)
-- `Scripts/fill-assets-cache.sh` — development helper: copies the assets subset of a Wallpaper Engine install into a local folder or the Wallpaper Storage cache
+- `Scripts/fill-assets-cache.sh` — development helper: copies the parts of a Wallpaper Engine install the app reads into a local folder or the Wallpaper Storage folder's `.owe-assets`, laid out as the install is
 - `Scripts/make-wallpaper-not-found-dark.swift` — draws the Dark Mode Wallpaper Not Found video (`OpenWallpaperEngine/Resources/WallpaperNotFoundDark.mp4`); usage is at the top of the file
 - `Scripts/scene-api-coverage.py` — reports which SceneScript APIs installed wallpapers use versus what is implemented

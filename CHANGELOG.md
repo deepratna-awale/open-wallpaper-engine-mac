@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Wallpaper Engine's assets are read where they're downloaded.** Settings › Assets now downloads only the parts of your Wallpaper Engine copy the app reads (no editor previews, Direct3D shaders or editor scenes, and the default wallpapers only when you add them) straight into `<Wallpaper Storage>/.owe-assets`, laid out as the install is, and reads them there. The download is no longer copied into a second folder and deleted, so an install writes about 60 MB instead of about 90 MB plus a 60 MB copy (about 240 MB plus the copy with the default wallpapers), and an update fetches only the files that changed. A copy made by an earlier version keeps working and is replaced the next time the assets are downloaded. ([#594](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/594))
+
 ## [1.0.0-beta.18] - 2026-11-15
 
 ### Changed
