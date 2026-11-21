@@ -3,7 +3,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// WE's "Video loading" (`videoreadmode`: `fromdisk`, the default, or `frommemory`): in memory,
-/// the file is read once and the player items read it through `MemoryVideoLoader`.
+/// the file is read once and the player items read it through `VideoBytesLoader`.
 @MainActor
 final class VideoFileSourceTests: XCTestCase {
     private var directory: URL!
@@ -42,7 +42,7 @@ final class VideoFileSourceTests: XCTestCase {
         XCTAssertTrue(source.isInMemory)
         let item = source.makeItem()
         let asset = try XCTUnwrap(item.asset as? AVURLAsset)
-        XCTAssertEqual(asset.url.scheme, MemoryVideoLoader.scheme)
+        XCTAssertEqual(asset.url.scheme, VideoBytesLoader.scheme)
 
         let disk = AVURLAsset(url: url)
         let memoryDuration = try await asset.load(.duration)
@@ -70,7 +70,7 @@ final class VideoFileSourceTests: XCTestCase {
         let slice = package[333..<(333 + movie.count)]
         let source = VideoFileSource(bytes: slice, name: "video-texture.mp4")
         XCTAssertTrue(source.isInMemory)
-        XCTAssertEqual(source.url.scheme, MemoryVideoLoader.scheme)
+        XCTAssertEqual(source.url.scheme, VideoBytesLoader.scheme)
         let asset = source.makeAsset()
         let duration = try await asset.load(.duration)
         let diskDuration = try await AVURLAsset(url: url).load(.duration)
@@ -85,18 +85,18 @@ final class VideoFileSourceTests: XCTestCase {
 
     func testTheLoaderServesTheFilesBytes() throws {
         let bytes = Data((0..<5000).map { UInt8(truncatingIfNeeded: $0 * 7) })
-        let loader = MemoryVideoLoader(data: bytes, contentType: "public.mpeg-4")
+        let loader = VideoBytesLoader(data: bytes, contentType: "public.mpeg-4")
         XCTAssertEqual(loader.bytes(100..<300), bytes.subdata(in: 100..<300))
         XCTAssertEqual(loader.bytes(0..<0), Data())
-        XCTAssertEqual(MemoryVideoLoader.range(offset: 4000, length: 2000, toEnd: false, fileLength: 5000), 4000..<5000)
-        XCTAssertEqual(MemoryVideoLoader.range(offset: 10, length: 2, toEnd: true, fileLength: 5000), 10..<5000)
-        XCTAssertNil(MemoryVideoLoader.range(offset: 5001, length: 2, toEnd: false, fileLength: 5000))
-        XCTAssertNil(MemoryVideoLoader.range(offset: -1, length: 2, toEnd: false, fileLength: 5000))
-        XCTAssertNotEqual(loader.assetURL(named: "a.mp4"), MemoryVideoLoader(data: bytes, contentType: "x").assetURL(named: "a.mp4"))
+        XCTAssertEqual(VideoBytesLoader.range(offset: 4000, length: 2000, toEnd: false, fileLength: 5000), 4000..<5000)
+        XCTAssertEqual(VideoBytesLoader.range(offset: 10, length: 2, toEnd: true, fileLength: 5000), 10..<5000)
+        XCTAssertNil(VideoBytesLoader.range(offset: 5001, length: 2, toEnd: false, fileLength: 5000))
+        XCTAssertNil(VideoBytesLoader.range(offset: -1, length: 2, toEnd: false, fileLength: 5000))
+        XCTAssertNotEqual(loader.assetURL(named: "a.mp4"), VideoBytesLoader(data: bytes, contentType: "x").assetURL(named: "a.mp4"))
     }
 
     func testBytesHandedOutOutliveTheLoader() throws {
-        var loader: MemoryVideoLoader? = MemoryVideoLoader(data: Data(repeating: 9, count: 64), contentType: "public.mpeg-4")
+        var loader: VideoBytesLoader? = VideoBytesLoader(data: Data(repeating: 9, count: 64), contentType: "public.mpeg-4")
         let slice = try XCTUnwrap(loader?.bytes(8..<16))
         loader = nil
         XCTAssertEqual(slice, Data(repeating: 9, count: 8))

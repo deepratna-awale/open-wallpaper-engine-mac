@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 /// every loop reads the whole file from its disk again: a 137 MB 4K loop of 27.6 s read 143 MB per
 /// loop, about 5 MB/s for as long as it plays, keeping a hard disk spinning or a network volume
 /// busy. In memory, the file is read once and the items read it from memory through a resource
-/// loader (`MemoryVideoLoader`): nothing is read from the disk after that, for the cost of the
+/// loader (`VideoBytesLoader`): nothing is read from the disk after that, for the cost of the
 /// file's size in memory (about 200 MB for that video, against 18 MB from disk).
 ///
 /// A scene's video texture (the MP4 a `.tex` holds) plays from the texture's bytes in place, through
@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 /// The source must outlive its items: an asset holds its resource loader's delegate weakly.
 final class VideoFileSource: Sendable {
     let url: URL
-    private let loader: MemoryVideoLoader?
+    private let loader: VideoBytesLoader?
 
     /// Opens `url`. In memory, the whole file is read now, so call it off the main thread. A file
     /// that can't be read plays from disk, which then reports the error itself.
@@ -36,13 +36,13 @@ final class VideoFileSource: Sendable {
             return
         }
         OWELog.info(.library, "Video \(url.lastPathComponent) loaded into memory (\(data.count) bytes)")
-        loader = MemoryVideoLoader(data: data, contentType: Self.contentType(of: url))
+        loader = VideoBytesLoader(data: data, contentType: Self.contentType(of: url))
     }
 
     /// Plays `bytes`, a video held by something else (a scene's video texture), named `name` in its
     /// asset's URL. The bytes are served where they are, never copied.
     init(bytes: Data, name: String) {
-        let loader = MemoryVideoLoader(data: bytes, contentType: UTType.mpeg4Movie.identifier)
+        let loader = VideoBytesLoader(data: bytes, contentType: UTType.mpeg4Movie.identifier)
         self.loader = loader
         url = loader.assetURL(named: name)
     }
@@ -76,7 +76,7 @@ final class VideoFileSource: Sendable {
 /// Serves a video's bytes from memory (or a mapped file) to AVFoundation (`VideoFileSource`). Answers
 /// each request at once and in full, so no request is ever pending; the bytes handed out share
 /// the file's memory instead of copying it, and keep it alive while AVFoundation holds them.
-final class MemoryVideoLoader: NSObject, AVAssetResourceLoaderDelegate, Sendable {
+final class VideoBytesLoader: NSObject, AVAssetResourceLoaderDelegate, Sendable {
     static let scheme = "owe-memory-video"
     /// Responses are at most this long, so AVFoundation can start on a large request early.
     static let chunkLength = 1 << 20
