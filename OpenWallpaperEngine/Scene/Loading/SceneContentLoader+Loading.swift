@@ -488,6 +488,9 @@ extension SceneContentLoader {
             }
             content.colorCorrection = engineChain("WE's colour correction", wallpaperDir: wallpaperDir,
                                                   SceneColorCorrection.build)
+            content.userAdjustments = engineChain("The user adjustments", wallpaperDir: wallpaperDir) {
+                SceneUserAdjustmentLayer(builder: $0)
+            }
             // WE makes the fade only for a scene with camera paths (0x140181bae).
             if !content.spatial.cameraPaths.isEmpty {
                 content.cameraFade = engineChain("WE's camera fade", wallpaperDir: wallpaperDir, SceneCameraFade.build)

@@ -190,8 +190,8 @@ final class SceneUserPropertiesModel: ObservableObject {
             properties.append(contentsOf: [
                 SceneUserProperty(id: "_owe_hue", title: String(localized: "Hue", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 5, defaultValue: "0", options: [], minimum: -Double.pi, maximum: Double.pi),
                 SceneUserProperty(id: "_owe_saturation", title: String(localized: "Saturation", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 4, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_bloom", title: String(localized: "Bloom", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 3, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_blur", title: String(localized: "Blur", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 2, defaultValue: "1", options: [], minimum: 0, maximum: 2),
+                SceneUserProperty(id: "_owe_bloom", title: String(localized: "Bloom", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 3, defaultValue: "0", options: [], minimum: 0, maximum: 2),
+                SceneUserProperty(id: "_owe_blur", title: String(localized: "Blur", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 2, defaultValue: "0", options: [], minimum: 0, maximum: 2),
                 SceneUserProperty(id: "_owe_speed", title: String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 1, defaultValue: "1", options: [], minimum: SceneClock.minimumRate, maximum: 2)
             ])
             // Mouse parallax (setting keys kept from when it lived with the native effects).
@@ -589,16 +589,22 @@ struct SceneUserPropertiesView: View {
     private func musicSyncControls(for property: SceneUserProperty) -> some View {
         let syncID = "\(property.id)_musicSync"
         let amountID = "\(property.id)_musicAmount"
+        // App extra (WE has no music sync): a modulation of up to the slider's own span, a quarter
+        // of it when sync is turned on without an amount, so turning it on shows at once.
+        let displaySpan = max(property.maximum - property.minimum, 0.001)
         let isEnabled = Binding<Bool>(
             get: { (model.values[syncID] ?? "false").lowercased() == "true" },
-            set: { model.set($0 ? "true" : "false", forID: syncID) }
+            set: { enabled in
+                if enabled, (Double(model.values[amountID] ?? "") ?? 0) == 0 {
+                    model.set(String(displaySpan / 4), forID: amountID)
+                }
+                model.set(enabled ? "true" : "false", forID: syncID)
+            }
         )
         Toggle("Sync to Music", isOn: isEnabled)
             .toggleStyle(.checkbox)
             .font(.caption)
         if isEnabled.wrappedValue {
-            // App extra (WE has no music sync): a modulation of up to the slider's own span.
-            let displaySpan = max(property.maximum - property.minimum, 0.001)
             let amount = Binding<Double>(
                 get: { Double(model.values[amountID] ?? "0") ?? 0 },
                 set: { model.set(String($0), forID: amountID) }
