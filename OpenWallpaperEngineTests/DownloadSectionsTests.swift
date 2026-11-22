@@ -34,6 +34,14 @@ final class DownloadSectionsTests: XCTestCase {
         XCTAssertEqual(sections.failed, [])
     }
 
+    func testUnpackedWallpapersWaitBehindTheUsersOwnDownloads() {
+        let sections = DownloadSections(
+            progress: ["package": .downloading(status: "Downloading…"), "mine": .downloading(status: "Queued")],
+            activeId: nil, queuedIds: ["mine"], waitingPackageIds: ["p1", "mine", "p2"], startedAt: [:])
+        XCTAssertEqual(sections.inProgress, ["package"])
+        XCTAssertEqual(sections.queued, ["mine", "p1", "p2"])
+    }
+
     func testNothingTrackedIsEmpty() {
         XCTAssertTrue(DownloadSections(progress: [:], activeId: nil, queuedIds: [], startedAt: [:]).isEmpty)
     }
