@@ -86,6 +86,8 @@ final class ScenePostProcess {
         var display = SceneDisplayOutput.standard
         /// The scene was drawn straight into the output (`passesThrough`, S2): nothing composites.
         var sceneIsOutput = false
+        /// The textures effects bind from assets (`util/noise`…), as the scene's effects get them.
+        var assetTexture: (String, SceneMetalTextureSource) -> MTLTexture? = { _, _ in nil }
 
         /// The size the bloom's texel steps and HDR levels are counted in.
         var bloomReferenceSize: SIMD2<Float> {
@@ -157,6 +159,8 @@ final class ScenePostProcess {
     private var reportedEncodeFailure = false
     /// The content's user adjustment layer, which plans what an adjustment needs on its first use.
     private var userAdjustments: SceneUserAdjustmentLayer?
+    /// An adjustment the user turned on is still being planned (`SceneUserAdjustmentLayer.isPlanning`).
+    var isPlanningUserAdjustments: Bool { userAdjustments?.isPlanning == true }
     /// The user adjustment layer's targets are held by the effect graph.
     private var holdsUserAdjustments = false
     /// The layer's blur and bloom were skipped on an EDR frame (logged once).
@@ -380,7 +384,7 @@ final class ScenePostProcess {
         holdsUserAdjustments = true
         return userAdjustments.encode(on: finished, extras: frame.extras, bloomThreshold: frame.bloom.threshold,
                                       effects: effects, builtins: frame.builtins, values: frame.values,
-                                      referenceSize: frame.bloomReferenceSize, commandBuffer: frame.commandBuffer)
+                                      assetTexture: frame.assetTexture, referenceSize: frame.bloomReferenceSize, commandBuffer: frame.commandBuffer)
     }
 
     /// Step 8: `finished` on the drawable at the user's placement, with the app's adjustments.

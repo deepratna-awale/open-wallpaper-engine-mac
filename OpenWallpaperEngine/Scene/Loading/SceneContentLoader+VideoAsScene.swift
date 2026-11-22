@@ -59,7 +59,7 @@ extension SceneContentLoader {
                                         bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
                                                                   tint: SIMD3<Float>(repeating: 1)))
         content.userAdjustments = engineChain("The user adjustments", wallpaperDir: currentWallpaper.wallpaperDirectory) {
-            SceneUserAdjustmentLayer(builder: $0)
+            SceneUserAdjustmentLayer(builder: $0, planQueue: contentQueue)
         }
         if stream.dynamicRange.isHDR {
             // WE 2.8's HDR video: a float frame of linear light, finished by `combine_video_hdr`.

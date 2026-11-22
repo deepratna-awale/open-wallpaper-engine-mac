@@ -14,7 +14,7 @@ import Metal
 ///    at its defaults but for the constant its slider sets.
 /// 4. Hue, saturation, Color Pop and Dim: per pixel, in the composite that puts the layer on the
 ///    drawable.
-final class SceneUserAdjustmentLayer {
+final class SceneUserAdjustmentLayer: @unchecked Sendable {
     /// One of WE's effects on the layer: the slider's value goes to `constants`; 0 is off.
     struct Effect: Sendable {
         let name: String
@@ -38,22 +38,31 @@ final class SceneUserAdjustmentLayer {
     ]
 
     private let builder: SceneEffectPlanBuilder
-    /// Each effect's plan once used; nil for one that can't be planned.
+    /// Where adjustments are planned, off the render thread (the content loader's queue); nil
+    /// plans them where they are first used.
+    private let planQueue: DispatchQueue?
+    private let lock = NSLock()
+    /// Each effect's plan once planned; nil for one that can't be. Behind `lock`.
     private var plans: [String: SceneEffectPlan?] = [:]
-    private var bloomChain: SceneBloomChain?
-    private var bloomFailed = false
+    private var bloomChain: SceneBloomChain??
+    /// What `planQueue` is planning. Behind `lock`.
+    private var planning: Set<String> = []
     /// The states whose targets the layer holds.
     private var held: Set<String> = []
     /// Frames encoded so far: the effects' input changes every frame while its texture stays.
     private var frames: UInt64 = 0
 
-    /// Plans nothing yet: each adjustment is planned the first time it is used. LDR: the layer
-    /// works on the finished frame, after any HDR combine.
-    init(builder: SceneEffectPlanBuilder) {
+    /// Plans nothing yet: each adjustment is planned the first time it is used, on `planQueue`.
+    /// LDR: the layer works on the finished frame, after any HDR combine.
+    init(builder: SceneEffectPlanBuilder, planQueue: DispatchQueue? = nil) {
         var builder = builder
         builder.sceneEngineCombos.hdr = false
         self.builder = builder
+        self.planQueue = planQueue
     }
+
+    /// An adjustment in use is still being planned: the frame shows without it until it lands.
+    var isPlanning: Bool { lock.withLock { !planning.isEmpty } }
 
     /// Whether the layer draws anything for `extras` beyond the composite's per-pixel adjustments.
     static func runs(_ extras: ScenePostProcess.AppExtras) -> Bool {
@@ -68,6 +77,7 @@ final class SceneUserAdjustmentLayer {
     /// is ready (the frame shows as it is). Targets of an adjustment back at its default are released.
     func encode(on frame: MTLTexture, extras: ScenePostProcess.AppExtras, bloomThreshold: Float,
                 effects: EffectGraphRenderer, builtins: BuiltinFrameContext, values: SceneValueContext,
+                assetTexture: @escaping (String, SceneMetalTextureSource) -> MTLTexture?,
                 referenceSize: SIMD2<Float>, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         frames &+= 1
         var output = frame
@@ -78,7 +88,7 @@ final class SceneUserAdjustmentLayer {
             }
             held.insert(effect.stateID)
             var context = EffectGraphRenderer.Context(
-                frame: builtins, values: values, assetTexture: { _, _ in nil },
+                frame: builtins, values: values, assetTexture: assetTexture,
                 sceneSnapshot: frame, layerColor: SIMD3(repeating: 1), layerAlpha: 1)
             context.inputVersion = frames
             context.constantWrites = [plan.effectIndex: effect.constants(extras)]
@@ -114,32 +124,48 @@ final class SceneUserAdjustmentLayer {
     }
 
     private func plan(_ effect: Effect) -> SceneEffectPlan? {
-        if let plan = plans[effect.name] { return plan }
+        if let plan = lock.withLock({ plans[effect.name] }) { return plan }
+        schedule(effect.name) { [self] in
+            let plan = makePlan(effect)
+            lock.withLock { plans[effect.name] = .some(plan) }
+        }
+        return lock.withLock { plans[effect.name] } ?? nil
+    }
+
+    private func bloom() -> SceneBloomChain? {
+        if let chain = lock.withLock({ bloomChain }) { return chain }
+        schedule("bloom") { [self] in
+            var chain: SceneBloomChain?
+            do {
+                chain = try SceneBloomChain.build(with: builder)
+            } catch {
+                OWELog.error(.scene, "The Bloom adjustment can't be planned; the wallpaper draws without it: \(error)")
+            }
+            lock.withLock { bloomChain = .some(chain) }
+        }
+        return lock.withLock { bloomChain } ?? nil
+    }
+
+    /// Runs `work` on `planQueue` once for `name` (in place without a queue); `name` is planning until it ends.
+    private func schedule(_ name: String, _ work: @escaping @Sendable () -> Void) {
+        guard let planQueue else { return work() }
+        guard lock.withLock({ planning.insert(name).inserted }) else { return }
+        planQueue.async { [self] in
+            work()
+            _ = lock.withLock { planning.remove(name) }
+        }
+    }
+
+    private func makePlan(_ effect: Effect) -> SceneEffectPlan? {
         do {
             let json = try JSONEncoder().encode(["file": effect.file])
             let plan = try builder.build(try JSONDecoder().decode(WEObjectEffect.self, from: json))
             guard !plan.passes.isEmpty, !plan.passes.contains(where: { $0.variant == nil }) else {
                 throw SceneEffectPlanError.missing("the \(effect.name) effect's shaders")
             }
-            plans[effect.name] = plan
             return plan
         } catch {
-            plans[effect.name] = .some(nil)
             OWELog.error(.scene, "The \(effect.name) adjustment can't be planned; the wallpaper draws without it: \(error)")
-            return nil
-        }
-    }
-
-    private func bloom() -> SceneBloomChain? {
-        if let bloomChain { return bloomChain }
-        guard !bloomFailed else { return nil }
-        do {
-            let chain = try SceneBloomChain.build(with: builder)
-            bloomChain = chain
-            return chain
-        } catch {
-            bloomFailed = true
-            OWELog.error(.scene, "The Bloom adjustment can't be planned; the wallpaper draws without it: \(error)")
             return nil
         }
     }

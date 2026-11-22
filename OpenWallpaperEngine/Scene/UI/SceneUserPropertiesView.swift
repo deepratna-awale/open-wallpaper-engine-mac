@@ -667,7 +667,7 @@ struct SceneUserPropertiesView: View {
         Self.colorString(NSColor(color))
     }
 
-    private static func colorString(_ color: NSColor) -> String {
+    private nonisolated static func colorString(_ color: NSColor) -> String {
         let nsColor = color.usingColorSpace(.deviceRGB) ?? .white
         return "\(nsColor.redComponent) \(nsColor.greenComponent) \(nsColor.blueComponent)"
     }
@@ -675,11 +675,12 @@ struct SceneUserPropertiesView: View {
     /// Picks the colour of any pixel on screen (`NSColorSampler`), the wallpaper's included.
     private func eyedropper(for property: SceneUserProperty) -> some View {
         let model = self.model
+        let apply: @MainActor (String) -> Void = { model.set($0, for: property) }
         return Button {
             NSColorSampler().show { picked in
                 guard let picked else { return }
                 let value = Self.colorString(picked)
-                MainActor.assumeIsolated { model.set(value, for: property) }
+                MainActor.assumeIsolated { apply(value) }
             }
         } label: {
             Image(systemName: "eyedropper")

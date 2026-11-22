@@ -858,7 +858,8 @@ extension SceneMetalRenderer {
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
                 colorCorrection: colorCorrection(),
                 effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
-                display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow)
+                display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow,
+                assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) })
             // The promoted layers' patch, over the scene as the composite upscales it without them,
             // made before the post-process (the camera fade may draw onto the scene target).
             var patch: (texture: MTLTexture, rect: SceneSnapshotTracker.Rect)?
@@ -1052,6 +1053,7 @@ extension SceneMetalRenderer {
         let geometry: Bool = modelDrawing?.hasPendingPipelines == true || shadowPass?.hasPendingPipelines == true
         let volume: Bool = volumetrics?.pipelines?.hasPendingPipelines == true
         return hasPendingEffectPipelines || materials || geometry || puppetPending || volume
+            || postProcess.isPlanningUserAdjustments
     }
 
     /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
