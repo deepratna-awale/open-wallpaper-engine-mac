@@ -15,6 +15,9 @@ final class ContentNavigation {
     var isPlaylistSidebarReveal = true
     /// The Installed tab's Details inspector.
     var isDetailsReveal = true
+    /// The main window shows only the Details panel, narrowed to it, so the wallpaper stays in
+    /// view behind it (`MainWindowController.setDetailsOnly`).
+    var isDetailsOnly = false
     /// The main window's content is shown: off while the window is closed.
     var isStaging = false
     var isApplicationActive = true

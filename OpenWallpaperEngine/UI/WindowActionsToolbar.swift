@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The library window's own buttons: Displays and Settings, and on Installed the Details toggle.
+/// The library window's own buttons: Displays and Settings, and on Installed Details Only and the
+/// Details toggle.
 /// Each tab ends its toolbar with these, so they follow the tab's items and Details sits at the
 /// trailing edge of the window, as macOS places an inspector toggle. (Items a parent view adds
 /// come before its children's, so `ContentView` can't add them itself.)
@@ -36,7 +37,14 @@ struct WindowActionsToolbar: ToolbarContent {
             if #available(macOS 26, *) {
                 ToolbarSpacer(.fixed)
             }
-            ToolbarItem {
+            ToolbarItemGroup {
+                Button {
+                    AppDelegate.shared.mainWindowController?.setDetailsOnly(true)
+                } label: {
+                    Label("Details Only", systemImage: "arrow.down.forward.and.arrow.up.backward")
+                }
+                .help("Details Only", shortcut: .detailsOnly)
+                .disabled(!isEnabled)
                 Button {
                     withAnimation { viewModel.navigation.isDetailsReveal.toggle() }
                 } label: {
