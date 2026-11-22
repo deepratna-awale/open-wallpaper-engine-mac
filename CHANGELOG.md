@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Downloads lists the unpacked wallpapers being downloaded again.** The one running and the ones waiting appear in Downloads, after your own downloads, which now always go first. ([#616](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/616))
+
+### Fixed
+
+- **Workshop downloads no longer stay at Queued.** The app could miss that a download's Steam helper had finished and wait for it for ever: every later download, and the re-download of unpacked wallpapers, then stayed at Queued until the app was restarted, with a CPU core busy meanwhile. ([#615](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/615))
+
 ## [1.0.0-beta.20] - 2026-11-22
 
 ### Added

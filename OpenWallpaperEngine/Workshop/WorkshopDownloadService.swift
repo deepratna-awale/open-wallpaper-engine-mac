@@ -20,6 +20,10 @@ class WorkshopDownloadService: ObservableObject {
     /// Where each finished download landed in the Wallpaper Storage folder, for Show in Finder and
     /// Set as Wallpaper in the Downloads tab.
     @Published var downloadFolders: [String: URL] = [:]
+    /// The unpacked wallpapers still to get their package back (`fetchPackage`), in order, and the
+    /// one getting it now. The Downloads tab lists them after the user's own downloads, which go first.
+    @Published private(set) var waitingPackageIds: [String] = []
+    @Published private(set) var activePackageId: String?
     /// The app's Steam login, which downloads go through.
     @Published private(set) var steamLogin: SteamLogin?
 
@@ -67,6 +71,9 @@ class WorkshopDownloadService: ObservableObject {
 
     /// The queued and running downloads that update an installed item (`updateWorkshopItem`).
     private var updateIds = Set<String>()
+
+    /// A `fetchPackage` that starts once the user's own downloads are through.
+    private var heldPackageFetches: [@MainActor () -> Void] = []
 
     nonisolated private let helperDownloads: SteamHelperDownloading
     /// The Wallpaper Storage folder every download goes into; throws when it can't be used.
@@ -180,6 +187,7 @@ class WorkshopDownloadService: ObservableObject {
                 }
                 self.finishDownload(workshopId, isUpdate: isUpdate, asDependency: asDependency, result: result,
                                     onCompleted: onCompleted)
+                self.startHeldPackageFetches()
             }
         }
     }
@@ -216,24 +224,56 @@ class WorkshopDownloadService: ObservableObject {
 
     /// Downloads a Workshop item again only for its package: the downloaded `packageName` is
     /// copied to `destination` (a hidden file beside the installed item's files), which nothing else
-    /// of the installed item changes. Runs after other downloads at background priority;
-    /// `completion` runs on the main queue with whether the package landed.
+    /// of the installed item changes. Starts once none of the user's own downloads is left, at
+    /// background priority; `completion` runs on the main queue with whether the package landed.
     func fetchPackage(workshopId: String, packageName: String, to destination: URL,
                       completion: @escaping @MainActor @Sendable (Bool) -> Void) {
-        guard let login = steamLogin,
-              !packageName.contains("/"), !packageName.contains("\\"), !packageName.hasPrefix(".") else {
+        guard !packageName.contains("/"), !packageName.contains("\\"), !packageName.hasPrefix(".") else {
+            waitingPackageIds.removeAll { $0 == workshopId }
+            return completion(false)
+        }
+        heldPackageFetches.append { [weak self] in
+            self?.startPackageFetch(workshopId: workshopId, packageName: packageName, to: destination, completion: completion)
+        }
+        startHeldPackageFetches()
+    }
+
+    /// Lists `items` in the Downloads tab as waiting for `fetchPackage`, in this order.
+    func showWaitingPackages(_ items: [(workshopId: String, item: DownloadItem)]) {
+        for (workshopId, item) in items where downloadItems[workshopId] == nil {
+            downloadItems[workshopId] = item
+        }
+        waitingPackageIds = items.map(\.workshopId)
+    }
+
+    private func startHeldPackageFetches() {
+        guard queuedDownloadIds.isEmpty, !heldPackageFetches.isEmpty else { return }
+        let fetches = heldPackageFetches
+        heldPackageFetches = []
+        for start in fetches { start() }
+    }
+
+    private func startPackageFetch(workshopId: String, packageName: String, to destination: URL,
+                                   completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+        // The login may have ended while the user's downloads ran.
+        guard let login = steamLogin else {
+            waitingPackageIds.removeAll { $0 == workshopId }
             return completion(false)
         }
         downloadQueue.async(qos: .background) { [weak self] in
             guard let self else { return }
+            DispatchQueue.main.async { self.packageFetchStarted(workshopId) }
             let landed: Bool
             do {
                 let storage = try self.storageDirectory()
                 let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
                 defer { WorkshopItemInstaller.removeStaging(staging) }
                 try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
-                let package = try self.helperDownload(workshopId, login: login, into: staging, validate: true)
-                    .appending(path: packageName)
+                let package = try self.helperDownload(workshopId, login: login, into: staging, validate: true) { [weak self] chunk in
+                    guard let percentage = SteamHelperDownload.progress(in: chunk) else { return }
+                    DispatchQueue.main.async { [weak self] in self?.packageFetchProgressed(workshopId, percentage) }
+                }
+                .appending(path: packageName)
                 guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
                     throw DownloadError.failed("\(packageName) isn't in the download")
                 }
@@ -247,8 +287,43 @@ class WorkshopDownloadService: ObservableObject {
                 OWELog.error(.workshop, "Workshop item \(workshopId): its package didn't download: \(error.localizedDescription)")
                 landed = false
             }
-            DispatchQueue.main.async { completion(landed) }
+            DispatchQueue.main.async {
+                self.packageFetchEnded(workshopId, folder: landed ? destination.deletingLastPathComponent() : nil)
+                completion(landed)
+            }
         }
+    }
+
+    /// Whether the row of `workshopId` shows a download of the user's, which a package leaves alone.
+    private func hasOwnDownload(_ workshopId: String) -> Bool {
+        queuedDownloadIds.contains(workshopId)
+    }
+
+    private func packageFetchStarted(_ workshopId: String) {
+        waitingPackageIds.removeAll { $0 == workshopId }
+        activePackageId = workshopId
+        guard !hasOwnDownload(workshopId) else { return }
+        downloadStartedAt[workshopId] = .now
+        downloadPercentages[workshopId] = 0
+        downloadProgress[workshopId] = .downloading(
+            status: String(localized: "Authenticating…", comment: "Download status: logging in to Steam"))
+    }
+
+    private func packageFetchProgressed(_ workshopId: String, _ percentage: Double) {
+        guard activePackageId == workshopId, !hasOwnDownload(workshopId) else { return }
+        let state = DownloadState.downloading(status: Self.downloadingStatus(percentage))
+        if downloadProgress[workshopId] != state { downloadProgress[workshopId] = state }
+        if downloadPercentages[workshopId] != percentage { downloadPercentages[workshopId] = percentage }
+    }
+
+    /// A package that didn't land leaves no row: its wallpaper keeps playing from the loose copy
+    /// and is tried again on a later launch.
+    private func packageFetchEnded(_ workshopId: String, folder: URL?) {
+        activePackageId = nil
+        guard !hasOwnDownload(workshopId) else { return }
+        downloadPercentages[workshopId] = folder == nil ? nil : 1
+        downloadProgress[workshopId] = folder == nil ? nil : .completed
+        downloadFolders[workshopId] = folder
     }
 
     /// Downloads into a staging folder inside the storage folder and moves the finished item to

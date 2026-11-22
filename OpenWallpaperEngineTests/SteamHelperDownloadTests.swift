@@ -220,4 +220,73 @@ final class SteamHelperDownloadTests: XCTestCase {
         XCTAssertEqual(service.downloadProgress["1000000003"],
                        .failed(SteamHelperError(code: .tokenRejected, message: "").errorDescription ?? ""))
     }
+
+    // MARK: Packages of unpacked wallpapers
+
+    @MainActor private final class Landings {
+        var landed: [Bool] = []
+    }
+
+    /// The user's own downloads all go before the next package, also those started while one waits.
+    func testTheUsersDownloadsGoBeforeThePackagesOfUnpackedWallpapers() async throws {
+        let gate = DispatchSemaphore(value: 0)
+        defer { for _ in 0..<10 { gate.signal() } }
+        let helper = FakeHelper { directory in
+            _ = gate.wait(timeout: .now() + 10)
+            try Data(#"{"type": "scene", "title": "T", "file": "scene.json"}"#.utf8).write(to: directory.appending(path: "project.json"))
+            try Data("pkg".utf8).write(to: directory.appending(path: "scene.pkg"))
+            return ProcessRun(output: "50.00% scene.pkg\n100.00% project.json\n", exitCode: 0)
+        }
+        func requested() -> [String] { helper.arguments.map { $0[3] } }
+        let service = try makeService(helper)
+        service.useSteamLogin(Self.login)
+        func item(_ title: String) -> WorkshopDownloadService.DownloadItem {
+            .init(title: title, previewURL: nil, creatorId: nil, subscriptions: 0, fileSize: 0)
+        }
+        let first = root.appending(path: "first", directoryHint: .isDirectory)
+        let second = root.appending(path: "second", directoryHint: .isDirectory)
+        for folder in [first, second] { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
+        let landings = Landings()
+        service.showWaitingPackages([("11", item("First")), ("12", item("Second"))])
+        XCTAssertEqual(service.waitingPackageIds, ["11", "12"])
+        XCTAssertEqual(service.downloadItems["12"]?.title, "Second")
+
+        service.fetchPackage(workshopId: "11", packageName: "scene.pkg", to: first.appending(path: ".restored")) { ok in
+            landings.landed.append(ok)
+            service.fetchPackage(workshopId: "12", packageName: "scene.pkg", to: second.appending(path: ".restored")) { landings.landed.append($0) }
+        }
+        try await waitFor("the first package to run") { service.activePackageId == "11" && requested() == ["11"] }
+        XCTAssertEqual(service.waitingPackageIds, ["12"])
+        service.downloadWorkshopItem(workshopId: "21")
+        service.downloadWorkshopItem(workshopId: "22")
+
+        gate.signal()
+        try await waitFor("the user's download to run") { requested() == ["11", "21"] }
+        XCTAssertEqual(landings.landed, [true])
+        XCTAssertEqual(service.downloadProgress["11"], .completed)
+        XCTAssertEqual(service.waitingPackageIds, ["12"], "still listed")
+        // Started while the second package already waits.
+        service.downloadWorkshopItem(workshopId: "23")
+
+        for _ in 0..<4 { gate.signal() }
+        try await waitFor("everything") { landings.landed.count == 2 }
+        XCTAssertEqual(requested(), ["11", "21", "22", "23", "12"])
+        XCTAssertEqual(landings.landed, [true, true])
+        XCTAssertEqual(service.waitingPackageIds, [])
+        XCTAssertNil(service.activePackageId)
+        XCTAssertEqual(service.downloadFolders["12"]?.standardizedFileURL.path, second.standardizedFileURL.path)
+    }
+
+    /// A package that fails leaves no row behind, and the ones after it still run.
+    func testAPackageThatDoesNotLandLeavesNoRow() async throws {
+        let service = try makeService(FakeHelper { _ in ProcessRun(output: "Error: no connection", exitCode: 1) })
+        service.useSteamLogin(Self.login)
+        service.showWaitingPackages([("11", .init(title: "First", previewURL: nil, creatorId: nil, subscriptions: 0, fileSize: 0))])
+        let landings = Landings()
+        service.fetchPackage(workshopId: "11", packageName: "scene.pkg", to: root.appending(path: ".restored")) { landings.landed.append($0) }
+        try await waitFor("the failure") { landings.landed == [false] }
+        XCTAssertNil(service.downloadProgress["11"])
+        XCTAssertEqual(service.waitingPackageIds, [])
+        XCTAssertNil(service.activePackageId)
+    }
 }

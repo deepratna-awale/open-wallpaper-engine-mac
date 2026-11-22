@@ -9,7 +9,8 @@ struct DownloadsView: View {
 
     private var sections: DownloadSections {
         DownloadSections(progress: workshopDownloads.downloadProgress, activeId: workshopDownloads.activeDownloadId,
-                         queuedIds: workshopDownloads.queuedDownloadIds, startedAt: workshopDownloads.downloadStartedAt)
+                         queuedIds: workshopDownloads.queuedDownloadIds,
+                         waitingPackageIds: workshopDownloads.waitingPackageIds, startedAt: workshopDownloads.downloadStartedAt)
     }
 
     var body: some View {

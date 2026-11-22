@@ -13,6 +13,8 @@ struct UnpackedBundle: Equatable, Sendable {
     /// The scene file project.json names, which the package must hold.
     let sceneFile: String
     let title: String
+    /// The preview picture project.json names.
+    let previewURL: URL?
 
     static let manifestName = ".owe-bundle.json"
     static let sourceFolderName = ".owe-source"
@@ -94,7 +96,8 @@ struct UnpackedBundle: Equatable, Sendable {
         let isWorkshopId = { (id: String) in !id.isEmpty && id.allSatisfy { $0.isASCII && $0.isNumber } }
         let workshopId = [directory.lastPathComponent, project.workshopid?.rawValue].compactMap { $0 }.first(where: isWorkshopId)
         return UnpackedBundle(directory: directory, workshopId: workshopId, packageName: packageName,
-                              sceneFile: sceneFile, title: project.title)
+                              sceneFile: sceneFile, title: project.title,
+                              previewURL: project.previewURL(in: directory))
     }
 
     /// What the loose files the manifest lists take up.
@@ -224,9 +227,19 @@ protocol UnpackedBundleDownloading: AnyObject {
     /// queue with whether the package landed.
     func fetchPackage(workshopId: String, packageName: String, to destination: URL,
                       completion: @escaping @MainActor @Sendable (Bool) -> Void)
+    /// The bundles `fetchPackage` is still to be asked for, in order, for the user to see.
+    func packagesWaiting(_ bundles: [UnpackedBundle])
 }
 
-extension WorkshopDownloadService: UnpackedBundleDownloading {}
+extension WorkshopDownloadService: UnpackedBundleDownloading {
+    func packagesWaiting(_ bundles: [UnpackedBundle]) {
+        showWaitingPackages(bundles.compactMap { bundle in
+            guard let workshopId = bundle.workshopId else { return nil }
+            return (workshopId, DownloadItem(title: bundle.title, previewURL: bundle.previewURL, creatorId: nil,
+                                             subscriptions: 0, fileSize: 0))
+        })
+    }
+}
 
 /// Gives unpacked wallpapers their package back one at a time, with no prompt: a package already on
 /// disk is used, else the Workshop item is downloaded again. The loose copy goes only once the
@@ -283,6 +296,7 @@ final class UnpackedBundleRestorer {
             }
         }
         queue = downloads
+        downloader.packagesWaiting(downloads)
         next()
     }
 
@@ -328,6 +342,7 @@ final class UnpackedBundleRestorer {
             OWELog.info(.importer, "Unpacked wallpapers: \(mayDownload() ? "no Steam login" : "not downloading them again, by choice"); \(queue.count) wallpaper(s) keep their loose copy")
             skipped += queue
             queue = []
+            downloader.packagesWaiting([])
             hasDeferredDownloads = true
             return done()
         }

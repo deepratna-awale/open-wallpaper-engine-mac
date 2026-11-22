@@ -117,6 +117,7 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         let downloader = FakePackageDownloader(result: .package(Self.scenePackage))
         await restore(makeRestorer(downloader))
         XCTAssertEqual(downloader.requests, ["1000000001"])
+        XCTAssertEqual(downloader.waiting, [["1000000001"]], "listed before it's asked for")
         XCTAssertTrue(isAsDownloaded(folder))
         XCTAssertFalse(fm.fileExists(atPath: folder.appending(path: UnpackedBundle.restoredPrefix + "scene.pkg").path))
         XCTAssertTrue(UnpackedBundle.scan(storage: storage, hasEdits: { _ in false }).isEmpty, "nothing left to do on the next launch")
@@ -359,5 +360,12 @@ final class FakePackageDownloader: UnpackedBundleDownloading {
             }
         }
         DispatchQueue.main.async { completion(landed) }
+    }
+
+    /// The Workshop ids each `packagesWaiting` listed.
+    private(set) var waiting: [[String]] = []
+
+    func packagesWaiting(_ bundles: [UnpackedBundle]) {
+        waiting.append(bundles.compactMap(\.workshopId))
     }
 }

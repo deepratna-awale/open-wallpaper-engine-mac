@@ -12,12 +12,15 @@ struct DownloadSections: Equatable {
     var failed: [String] = []
     var completed: [String] = []
 
-    /// Groups the ids `WorkshopDownloadService` tracks. `startedAt` orders the finished ones, most recent
-    /// first (ids without a start time last, by id, so the order never jumps).
+    /// Groups the ids `WorkshopDownloadService` tracks; the unpacked wallpapers waiting for their
+    /// package (`waitingPackageIds`) come after the user's own downloads, which go first. `startedAt`
+    /// orders the finished ones, most recent first (ids without a start time last, by id, so the order never jumps).
     init(progress: [String: WorkshopDownloadService.DownloadState], activeId: String?, queuedIds: [String],
-         startedAt: [String: Date]) {
+         waitingPackageIds: [String] = [], startedAt: [String: Date]) {
         if let activeId { inProgress = [activeId] }
         queued = queuedIds.filter { $0 != activeId }
+        queued += waitingPackageIds.filter { $0 != activeId && !queuedIds.contains($0) }
+        let queuedIds = queuedIds + waitingPackageIds
         let newestFirst: (String, String) -> Bool = { left, right in
             switch (startedAt[left], startedAt[right]) {
             case let (leftDate?, rightDate?) where leftDate != rightDate: return leftDate > rightDate
