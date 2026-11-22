@@ -86,7 +86,7 @@ final class UnpackedBundleRestoreTests: XCTestCase {
     private func logIn(_ restorer: UnpackedBundleRestorer) async {
         let storage = self.storage!
         let finished = expectation(description: "restore after the login finished")
-        restorer.steamLoginAvailable(scan: {
+        restorer.resumeDownloads(scan: {
             UnpackedBundle.scan(storage: storage, hasEdits: { _ in false }).map { (bundle: $0, packageOnDisk: $0.packageOnDisk()) }
         }, onFinished: { finished.fulfill() })
         await fulfillment(of: [finished], timeout: 5)
@@ -153,7 +153,7 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         XCTAssertEqual(downloader.requests, [])
         XCTAssertTrue(isUnpacked(folder))
         XCTAssertEqual(restorer.skipped.count, 1)
-        XCTAssertTrue(restorer.waitsForLogin)
+        XCTAssertTrue(restorer.hasDeferredDownloads)
     }
 
     /// Logging in later in the session downloads what was skipped, over what is on disk by then.
@@ -170,10 +170,10 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         await logIn(restorer)
         XCTAssertEqual(downloader.requests, ["1000000001"])
         XCTAssertTrue(isAsDownloaded(folder))
-        XCTAssertFalse(restorer.waitsForLogin)
+        XCTAssertFalse(restorer.hasDeferredDownloads)
 
         // The next login finds nothing waiting.
-        restorer.steamLoginAvailable(scan: { XCTFail("scanned again"); return [] })
+        restorer.resumeDownloads(scan: { XCTFail("scanned again"); return [] })
         try await Task.sleep(for: .milliseconds(100))
         XCTAssertEqual(downloader.requests, ["1000000001"])
     }
@@ -185,8 +185,8 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         let downloader = FakePackageDownloader(result: .failure)
         let restorer = makeRestorer(downloader)
         await restore(restorer)
-        XCTAssertFalse(restorer.waitsForLogin)
-        restorer.steamLoginAvailable(scan: { XCTFail("scanned again"); return [] })
+        XCTAssertFalse(restorer.hasDeferredDownloads)
+        restorer.resumeDownloads(scan: { XCTFail("scanned again"); return [] })
         try await Task.sleep(for: .milliseconds(100))
         XCTAssertEqual(downloader.requests, ["1000000001"])
     }
@@ -203,7 +203,7 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         XCTAssertEqual(downloader.requests, ["1000000001"])
         XCTAssertTrue(isAsDownloaded(first))
         XCTAssertTrue(isUnpacked(second))
-        XCTAssertTrue(restorer.waitsForLogin)
+        XCTAssertTrue(restorer.hasDeferredDownloads)
 
         downloader.onRequest = nil
         downloader.isLoggedIn = true
@@ -326,7 +326,7 @@ final class UnpackedBundleRestoreTests: XCTestCase {
 
 /// A Workshop download path that "downloads" a package, or fails.
 @MainActor
-private final class FakePackageDownloader: UnpackedBundleDownloading {
+final class FakePackageDownloader: UnpackedBundleDownloading {
     enum Result {
         case package(Data)
         case failure

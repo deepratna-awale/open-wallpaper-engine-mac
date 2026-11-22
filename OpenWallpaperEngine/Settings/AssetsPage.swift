@@ -12,6 +12,7 @@ struct AssetsPage: SettingsPage {
     private let steamAccount: SteamAccount
     private let editorPreviews: EditorPreviewPrewarm
     @AppStorage(WallpaperEngineAssetsService.autoInstallKey, store: .app) private var installsAssetsAutomatically = true
+    @AppStorage(UnpackedBundleRestoreService.keepsLooseCopiesKey, store: .app) private var keepsUnpackedWallpapers = false
     @State private var confirmsRemoval = false
     @State private var folderError: String?
 
@@ -27,6 +28,13 @@ struct AssetsPage: SettingsPage {
         SettingsForm {
             SteamAccountSection(account: steamAccount)
                 .settingsAnchor(SettingsAnchor.steamLogin)
+
+            Section {
+                KeepUnpackedWallpapersToggle(keepsLooseCopies: $keepsUnpackedWallpapers)
+                    .onChange(of: keepsUnpackedWallpapers) { _, keeps in
+                        if !keeps { AppDelegate.shared.unpackedBundles.startDownloads() }
+                    }
+            }
 
             Section {
                 Text("Scenes need Wallpaper Engine assets from your Steam copy: built-in effects, shaders, materials and fonts. Video and web wallpapers play without them.")

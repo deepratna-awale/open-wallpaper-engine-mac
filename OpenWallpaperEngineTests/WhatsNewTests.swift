@@ -143,4 +143,17 @@ final class WhatsNewTests: XCTestCase {
         XCTAssertNil(UpdateRelaunchState.take(from: defaults))
         XCTAssertNil(defaults.data(forKey: UpdateRelaunchState.defaultsKey))
     }
+
+    /// An update is one also with the release notes turned off, until it is taken.
+    func testAnUpdateIsKnownUntilItIsTaken() {
+        let defaults = isolatedDefaults()
+        whatsNew("1.1.0", defaults).recordFirstInstall()
+        XCTAssertFalse(whatsNew("1.1.0", defaults).isUpdate, "a first install")
+        defaults.set(true, forKey: WhatsNew.hidesReleaseNotesKey)
+        let updated = whatsNew("1.2.0", defaults)
+        XCTAssertTrue(updated.isUpdate)
+        XCTAssertNil(updated.takePendingEntries())
+        XCTAssertFalse(updated.isUpdate)
+        XCTAssertFalse(whatsNew("1.0.0", defaults).isUpdate, "a downgrade")
+    }
 }

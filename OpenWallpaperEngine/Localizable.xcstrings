@@ -40264,6 +40264,100 @@
         }
       }
     },
+    "Don't re-download wallpapers that were unpacked before" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عدم إعادة تنزيل الخلفيات التي فُكّت حزمها سابقًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Früher entpackte Hintergrundbilder nicht erneut laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No volver a descargar los fondos de pantalla desempaquetados anteriormente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne pas retélécharger les fonds d’écran déjà décompressés"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले अनपैक किए गए वॉलपेपर फिर से डाउनलोड न करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non scaricare di nuovo gli sfondi estratti in precedenza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前に展開された壁紙を再ダウンロードしない"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전에 풀어 둔 배경화면을 다시 다운로드하지 않기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie pobieraj ponownie wcześniej rozpakowanych tapet"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não baixar novamente as imagens de fundo já desempacotadas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не загружать заново ранее распакованные обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha önce açılmış duvar kâğıtlarını yeniden indirme"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не викачувати знову раніше розпаковані шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不重新下载以前解包的墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不重新下載先前解開的背景圖片"
+          }
+        }
+      }
+    },
     "Don't show release notes" : {
       "comment" : "Settings › General › Updates toggle: after an update, don't show the What's New sheet",
       "localizations" : {
@@ -45455,6 +45549,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每張背景圖片會從其開始時間顯示到下一張的開始時間。"
+          }
+        }
+      }
+    },
+    "Earlier versions unpacked your Workshop scenes into loose files. This version plays a scene straight from its Workshop package, so each one is downloaded once more, then its loose files are deleted. Log in to Steam to start the downloads." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كانت الإصدارات السابقة تفك حزم مشاهد الورشة إلى ملفات منفصلة. يشغّل هذا الإصدار المشهد مباشرةً من حزمته في الورشة، لذلك يُنزَّل كل مشهد مرة أخرى ثم تُحذف ملفاته المنفصلة. سجّل الدخول إلى Steam لبدء التنزيلات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frühere Versionen haben Ihre Workshop-Szenen in einzelne Dateien entpackt. Diese Version gibt eine Szene direkt aus ihrem Workshop-Paket wieder. Deshalb wird jede noch einmal geladen, danach werden ihre einzelnen Dateien gelöscht. Melden Sie sich bei Steam an, um das Laden zu starten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las versiones anteriores desempaquetaban tus escenas de Workshop en archivos sueltos. Esta versión reproduce cada escena directamente desde su paquete de Workshop, así que cada una se descarga una vez más y después se eliminan sus archivos sueltos. Inicia sesión en Steam para empezar las descargas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les versions précédentes décompressaient vos scènes du Workshop en fichiers séparés. Cette version lit chaque scène directement depuis son paquet du Workshop : chacune est donc téléchargée une nouvelle fois, puis ses fichiers séparés sont supprimés. Connectez-vous à Steam pour lancer les téléchargements."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले के संस्करण आपके Workshop सीन को अलग-अलग फ़ाइलों में अनपैक करते थे। यह संस्करण सीन को सीधे उसके Workshop पैकेज से चलाता है, इसलिए हर सीन एक बार फिर डाउनलोड होता है, फिर उसकी अलग-अलग फ़ाइलें डिलीट कर दी जाती हैं। डाउनलोड शुरू करने के लिए Steam में लॉग इन करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le versioni precedenti estraevano le tue scene del Workshop in file separati. Questa versione riproduce ogni scena direttamente dal suo pacchetto del Workshop, quindi ognuna viene scaricata ancora una volta e poi i suoi file separati vengono eliminati. Accedi a Steam per avviare i download."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前のバージョンは、ワークショップのシーンを個別のファイルに展開していました。このバージョンはシーンをワークショップのパッケージから直接再生するため、各シーンをもう一度ダウンロードしてから、個別のファイルを削除します。ダウンロードを開始するには Steam にログインしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 버전은 창작마당 장면을 개별 파일로 풀었습니다. 이 버전은 장면을 창작마당 패키지에서 바로 재생하므로 각 장면을 한 번 더 다운로드한 다음 개별 파일을 삭제합니다. 다운로드를 시작하려면 Steam에 로그인하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wcześniejsze wersje rozpakowywały sceny z Warsztatu na osobne pliki. Ta wersja odtwarza scenę bezpośrednio z jej pakietu z Warsztatu, więc każda jest pobierana jeszcze raz, a potem jej osobne pliki są usuwane. Zaloguj się do Steam, aby rozpocząć pobieranie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As versões anteriores desempacotavam as suas cenas da Oficina em arquivos soltos. Esta versão reproduz cada cena diretamente do pacote da Oficina, por isso cada uma é baixada mais uma vez e depois os arquivos soltos são apagados. Inicie a sessão no Steam para começar os downloads."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прежние версии распаковывали сцены из Мастерской в отдельные файлы. Эта версия воспроизводит сцену прямо из её пакета из Мастерской, поэтому каждая загружается ещё раз, после чего её отдельные файлы удаляются. Войдите в Steam, чтобы начать загрузку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki sürümler Atölye sahnelerinizi ayrı dosyalara açıyordu. Bu sürüm bir sahneyi doğrudan Atölye paketinden oynatır; bu yüzden her biri bir kez daha indirilir, ardından ayrı dosyaları silinir. İndirmeleri başlatmak için Steam’e giriş yapın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередні версії розпаковували сцени з Майстерні в окремі файли. Ця версія відтворює сцену прямо з її пакета з Майстерні, тому кожна викачується ще раз, а потім її окремі файли видаляються. Увійдіть у Steam, щоб почати викачування."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前的版本会将创意工坊场景解包为零散文件。此版本直接从创意工坊的包播放场景，因此每个场景会再下载一次，然后删除其零散文件。登录 Steam 以开始下载。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先前的版本會將工作坊場景解開為零散檔案。此版本直接從工作坊的套件播放場景，因此每個場景會再下載一次，然後刪除其零散檔案。登入 Steam 以開始下載。"
           }
         }
       }
@@ -75952,6 +76140,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新登入"
+          }
+        }
+      }
+    },
+    "Log in to Steam to download your wallpapers again" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سجّل الدخول إلى Steam لتنزيل خلفياتك مرة أخرى"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Steam anmelden, um Ihre Hintergrundbilder erneut zu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión en Steam para volver a descargar tus fondos de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous à Steam pour retélécharger vos fonds d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने वॉलपेपर फिर से डाउनलोड करने के लिए Steam में लॉग इन करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi a Steam per scaricare di nuovo i tuoi sfondi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙を再ダウンロードするにはSteamにログインしてください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면을 다시 다운로드하려면 Steam에 로그인하십시오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się do Steam, aby ponownie pobrać tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicie a sessão no Steam para baixar novamente as suas imagens de fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в Steam, чтобы заново загрузить обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarınızı yeniden indirmek için Steam’e giriş yapın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увійдіть у Steam, щоб викачати шпалери знову"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录 Steam 以重新下载墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入 Steam 以重新下載背景圖片"
           }
         }
       }
@@ -156181,6 +156463,100 @@
         }
       }
     },
+    "They keep playing from their loose files. New downloads are never unpacked." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستمر تشغيلها من ملفاتها المنفصلة. لا تُفك حزم التنزيلات الجديدة أبدًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie werden weiterhin aus ihren einzelnen Dateien wiedergegeben. Neue Downloads werden nie entpackt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se siguen reproduciendo desde sus archivos sueltos. Las descargas nuevas nunca se desempaquetan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leur lecture continue depuis leurs fichiers séparés. Les nouveaux téléchargements ne sont jamais décompressés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वे अपनी अलग-अलग फ़ाइलों से चलते रहते हैं। नए डाउनलोड कभी अनपैक नहीं किए जाते।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuano a essere riprodotti dai loro file separati. I nuovi download non vengono mai estratti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引き続き個別のファイルから再生されます。新しいダウンロードが展開されることはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개별 파일에서 계속 재생됩니다. 새 다운로드는 풀지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nadal są odtwarzane z osobnych plików. Nowo pobrane tapety nigdy nie są rozpakowywane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elas continuam sendo reproduzidas dos arquivos soltos. Os novos downloads nunca são desempacotados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Они по-прежнему воспроизводятся из отдельных файлов. Новые загрузки никогда не распаковываются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayrı dosyalarından oynatılmaya devam ederler. Yeni indirilenler hiçbir zaman açılmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вони й далі відтворюються з окремих файлів. Нові викачані шпалери ніколи не розпаковуються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它们会继续从零散文件播放。新下载的墙纸不会解包。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它們會繼續從零散檔案播放。新下載的項目不會解開。"
+          }
+        }
+      }
+    },
     "They were kept from an earlier editing session. Resume editing them, or discard them and edit the wallpaper as it was last saved." : {
       "comment" : "Wallpaper Editor: under the question about a draft left from an earlier session",
       "localizations" : {
@@ -169993,6 +170369,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "體積光"
+          }
+        }
+      }
+    },
+    "Wallpapers to download: %lld, about %@" : {
+      "comment" : "%lld is a number of wallpapers, %@ a size such as 4.2 GB",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخلفيات المطلوب تنزيلها: %1$lld، حوالي %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu ladende Hintergrundbilder: %1$lld, etwa %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondos de pantalla por descargar: %1$lld, unos %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fonds d’écran à télécharger : %1$lld, environ %2$@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डाउनलोड करने के लिए वॉलपेपर: %1$lld, लगभग %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfondi da scaricare: %1$lld, circa %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードする壁紙：%1$lld、約%2$@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드할 배경화면: %1$lld개, 약 %2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapety do pobrania: %1$lld, około %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens de fundo a baixar: %1$lld, cerca de %2$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обоев для загрузки: %1$lld, около %2$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İndirilecek duvar kâğıtları: %1$lld, yaklaşık %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалер для викачування: %1$lld, близько %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要下载的墙纸：%1$lld 个，约 %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要下載的背景圖片：%1$lld 個，約 %2$@"
           }
         }
       }

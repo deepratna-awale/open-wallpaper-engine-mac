@@ -24,6 +24,7 @@ final class SettingsResetTests: XCTestCase {
     /// Constants Settings views pass to `@AppStorage`, by the name the source spells.
     private static let keyConstants: [String: String] = [
         "WallpaperEngineAssetsService.autoInstallKey": WallpaperEngineAssetsService.autoInstallKey,
+        "UnpackedBundleRestoreService.keepsLooseCopiesKey": UnpackedBundleRestoreService.keepsLooseCopiesKey,
         "WhatsNew.hidesReleaseNotesKey": WhatsNew.hidesReleaseNotesKey,
         "AppUpdater.receivesBetaUpdatesKey": AppUpdater.receivesBetaUpdatesKey,
     ]

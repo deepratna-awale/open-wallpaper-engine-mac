@@ -278,7 +278,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.workshopDependencies.ensureDependencies(for: wallpaper)
             }
             // After the change is applied, so the old wallpaper counts as no longer shown.
-            DispatchQueue.main.async { self?.unpackedBundleRestorer?.shownWallpapersChanged() }
+            DispatchQueue.main.async { self?.unpackedBundles.shownWallpapersChanged() }
         }
 
         libraryFolderWatcher.watch(LibraryFolders().folders)
@@ -449,6 +449,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     var windowOpenedObserver: NSObjectProtocol?
 
-    var unpackedBundleRestorer: UnpackedBundleRestorer?
-    var unpackedBundleLoginCancellable: AnyCancellable?
+    /// Gives wallpapers an earlier version unpacked their package back.
+    lazy var unpackedBundles = UnpackedBundleRestoreService(
+        downloader: contentViewModel.workshopDownloads,
+        loginSucceeded: contentViewModel.workshopDownloads.loginSucceeded.eraseToAnyPublisher(),
+        isShown: { [weak self] directory in
+            self?.wallpaperViewModel.wallpapers.values.contains {
+                $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
+            } ?? false
+        })
 }

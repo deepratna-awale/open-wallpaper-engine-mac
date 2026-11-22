@@ -97,6 +97,14 @@ struct UnpackedBundle: Equatable, Sendable {
                               sceneFile: sceneFile, title: project.title)
     }
 
+    /// What the loose files the manifest lists take up.
+    func looseSize() -> Int64 {
+        (Self.readManifest(manifestURL)?.extractedFiles ?? []).reduce(0) { total, relative in
+            let file = directory.appending(path: relative.replacingOccurrences(of: "\\", with: "/"))
+            return total + Int64((try? file.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+        }
+    }
+
     private static func readManifest(_ url: URL) -> Manifest? {
         OWELog.attempt(.importer, "Unpacked wallpapers: \(url.path(percentEncoded: false))") {
             try JSONDecoder().decode(Manifest.self, from: Data(contentsOf: url))
@@ -225,11 +233,13 @@ extension WorkshopDownloadService: UnpackedBundleDownloading {}
 /// package is in hand and holds the scene, and never while the wallpaper is shown: that one waits
 /// until it isn't. Whatever can't be done (no Steam login, a local import, an item gone from the
 /// Workshop, a failed download) keeps its loose copy and is tried again on a later launch; what
-/// only lacked the login, as soon as there is one (`steamLoginAvailable`).
+/// only lacked the login, as soon as there is one, and what the user kept from downloading, once they
+/// let it (`resumeDownloads`).
 @MainActor
 final class UnpackedBundleRestorer {
     private let downloader: UnpackedBundleDownloading
     private let isShown: (URL) -> Bool
+    private let mayDownload: () -> Bool
     /// Finishes a bundle whose package is in hand; runs off the main thread.
     private let finish: @Sendable (UnpackedBundle, URL) -> Void
     private var queue: [UnpackedBundle] = []
@@ -237,16 +247,18 @@ final class UnpackedBundleRestorer {
     private(set) var pending: [(bundle: UnpackedBundle, package: URL)] = []
     /// Bundles left as they are this launch.
     private(set) var skipped: [UnpackedBundle] = []
-    /// Whether bundles were skipped because there was no Steam login.
-    private(set) var waitsForLogin = false
+    /// Whether bundles were skipped because there was no Steam login, or the user keeps them.
+    private(set) var hasDeferredDownloads = false
     private var isRunning = false
     private var onFinished: (() -> Void)?
 
     init(downloader: UnpackedBundleDownloading,
          isShown: @escaping (URL) -> Bool,
+         mayDownload: @escaping () -> Bool = { true },
          finish: @escaping @Sendable (UnpackedBundle, URL) -> Void = UnpackedBundleRestorer.finishInBackground) {
         self.downloader = downloader
         self.isShown = isShown
+        self.mayDownload = mayDownload
         self.finish = finish
     }
 
@@ -255,7 +267,7 @@ final class UnpackedBundleRestorer {
     func run(_ bundles: [(bundle: UnpackedBundle, packageOnDisk: URL?)], onFinished: (() -> Void)? = nil) {
         self.onFinished = onFinished
         isRunning = true
-        waitsForLogin = false
+        hasDeferredDownloads = false
         skipped = []
         var downloads: [UnpackedBundle] = []
         // A bundle still waiting on its wallpaper has its package in hand.
@@ -274,18 +286,18 @@ final class UnpackedBundleRestorer {
         next()
     }
 
-    /// Call when a Steam login becomes available: if an earlier run skipped bundles for want of
-    /// one, runs again over what `scan` (off the main thread) finds now, since wallpapers may have
+    /// Call when a Steam login becomes available, or the user lets the downloads run: if an earlier
+    /// run skipped bundles for want of either, runs again over what `scan` (off the main thread) finds now, since wallpapers may have
     /// been edited, updated or deleted meanwhile.
-    func steamLoginAvailable(scan: @escaping @Sendable () -> [(bundle: UnpackedBundle, packageOnDisk: URL?)],
+    func resumeDownloads(scan: @escaping @Sendable () -> [(bundle: UnpackedBundle, packageOnDisk: URL?)],
                              onFinished: (() -> Void)? = nil) {
-        guard waitsForLogin, !isRunning else { return }
-        waitsForLogin = false
+        guard hasDeferredDownloads, !isRunning, downloader.isLoggedIn, mayDownload() else { return }
+        hasDeferredDownloads = false
         isRunning = true
         self.onFinished = onFinished
         DispatchQueue.global(qos: .utility).async {
             let bundles = scan()
-            OWELog.info(.importer, "Unpacked wallpapers: logged in to Steam; \(bundles.count) to give their package back")
+            OWELog.info(.importer, "Unpacked wallpapers: carrying on; \(bundles.count) to give their package back")
             DispatchQueue.main.async { [weak self] in self?.run(bundles, onFinished: self?.onFinished) }
         }
     }
@@ -311,12 +323,12 @@ final class UnpackedBundleRestorer {
 
     private func next() {
         guard !queue.isEmpty else { return done() }
-        // Also partway through: Steam can end the login meanwhile.
-        guard downloader.isLoggedIn else {
-            OWELog.info(.importer, "Unpacked wallpapers: no Steam login; \(queue.count) wallpaper(s) keep their loose copy until the next login")
+        // Also partway through: Steam can end the login, and the user keep the rest, meanwhile.
+        guard downloader.isLoggedIn, mayDownload() else {
+            OWELog.info(.importer, "Unpacked wallpapers: \(mayDownload() ? "no Steam login" : "not downloading them again, by choice"); \(queue.count) wallpaper(s) keep their loose copy")
             skipped += queue
             queue = []
-            waitsForLogin = true
+            hasDeferredDownloads = true
             return done()
         }
         let bundle = queue.removeFirst()
@@ -330,7 +342,7 @@ final class UnpackedBundleRestorer {
             } else {
                 OWELog.info(.importer, "Unpacked wallpapers: \(workshopId) didn't download; its loose copy stays until a later launch")
                 self.skipped.append(bundle)
-                if !self.downloader.isLoggedIn { self.waitsForLogin = true }
+                if !self.downloader.isLoggedIn { self.hasDeferredDownloads = true }
             }
             self.next()
         }
