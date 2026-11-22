@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.20] - 2026-11-22
+
 ### Added
 
 - **The Steam login asks for itself after an update, and the re-download can be turned off.** When wallpapers an earlier version unpacked wait to be downloaded again and there is no working Steam login, the first launch after an update shows the login after What's New, with why, how many and about how much; logging in starts the downloads at once. "Don't re-download wallpapers that were unpacked before", there and in Settings › Assets, keeps their loose copies, which play as they are. New downloads are never unpacked either way. ([#610](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/610))
