@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.23] - 2026-11-22
+
 ### Added
 
 - **Details Only, as in Wallpaper Engine.** The button beside Details in the Installed toolbar (or View › Details Only, ⇧⌘D) narrows the window to the wallpaper's Details panel, so you can change its settings while watching it on the same desktop. Wallpaper Explorer (or ⇧⌘D again) brings back the whole window. ([#633](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/633))
