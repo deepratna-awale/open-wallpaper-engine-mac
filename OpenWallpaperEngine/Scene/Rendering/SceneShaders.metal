@@ -17,7 +17,7 @@ struct LayerUniform {
     float4 colorEffects;
     float4 transform;
     float transformScaleY;
-    float4 bloomTint;
+    float4 colorPop;
     float2 quadAxisX;
     float2 quadAxisY;
 };
