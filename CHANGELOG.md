@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Add Effect shows effect names again.** Without Wallpaper Engine's text files the Wallpaper Editor listed effects as "Effect Blur Title"; they now read "Blur". ([#628](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/628))
+
 ## [1.0.0-beta.22] - 2026-11-22
 
 ### Fixed
