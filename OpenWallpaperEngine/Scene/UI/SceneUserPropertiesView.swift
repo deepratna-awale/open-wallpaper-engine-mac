@@ -149,10 +149,10 @@ final class SceneUserPropertiesModel: ObservableObject {
             ("_owe_blur", String(localized: "Blur", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
             ("_owe_tint", String(localized: "Tint", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
             ("_owe_tint_color", String(localized: "Tint Color", comment: "Wallpaper setting added by the app"), "color", "1 0.6 0.2", 0...1),
-            ("_owe_localcontrast", String(localized: "Local Contrast", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
-            ("_owe_chromaticaberration", String(localized: "Chromatic Aberration", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
-            ("_owe_vhs", String(localized: "VHS", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
-            ("_owe_filmgrain", String(localized: "Film Grain", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
+            ("_owe_localcontrast", String(localized: "Local Contrast", comment: "Wallpaper setting added by the app"), "slider", "0", 0...5),
+            ("_owe_chromaticaberration", String(localized: "Chromatic Aberration", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
+            ("_owe_vhs", String(localized: "VHS", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
+            ("_owe_filmgrain", String(localized: "Film Grain", comment: "Wallpaper setting added by the app"), "slider", "0", 0...5),
             ("_owe_speed", String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), "slider", "1", SceneClock.minimumRate...2),
             ("_owe_pause", String(localized: "Pause Animation", comment: "Wallpaper setting added by the app"), "bool", "false", 0...1)
         ]

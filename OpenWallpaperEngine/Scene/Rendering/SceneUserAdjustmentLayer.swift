@@ -32,7 +32,7 @@ final class SceneUserAdjustmentLayer {
     static let effects: [Effect] = [
         Effect(name: "tint", amount: { $0.tint }) { [SceneUserAdjustmentLayer.write("alpha", [$0.tint]), SceneUserAdjustmentLayer.write("color", [$0.tintColor.x, $0.tintColor.y, $0.tintColor.z])] },
         Effect(name: "localcontrast", amount: { $0.localContrast }) { [SceneUserAdjustmentLayer.write("strength", [$0.localContrast])] },
-        Effect(name: "chromaticaberration", amount: { $0.chromaticAberration }) { [SceneUserAdjustmentLayer.write("strength", [$0.chromaticAberration])] },
+        Effect(name: "chromaticaberration", amount: { $0.chromaticAberration }) { [SceneUserAdjustmentLayer.write("ui_editor_properties_strength", [$0.chromaticAberration])] },
         Effect(name: "vhs", amount: { $0.vhs }) { [SceneUserAdjustmentLayer.write("strength", [$0.vhs])] },
         Effect(name: "filmgrain", amount: { $0.filmGrain }) { [SceneUserAdjustmentLayer.write("strength", [$0.filmGrain])] }
     ]
