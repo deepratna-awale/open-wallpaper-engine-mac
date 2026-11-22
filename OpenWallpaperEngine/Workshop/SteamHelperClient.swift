@@ -134,7 +134,7 @@ actor SteamHelperClient {
                                        as: Empty.self)
         }
         logOnTask = task
-        defer { if self.login == login { logOnTask = nil } }
+        defer { if logOnTask == task { logOnTask = nil } }
         do {
             try await task.value
         } catch let error as SteamHelperError where error.needsNewSignIn {
@@ -233,8 +233,13 @@ actor SteamHelperClient {
         let kind: String?
         let previousCodeWasIncorrect: Bool?
         let eresult: Int?
+        let afterSeconds: Double?
+        let attempt: Int?
         let publishedfileid: String?
         let appid: Int?
+
+        /// For the log: how long the logon that ended had lasted.
+        var logOnAge: String { afterSeconds.map { ", \($0) s after logging on" } ?? "" }
     }
 
     private struct Success<Value: Decodable>: Decodable {
@@ -297,8 +302,9 @@ actor SteamHelperClient {
             continuation.finish()
         })
         self.transport = transport
+        // Not `logOnTask`: the logon may be what starts the helper, and a request that doesn't find
+        // it sends a second one.
         isLoggedOn = false
-        logOnTask = nil
         readTask = Task { [weak self] in
             for await line in lines {
                 await self?.receive(line)
@@ -340,12 +346,15 @@ actor SteamHelperClient {
         case "deviceConfirmationRequired":
             event = .deviceConfirmationRequired
         case "loggedOff":
-            OWELog.info(.workshop, "Steam logged the helper off (EResult \(message.eresult.map { String($0) } ?? "none"))")
+            OWELog.info(.workshop, "Steam logged the helper off (EResult \(message.eresult.map { String($0) } ?? "none"))\(message.logOnAge)")
             logOnAgain()
             event = nil
         case "disconnected":
-            OWELog.info(.workshop, "The Steam helper lost its connection to Steam")
+            OWELog.info(.workshop, "The Steam helper lost its connection to Steam\(message.logOnAge)")
             logOnAgain()
+            event = nil
+        case "logOnRetried":
+            OWELog.info(.workshop, "Steam answered the logon with EResult \(message.eresult.map { String($0) } ?? "none") (\(message.attempt ?? 0)); asking again on a new connection")
             event = nil
         case "workshopItemSubscribed":
             if let id = message.publishedfileid, message.appid == WorkshopAPIService.wallpaperEngineAppId {

@@ -127,6 +127,7 @@ struct SettingsSearch {
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("Install Wallpaper Engine assets automatically after signing in", .assets, SettingsAnchor.assets),
             entry("Steam Login", .assets, SettingsAnchor.steamLogin),
+            entry("Don't re-download wallpapers that were unpacked before", .assets, SettingsAnchor.steamLogin),
             entry("Wallpaper Storage", .assets, SettingsAnchor.storage),
             entry("Library Folders", .assets, SettingsAnchor.libraryFolders),
             entry("Manage Blocklist", .assets, SettingsAnchor.blockList),

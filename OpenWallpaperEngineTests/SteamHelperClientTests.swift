@@ -118,6 +118,52 @@ final class SteamHelperClientTests: XCTestCase {
         XCTAssertEqual(transports.values.last?.methods, ["logOn", "call"])
     }
 
+    /// At launch several requests arrive while the first one's logon starts the helper: they share
+    /// that logon (Steam answers a second one on the connection with InvalidParam and drops it).
+    func testRequestsWhileTheHelperStartsShareOneLogOn() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            switch request.method {
+            case "logOn": []
+            case "ownsApp": [Fake.result(request, #"{"owned":true}"#)]
+            default: [Fake.result(request, #"{"total":3}"#)]
+            }
+        }
+        await client.use(Fake.login)
+        async let logOn: Void = client.ensureLoggedOn()
+        try await sleepUntil("the logon") { transports.values.first?.methods == ["logOn"] }
+        let fake = try XCTUnwrap(transports.values.first)
+        async let owned = client.ownsApp(appID: 431960)
+        async let favourites = client.webAPIResponse("PublishedFile.GetUserFiles", parameters: [])
+        // Both reach the client before Steam answers.
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(fake.methods, ["logOn"])
+
+        fake.emit(Fake.result(fake.requests[0], #"{"steamID":"76561190000000001"}"#))
+        try await logOn
+        let answers = try await (owned, favourites)
+        XCTAssertTrue(answers.0)
+        XCTAssertEqual(fake.methods.filter { $0 == "logOn" }.count, 1)
+        XCTAssertEqual(Set(fake.methods), ["logOn", "ownsApp", "call"])
+    }
+
+    /// A logon the helper asks Steam again for isn't a rejection: the request waits for its answer.
+    func testALogOnTheHelperRetriesKeepsTheLogin() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            [#"{"event":"logOnRetried","eresult":8,"attempt":1}"#,
+             #"{"event":"logOnRetried","eresult":8,"attempt":2}"#,
+             Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+        }
+        let calls = Box<Int>()
+        await client.setLoginRejectedHandler { calls.append(1) }
+        await client.use(Fake.login)
+        try await client.ensureLoggedOn()
+        XCTAssertTrue(calls.values.isEmpty)
+        let hasLogin = await client.hasLogin
+        XCTAssertTrue(hasLogin)
+    }
+
     func testRejectedTokenFailsTheLogOn() async throws {
         let transports = Box<Fake>()
         let client = makeClient(transports) { request in
@@ -310,7 +356,7 @@ final class SteamHelperClientTests: XCTestCase {
         try await client.ensureLoggedOn()
         let fake = try XCTUnwrap(transports.values.first)
 
-        fake.emit(#"{"event":"disconnected"}"#)
+        fake.emit(#"{"event":"disconnected","afterSeconds":1.4}"#)
 
         try await sleepUntil("the second logon") { fake.methods == ["logOn", "logOn"] }
     }

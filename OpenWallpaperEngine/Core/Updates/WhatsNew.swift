@@ -28,6 +28,12 @@ struct WhatsNew {
         defaults.set(current.description, forKey: Self.lastSeenVersionKey)
     }
 
+    /// Whether the app runs a newer version than the user last saw.
+    var isUpdate: Bool {
+        guard let current, let lastSeen = defaults.string(forKey: Self.lastSeenVersionKey).flatMap(ReleaseVersion.init) else { return false }
+        return current > lastSeen
+    }
+
     /// The versions since the last one seen, newest first, with their notes; nil when there is
     /// nothing to show. Marks them seen, so this returns them once.
     func takePendingEntries() -> (current: String, entries: [Entry])? {

@@ -35,6 +35,8 @@ final class SteamAccount: ObservableObject {
     private let store: SteamLoginStore
     private let deviceName: String
     private var signInTask: Task<Void, Never>?
+    private var hasRestored = false
+    private var restoreWaiters: [CheckedContinuation<Void, Never>] = []
 
     init(client: SteamHelperClient = .app(), store: SteamLoginStore = .app(),
          deviceName: String = SteamAccount.defaultDeviceName) {
@@ -64,6 +66,11 @@ final class SteamAccount: ObservableObject {
     /// Logs on with the saved sign-in, if any. Without a network the account stays signed in and
     /// later requests log on; a sign-in Steam no longer accepts is removed.
     func restore() async {
+        defer {
+            hasRestored = true
+            restoreWaiters.forEach { $0.resume() }
+            restoreWaiters = []
+        }
         guard let login = store.load() else { return }
         status = .restoring(accountName: login.accountName)
         await adopt(login)
@@ -78,6 +85,12 @@ final class SteamAccount: ObservableObject {
             OWELog.error(.workshop, "Can't log on to Steam at launch: \(error)")
             status = .signedIn(accountName: login.accountName)
         }
+    }
+
+    /// Returns once `restore` has tried the saved sign-in.
+    func waitUntilRestored() async {
+        guard !hasRestored else { return }
+        await withCheckedContinuation { restoreWaiters.append($0) }
     }
 
     func signInWithQR() {
