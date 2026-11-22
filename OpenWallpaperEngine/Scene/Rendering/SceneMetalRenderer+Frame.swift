@@ -858,7 +858,8 @@ extension SceneMetalRenderer {
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
                 colorCorrection: colorCorrection(),
                 effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
-                display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow)
+                display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow,
+                assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) })
             // The promoted layers' patch, over the scene as the composite upscales it without them,
             // made before the post-process (the camera fade may draw onto the scene target).
             var patch: (texture: MTLTexture, rect: SceneSnapshotTracker.Rect)?
@@ -961,10 +962,27 @@ extension SceneMetalRenderer {
     /// The app's own whole-scene adjustments, from this wallpaper's user properties.
     func appExtras() -> ScenePostProcess.AppExtras {
         let services = WallpaperServices.shared
-        return ScenePostProcess.AppExtras(bloom: services.userPropertyValue("_owe_bloom", fallback: 1),
+        return ScenePostProcess.AppExtras(bloom: max(services.userPropertyValue("_owe_bloom", fallback: 0), 0),
                                           saturation: services.userPropertyValue("_owe_saturation", fallback: 1),
                                           hue: services.userPropertyValue("_owe_hue", fallback: 0),
-                                          blur: services.userPropertyValue("_owe_blur", fallback: 1))
+                                          blur: max(services.userPropertyValue("_owe_blur", fallback: 0), 0),
+                                          dim: services.userPropertyValue("_owe_dim", fallback: 0),
+                                          colorPop: max(services.userPropertyValue("_owe_colorpop", fallback: 0), 0),
+                                          colorPopKey: Self.color(services.userPropertyString("_owe_colorpop_color"), or: SIMD3(1, 0, 0)),
+                                          tint: min(max(services.userPropertyValue("_owe_tint", fallback: 0), 0), 1),
+                                          tintColor: Self.color(services.userPropertyString("_owe_tint_color"), or: SIMD3(1, 0.6, 0.2)),
+                                          localContrast: max(services.userPropertyValue("_owe_localcontrast", fallback: 0), 0),
+                                          chromaticAberration: max(services.userPropertyValue("_owe_chromaticaberration", fallback: 0), 0),
+                                          vhs: max(services.userPropertyValue("_owe_vhs", fallback: 0), 0),
+                                          filmGrain: max(services.userPropertyValue("_owe_filmgrain", fallback: 0), 0))
+    }
+
+    /// A User Adjustments colour (`"r g b"`, 0…1 or 0…255 as the colour rows store it); `fallback` when unset.
+    static func color(_ value: String?, or fallback: SIMD3<Float>) -> SIMD3<Float> {
+        let components = SceneVector.numbers(value ?? "")
+        guard components.count >= 3 else { return fallback }
+        let scale: Double = (components.max() ?? 1) > 1 ? 255 : 1
+        return SIMD3(Float(components[0] / scale), Float(components[1] / scale), Float(components[2] / scale))
     }
 
     /// WE's image filter and colour options, from this wallpaper's user properties.
@@ -1035,6 +1053,7 @@ extension SceneMetalRenderer {
         let geometry: Bool = modelDrawing?.hasPendingPipelines == true || shadowPass?.hasPendingPipelines == true
         let volume: Bool = volumetrics?.pipelines?.hasPendingPipelines == true
         return hasPendingEffectPipelines || materials || geometry || puppetPending || volume
+            || postProcess.isPlanningUserAdjustments
     }
 
     /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
@@ -1077,10 +1096,15 @@ extension SceneMetalRenderer {
         // A compile can also start and land between two frames, unseen by `warming`.
         let warming = pipelinesCompiling
         let landed = pipelinesLanded
+        // The User Adjustments draw over the whole frame: a change (a slider, or the music they
+        // follow) redraws it.
+        let extras = appExtras()
+        adjustmentsChanged = extras != analysedExtras
+        analysedExtras = extras
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
             || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
             || scripts.userVisibilityRevision != analysedUserVisibility
-            || editorLive.revision != analysedEditorRevision
+            || editorLive.revision != analysedEditorRevision || adjustmentsChanged || extras.animates
         analysedUserVisibility = scripts.userVisibilityRevision
         analysedEditorRevision = editorLive.revision
         analysedLanded = landed
@@ -1102,9 +1126,12 @@ extension SceneMetalRenderer {
             particlesLive = true
             if system.configuration.controlPoints.contains(where: \.followsCursor) { particlesFollowCursor = true; break }
         }
-        let inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
+        var inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
                                        parallaxMoved: parallaxMoved, particlesLive: particlesLive,
                                        particlesFollowCursor: particlesFollowCursor)
+        // Adjustments moving with the music change frame after frame, as audio-reactive layers do.
+        // An animated effect on the user adjustment layer moves every frame.
+        if adjustmentsChanged && adjustmentsFollowMusic || analysedExtras.animates { inputs.sceneStagesAnimate = true }
         return framePacing.record(framePacing.classify(inputs), at: now) || !skipsIdleFrames
     }
 

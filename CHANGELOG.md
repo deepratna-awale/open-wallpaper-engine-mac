@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Details Only, as in Wallpaper Engine.** The button beside Details in the Installed toolbar (or View › Details Only, ⇧⌘D) narrows the window to the wallpaper's Details panel, so you can change its settings while watching it on the same desktop. Wallpaper Explorer (or ⇧⌘D again) brings back the whole window. ([#633](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/633))
+- **More User Adjustments.** Color Pop keeps one colour and turns the rest grey, with an eyedropper to pick the colour from anywhere on screen (on every colour setting). Dim darkens the wallpaper, Pause Animation holds its frame, and Wallpaper Engine's own Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain effects can be laid over any wallpaper. Each can follow the music. ([#631](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/631))
+
+### Changed
+
+- **User Adjustments are one layer over the wallpaper.** Hue, saturation, bloom and blur are drawn as one full-screen layer on top of the wallpaper, made only once one of them leaves its default. Blur is Wallpaper Engine's own Blur effect, and Blur and Bloom now start at 0 (off). ([#627](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/627))
+
+### Fixed
+
+- **Sync to Music works on every User Adjustment.** Hue, saturation, bloom, blur, animation speed and parallax amount now follow the music on any wallpaper, and turning sync on starts with an amount, so it shows at once. ([#625](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/625))
+- **The Bloom adjustment works on every wallpaper.** It adds a glow of its own instead of only scaling a bloom the scene may not have. ([#626](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/626))
+- **Add Effect shows effect names again.** Without Wallpaper Engine's text files the Wallpaper Editor listed effects as "Effect Blur Title"; they now read "Blur". ([#628](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/628))
 
 ## [1.0.0-beta.22] - 2026-11-22
 

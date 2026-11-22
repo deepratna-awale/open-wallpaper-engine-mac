@@ -133,6 +133,35 @@ final class SceneUserPropertiesModel: ObservableObject {
         values.filter { !SceneTextLayerSettings.isLayerSetting($0.key) || userLayerSettings.contains($0.key) }
     }
 
+    /// The User Adjustments (app extras, not WE's), in the order they show: the user adjustment
+    /// layer's (`SceneUserAdjustmentLayer`), then the animation's. Every one at its default leaves
+    /// the wallpaper as WE draws it.
+    static func userAdjustments() -> [SceneUserProperty] {
+        let rows: [(id: String, title: String, type: String, value: String, range: ClosedRange<Double>)] = [
+            ("_owe_effect_enabled_parallax", String(localized: "Mouse Parallax", comment: "Wallpaper setting added by the app"), "bool", "false", 0...1),
+            ("_owe_effect_parallax_amount", String(localized: "Parallax Amount", comment: "Wallpaper setting added by the app"), "slider", "1", 0...2),
+            ("_owe_hue", String(localized: "Hue", comment: "Wallpaper setting added by the app"), "slider", "0", -Double.pi...Double.pi),
+            ("_owe_saturation", String(localized: "Saturation", comment: "Wallpaper setting added by the app"), "slider", "1", 0...2),
+            ("_owe_colorpop", String(localized: "Color Pop", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
+            ("_owe_colorpop_color", String(localized: "Color Pop Color", comment: "Wallpaper setting added by the app"), "color", "1 0 0", 0...1),
+            ("_owe_dim", String(localized: "Dim", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
+            ("_owe_bloom", String(localized: "Bloom", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
+            ("_owe_blur", String(localized: "Blur", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
+            ("_owe_tint", String(localized: "Tint", comment: "Wallpaper setting added by the app"), "slider", "0", 0...1),
+            ("_owe_tint_color", String(localized: "Tint Color", comment: "Wallpaper setting added by the app"), "color", "1 0.6 0.2", 0...1),
+            ("_owe_localcontrast", String(localized: "Local Contrast", comment: "Wallpaper setting added by the app"), "slider", "0", 0...5),
+            ("_owe_chromaticaberration", String(localized: "Chromatic Aberration", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
+            ("_owe_vhs", String(localized: "VHS", comment: "Wallpaper setting added by the app"), "slider", "0", 0...2),
+            ("_owe_filmgrain", String(localized: "Film Grain", comment: "Wallpaper setting added by the app"), "slider", "0", 0...5),
+            ("_owe_speed", String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), "slider", "1", SceneClock.minimumRate...2),
+            ("_owe_pause", String(localized: "Pause Animation", comment: "Wallpaper setting added by the app"), "bool", "false", 0...1)
+        ]
+        return rows.enumerated().map { index, row in
+            SceneUserProperty(id: row.id, title: row.title, type: row.type, order: Int.max - (rows.count - index),
+                              defaultValue: row.value, options: [], minimum: row.range.lowerBound, maximum: row.range.upperBound)
+        }
+    }
+
     private func trailingOrder(offset: Int, index: Int) -> Int {
         Int.max - max(0, offset - index)
     }
@@ -187,20 +216,7 @@ final class SceneUserPropertiesModel: ObservableObject {
             let visibilityProperties = isScene
                 ? undeclaredVisibilityToggles(for: wallpaper, excluding: Set(properties.map(\.id)))
                 : []
-            properties.append(contentsOf: [
-                SceneUserProperty(id: "_owe_hue", title: String(localized: "Hue", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 5, defaultValue: "0", options: [], minimum: -Double.pi, maximum: Double.pi),
-                SceneUserProperty(id: "_owe_saturation", title: String(localized: "Saturation", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 4, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_bloom", title: String(localized: "Bloom", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 3, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_blur", title: String(localized: "Blur", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 2, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_speed", title: String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 1, defaultValue: "1", options: [], minimum: SceneClock.minimumRate, maximum: 2)
-            ])
-            // Mouse parallax (setting keys kept from when it lived with the native effects).
-            properties.append(contentsOf: [
-                SceneUserProperty(id: "_owe_effect_enabled_parallax", title: String(localized: "Mouse Parallax", comment: "Wallpaper setting added by the app"), type: "bool",
-                                  order: Int.max - 7, defaultValue: "false", options: [], minimum: 0, maximum: 1),
-                SceneUserProperty(id: "_owe_effect_parallax_amount", title: String(localized: "Parallax Amount", comment: "Wallpaper setting added by the app"), type: "slider",
-                                  order: Int.max - 6, defaultValue: "1", options: [], minimum: 0, maximum: 2)
-            ])
+            properties.append(contentsOf: Self.userAdjustments())
             // Some scenes gate a layer's visibility on a user property (e.g. a "dark"/"colored" variant
             // toggle) that the author forgot to declare in project.json; expose the simple on/off ones
             // anyway since the renderer already honors any visibleUserProperty by name.
@@ -527,13 +543,16 @@ struct SceneUserPropertiesView: View {
                     infoButton(parameterHelp(property))
                 }
             case "color":
-                ColorPicker(selection: Binding(
-                    get: { colorValue(model.values[property.id] ?? property.defaultValue) },
-                    set: { model.set(colorString($0), for: property) }
-                ), supportsOpacity: false) {
-                    parameterLabel(property.title, help: parameterHelp(property))
+                HStack(spacing: 6) {
+                    ColorPicker(selection: Binding(
+                        get: { colorValue(model.values[property.id] ?? property.defaultValue) },
+                        set: { model.set(colorString($0), for: property) }
+                    ), supportsOpacity: false) {
+                        parameterLabel(property.title, help: parameterHelp(property))
+                    }
+                    .anchorsColorPanel()
+                    eyedropper(for: property)
                 }
-                .anchorsColorPanel()
             case "file", "directory", "texture", "scenetexture":
                 pathPicker(property)
             case SceneScriptUserProperties.Property.userShortcutType:
@@ -589,16 +608,22 @@ struct SceneUserPropertiesView: View {
     private func musicSyncControls(for property: SceneUserProperty) -> some View {
         let syncID = "\(property.id)_musicSync"
         let amountID = "\(property.id)_musicAmount"
+        // App extra (WE has no music sync): a modulation of up to the slider's own span, a quarter
+        // of it when sync is turned on without an amount, so turning it on shows at once.
+        let displaySpan = max(property.maximum - property.minimum, 0.001)
         let isEnabled = Binding<Bool>(
             get: { (model.values[syncID] ?? "false").lowercased() == "true" },
-            set: { model.set($0 ? "true" : "false", forID: syncID) }
+            set: { enabled in
+                if enabled, (Double(model.values[amountID] ?? "") ?? 0) == 0 {
+                    model.set(String(displaySpan / 4), forID: amountID)
+                }
+                model.set(enabled ? "true" : "false", forID: syncID)
+            }
         )
         Toggle("Sync to Music", isOn: isEnabled)
             .toggleStyle(.checkbox)
             .font(.caption)
         if isEnabled.wrappedValue {
-            // App extra (WE has no music sync): a modulation of up to the slider's own span.
-            let displaySpan = max(property.maximum - property.minimum, 0.001)
             let amount = Binding<Double>(
                 get: { Double(model.values[amountID] ?? "0") ?? 0 },
                 set: { model.set(String($0), forID: amountID) }
@@ -639,8 +664,30 @@ struct SceneUserPropertiesView: View {
     }
 
     private func colorString(_ color: Color) -> String {
-        let nsColor = NSColor(color).usingColorSpace(.deviceRGB) ?? .white
+        Self.colorString(NSColor(color))
+    }
+
+    private nonisolated static func colorString(_ color: NSColor) -> String {
+        let nsColor = color.usingColorSpace(.deviceRGB) ?? .white
         return "\(nsColor.redComponent) \(nsColor.greenComponent) \(nsColor.blueComponent)"
+    }
+
+    /// Picks the colour of any pixel on screen (`NSColorSampler`), the wallpaper's included.
+    private func eyedropper(for property: SceneUserProperty) -> some View {
+        let model = self.model
+        let apply: @MainActor (String) -> Void = { model.set($0, for: property) }
+        return Button {
+            NSColorSampler().show { picked in
+                guard let picked else { return }
+                let value = Self.colorString(picked)
+                MainActor.assumeIsolated { apply(value) }
+            }
+        } label: {
+            Image(systemName: "eyedropper")
+        }
+        .buttonStyle(.borderless)
+        .help(Text("Pick a color on the screen"))
+        .accessibilityLabel(Text("Pick a color on the screen"))
     }
 }
 /// Open panel for `file`, `directory`, `texture` and `scenetexture` properties; returns the chosen path.

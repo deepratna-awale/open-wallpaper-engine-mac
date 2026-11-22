@@ -67,7 +67,9 @@ enum SceneChangeImpact: Int, Comparable {
         if WEColorCorrectionProperty.contains(key) { return .none }
 
         switch key {
-        case "_owe_hue", "_owe_saturation", "_owe_bloom", "_owe_blur", "_owe_speed":
+        case "_owe_hue", "_owe_saturation", "_owe_bloom", "_owe_blur", "_owe_speed", "_owe_pause", "_owe_dim",
+             "_owe_colorpop", "_owe_colorpop_color", "_owe_tint", "_owe_tint_color", "_owe_localcontrast",
+             "_owe_chromaticaberration", "_owe_vhs", "_owe_filmgrain":
             return .none
         default:
             // Authored properties can gate layer/effect visibility, so rebuild to be safe.
