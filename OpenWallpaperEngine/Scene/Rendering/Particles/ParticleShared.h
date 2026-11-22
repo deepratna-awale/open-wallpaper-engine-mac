@@ -297,7 +297,7 @@ static FallbackInstance fallbackInstance(float2 position, float2 size, float opa
     instance.colorEffects = float4(0, 1, 0, 0.7);
     instance.transform = float4(0, 0, 0, 1);
     instance.transformScaleY = 1;
-    instance.colorPop = float4(1);
+    instance.colorPop = float4(0);
     instance.quadAxisX = float2(0);
     instance.quadAxisY = float2(0);
     return instance;

@@ -10,20 +10,40 @@ import Metal
 ///    set to the slider's value on both axes.
 /// 2. Bloom: WE's LDR bloom (`SceneBloomChain`) at the slider's strength, whether or not the
 ///    scene has bloom of its own.
-/// 3. Hue and saturation: per pixel, in the composite that puts the layer on the drawable.
+/// 3. WE's Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain effects (`effects`), each
+///    at its defaults but for the constant its slider sets.
+/// 4. Hue, saturation, Color Pop and Dim: per pixel, in the composite that puts the layer on the
+///    drawable.
 final class SceneUserAdjustmentLayer {
-    static let blurFile = "effects/blur/effect.json"
-    /// The effect graph's states for the layer's targets.
-    static let blurStateID = "engine:user-blur"
+    /// One of WE's effects on the layer: the slider's value goes to `constants`; 0 is off.
+    struct Effect {
+        let name: String
+        let amount: (ScenePostProcess.AppExtras) -> Float
+        let constants: (ScenePostProcess.AppExtras) -> [SceneScriptConstantWrite]
+
+        var file: String { "effects/\(name)/effect.json" }
+        /// The effect graph's state for the effect's targets.
+        var stateID: String { "engine:user-\(name)" }
+    }
+
+    static let blur = Effect(name: "blur", amount: \.blur) { [SceneUserAdjustmentLayer.write("scale", [$0.blur, $0.blur])] }
     static let bloomStateID = "engine:user-bloom"
+    /// The effects after the bloom, in the order they stack.
+    static let effects: [Effect] = [
+        Effect(name: "tint", amount: \.tint) { [SceneUserAdjustmentLayer.write("alpha", [$0.tint]), SceneUserAdjustmentLayer.write("color", [$0.tintColor.x, $0.tintColor.y, $0.tintColor.z])] },
+        Effect(name: "localcontrast", amount: \.localContrast) { [SceneUserAdjustmentLayer.write("strength", [$0.localContrast])] },
+        Effect(name: "chromaticaberration", amount: \.chromaticAberration) { [SceneUserAdjustmentLayer.write("strength", [$0.chromaticAberration])] },
+        Effect(name: "vhs", amount: \.vhs) { [SceneUserAdjustmentLayer.write("strength", [$0.vhs])] },
+        Effect(name: "filmgrain", amount: \.filmGrain) { [SceneUserAdjustmentLayer.write("strength", [$0.filmGrain])] }
+    ]
 
     private let builder: SceneEffectPlanBuilder
-    private var blurPlan: SceneEffectPlan?
-    private var blurFailed = false
+    /// Each effect's plan once used; nil for one that can't be planned.
+    private var plans: [String: SceneEffectPlan?] = [:]
     private var bloomChain: SceneBloomChain?
     private var bloomFailed = false
-    private var holdsBlur = false
-    private var holdsBloom = false
+    /// The states whose targets the layer holds.
+    private var held: Set<String> = []
     /// Frames encoded so far: the effects' input changes every frame while its texture stays.
     private var frames: UInt64 = 0
 
@@ -35,73 +55,77 @@ final class SceneUserAdjustmentLayer {
         self.builder = builder
     }
 
-    /// Whether the layer draws anything for `extras` beyond the composite's hue and saturation.
+    /// Whether the layer draws anything for `extras` beyond the composite's per-pixel adjustments.
     static func runs(_ extras: ScenePostProcess.AppExtras) -> Bool {
-        extras.blur > 0 || extras.bloom > 0
+        extras.bloom > 0 || ([blur] + effects).contains { $0.amount(extras) > 0 }
     }
 
-    /// The `scale` constant WE's Blur effect gets for the Blur slider.
-    static func blurConstants(_ amount: Float) -> [SceneScriptConstantWrite] {
-        [SceneScriptConstantWrite(material: nil, name: "scale", value: [amount, amount])]
+    private static func write(_ name: String, _ value: [Float]) -> SceneScriptConstantWrite {
+        SceneScriptConstantWrite(material: nil, name: name, value: value)
     }
 
-    /// Encodes the layer's blur and bloom on `frame` and returns the result; nil when neither runs
-    /// or neither is ready (the frame shows as it is). Targets of an adjustment back at its default
-    /// are released.
+    /// Encodes the layer's effects on `frame` and returns the result; nil when none runs or none
+    /// is ready (the frame shows as it is). Targets of an adjustment back at its default are released.
     func encode(on frame: MTLTexture, extras: ScenePostProcess.AppExtras, bloomThreshold: Float,
                 effects: EffectGraphRenderer, builtins: BuiltinFrameContext, values: SceneValueContext,
                 referenceSize: SIMD2<Float>, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         frames &+= 1
         var output = frame
-        if extras.blur > 0, let plan = blur() {
-            holdsBlur = true
+        func apply(_ effect: Effect) {
+            guard effect.amount(extras) > 0, let plan = plan(effect) else {
+                release(effect.stateID, from: effects)
+                return
+            }
+            held.insert(effect.stateID)
             var context = EffectGraphRenderer.Context(
                 frame: builtins, values: values, assetTexture: { _, _ in nil },
                 sceneSnapshot: frame, layerColor: SIMD3(repeating: 1), layerAlpha: 1)
             context.inputVersion = frames
-            context.constantWrites = [plan.effectIndex: Self.blurConstants(extras.blur)]
-            output = effects.apply([plan], to: output, layerID: Self.blurStateID, context: context,
+            context.constantWrites = [plan.effectIndex: effect.constants(extras)]
+            output = effects.apply([plan], to: output, layerID: effect.stateID, context: context,
                                    commandBuffer: commandBuffer) ?? output
-        } else if holdsBlur {
-            effects.releaseLayer(Self.blurStateID)
-            holdsBlur = false
         }
+        apply(Self.blur)
         if extras.bloom > 0, let chain = bloom() {
-            holdsBloom = true
+            held.insert(Self.bloomStateID)
             output = chain.encode(on: output, strength: extras.bloom, threshold: bloomThreshold, tint: SIMD3(repeating: 1),
                                   effects: effects, builtins: builtins, values: values, frameIndex: frames,
                                   referenceSize: referenceSize, stateID: Self.bloomStateID,
                                   commandBuffer: commandBuffer) ?? output
-        } else if holdsBloom {
-            effects.releaseLayer(Self.bloomStateID)
-            holdsBloom = false
+        } else {
+            release(Self.bloomStateID, from: effects)
         }
+        Self.effects.forEach(apply)
         return output === frame ? nil : output
+    }
+
+    private func release(_ stateID: String, from effects: EffectGraphRenderer) {
+        guard held.remove(stateID) != nil else { return }
+        effects.releaseLayer(stateID)
     }
 
     /// Releases every target a user adjustment layer holds (every adjustment back at its default),
     /// `layer`'s or an earlier content's.
     static func release(_ layer: SceneUserAdjustmentLayer?, from effects: EffectGraphRenderer) {
-        effects.releaseLayer(blurStateID)
-        effects.releaseLayer(bloomStateID)
-        layer?.holdsBlur = false
-        layer?.holdsBloom = false
+        for stateID in [blur.stateID, bloomStateID] + Self.effects.map(\.stateID) {
+            effects.releaseLayer(stateID)
+        }
+        layer?.held.removeAll()
     }
 
-    private func blur() -> SceneEffectPlan? {
-        if let blurPlan { return blurPlan }
-        guard !blurFailed else { return nil }
+    private func plan(_ effect: Effect) -> SceneEffectPlan? {
+        if let plan = plans[effect.name] { return plan }
         do {
-            let effect = try JSONDecoder().decode(WEObjectEffect.self, from: Data(#"{"file": "\#(Self.blurFile)"}"#.utf8))
-            let plan = try builder.build(effect)
+            let json = try JSONEncoder().encode(["file": effect.file])
+            let plan = try builder.build(try JSONDecoder().decode(WEObjectEffect.self, from: json))
             guard !plan.passes.isEmpty, !plan.passes.contains(where: { $0.variant == nil }) else {
-                throw SceneEffectPlanError.missing("the Blur effect's shaders")
+                throw SceneEffectPlanError.missing("the \(effect.name) effect's shaders")
             }
-            blurPlan = plan
+            plans[effect.name] = plan
             return plan
         } catch {
-            blurFailed = true
-            OWELog.error(.scene, "The Blur adjustment can't be planned; the wallpaper draws without it: \(error)")
+            plans[effect.name] = .some(nil)
+            OWELog.error(.scene, "The \(effect.name) adjustment can't be planned; the wallpaper draws without it: \(error)")
             return nil
         }
     }

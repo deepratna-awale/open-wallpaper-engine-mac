@@ -8,6 +8,14 @@ import Foundation
 enum ScenePlaybackSpeed {
     /// The property the sidebar's Animation Speed slider writes.
     static let propertyKey = "_owe_speed"
+    /// The User Adjustments' Pause Animation: the wallpaper pauses as when playback is paused,
+    /// easing to a stop and holding its frame.
+    static let pauseKey = "_owe_pause"
+
+    /// Whether the instance whose property store is `store` has its animation paused.
+    static func isPaused(ofStore store: String, services: WallpaperServices = .shared) -> Bool {
+        services.userPropertyString(pauseKey, wallpaper: store)?.lowercased() == "true"
+    }
 
     /// The speed stored for the instance whose property store is `store`; 1 when it has none or
     /// it isn't a number. Synced to music, the music amount times the audio level is added.

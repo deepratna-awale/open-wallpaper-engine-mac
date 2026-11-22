@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **User Adjustments are one layer over the wallpaper.** Hue, saturation, bloom and blur are drawn as one full-screen layer on top of the wallpaper, made only once one of them leaves its default. Blur is Wallpaper Engine's own Blur effect, and Blur and Bloom now start at 0 (off). ([#627](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/627))
 
+### Added
+
+- **More User Adjustments.** Color Pop keeps one colour and turns the rest grey, with an eyedropper to pick the colour from anywhere on screen (on every colour setting). Dim darkens the wallpaper, Pause Animation holds its frame, and Wallpaper Engine's own Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain effects can be laid over any wallpaper. Each can follow the music. ([#631](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/631))
+
 ### Fixed
 
 - **Sync to Music works on every User Adjustment.** Hue, saturation, bloom, blur, animation speed and parallax amount now follow the music on any wallpaper, and turning sync on starts with an amount, so it shows at once. ([#625](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/625))

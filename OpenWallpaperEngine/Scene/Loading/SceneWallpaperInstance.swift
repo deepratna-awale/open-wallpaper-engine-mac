@@ -264,6 +264,7 @@ final class SceneWallpaperInstance {
                                                                  hidden: hidden, refresh: Self.refreshRate(of: view))
         }
         playback.paused = wallpapers.playRate == 0 || !playback.displays.values.contains { $0.plays }
+            || ScenePlaybackSpeed.isPaused(ofStore: viewModel.propertyStoreKey)
         // Scene video textures decode only while some display shows the wallpaper playing.
         let shown = playback.displays.values.contains { $0.plays && !$0.hidden }
         viewModel.setEmbeddedVideoRate(playback.paused || !shown ? 0 : wallpapers.playRate)
@@ -423,6 +424,7 @@ final class SceneWallpaperInstance {
                 // The picture changes: the loading snapshots follow once it has shown a while.
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
+                if changed.contains(ScenePlaybackSpeed.pauseKey) { self.update() }
                 if WallpaperServices.shared.propertyEditing.isActive, !update.isEmpty { self.appliedLive = true }
                 if !update.rebuild.isEmpty { self.scheduleObjectRebuild(update.rebuild) }
                 guard update.impact > .none else { return }
@@ -460,6 +462,7 @@ final class SceneWallpaperInstance {
                       self.runsWallpaper(in: directory), self.runsEditorDraft == draft else { return }
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
+                if changed.contains(ScenePlaybackSpeed.pauseKey) { self.update() }
                 if self.applyEditorEdits(overlay: overlay, base: base) { return }
                 // A drag in progress the renderer can't draw live waits for its commit.
                 guard !transient else { return }
@@ -480,6 +483,7 @@ final class SceneWallpaperInstance {
                 self.viewModel.setEditorAssets(assets)
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
+                if changed.contains(ScenePlaybackSpeed.pauseKey) { self.update() }
                 if !objectIDs.isEmpty { self.scheduleObjectRebuild(objectIDs) }
                 guard !paths.isEmpty else { return }
                 self.viewModel.particleObjectIDsAsync(using: paths) { [weak self] ids in

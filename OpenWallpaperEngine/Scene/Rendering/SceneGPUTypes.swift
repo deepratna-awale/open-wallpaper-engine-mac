@@ -18,7 +18,9 @@ struct LayerUniform {
     var colorEffects: SIMD4<Float>
     var transform: SIMD4<Float>
     var transformScaleY: Float
-    var colorPop: SIMD4<Float> = SIMD4<Float>(repeating: 1)
+    /// Color pop (the User Adjustments, in the composite): the colour kept in rgb and how far from
+    /// it colours keep in w; 0 is off.
+    var colorPop: SIMD4<Float> = .zero
     /// Full-extent quad axes (y-up scene space). Zero means build the quad from size and rotation.
     var quadAxisX: SIMD2<Float> = .zero
     var quadAxisY: SIMD2<Float> = .zero

@@ -25,14 +25,39 @@ final class SceneUserAdjustmentMusicTests: XCTestCase {
     }
 
     /// Every slider of User Adjustments can be synced, the speed and parallax amount included.
+    @MainActor
     func testEveryAdjustmentSliderCanBeSynced() {
-        for key in ["_owe_hue", "_owe_saturation", "_owe_bloom", "_owe_blur", "_owe_speed", "_owe_effect_parallax_amount"] {
+        let sliders = SceneUserPropertiesModel.userAdjustments().filter { $0.type == "slider" }.map(\.id)
+        XCTAssertEqual(sliders.count, 13)
+        for key in sliders {
             let store = "adjustment-music-\(key)"
             WallpaperServices.shared.setUserProperties(["\(key)_musicSync": "true", "\(key)_musicAmount": "1"],
                                                        wallpaper: store, replacing: true)
             XCTAssertTrue(SceneMetalRenderer.adjustmentsFollowMusic(store: store), key)
             WallpaperServices.shared.setUserProperties([:], wallpaper: store, replacing: true)
         }
+    }
+
+    /// VHS and Film Grain move on their own; the other adjustments don't.
+    func testAnimatedAdjustmentsKeepTheSceneDrawing() {
+        let store = "adjustment-animates"
+        defer { WallpaperServices.shared.setUserProperties([:], wallpaper: store, replacing: true) }
+        for (properties, animates) in [([String: String](), false), (["_owe_tint": "1", "_owe_vhs": "0"], false),
+                                       (["_owe_vhs": "0.2"], true), (["_owe_filmgrain": "0.2"], true)] {
+            WallpaperServices.shared.setUserProperties(properties, wallpaper: store, replacing: true)
+            XCTAssertEqual(SceneMetalRenderer.adjustmentsAnimate(store: store), animates, "\(properties)")
+        }
+    }
+
+    /// Pause Animation pauses the wallpaper's store only while it is on.
+    func testPauseAnimation() {
+        let store = "adjustment-pause"
+        defer { WallpaperServices.shared.setUserProperties([:], wallpaper: store, replacing: true) }
+        XCTAssertFalse(ScenePlaybackSpeed.isPaused(ofStore: store))
+        WallpaperServices.shared.setUserProperties([ScenePlaybackSpeed.pauseKey: "true"], wallpaper: store, replacing: true)
+        XCTAssertTrue(ScenePlaybackSpeed.isPaused(ofStore: store))
+        WallpaperServices.shared.setUserProperties([ScenePlaybackSpeed.pauseKey: "false"], wallpaper: store, replacing: true)
+        XCTAssertFalse(ScenePlaybackSpeed.isPaused(ofStore: store))
     }
 
     /// Unsynced, the speed has no music offset; synced, its amount times the level.

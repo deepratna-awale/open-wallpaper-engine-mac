@@ -66,17 +66,54 @@ final class ScenePostProcessTests: XCTestCase {
         XCTAssertNil(ScenePostProcess.hdrLevels(frame), "a script turned bloom off: combine_srgb")
     }
 
-    /// The user adjustment layer exists only once an adjustment leaves its default; only its blur
-    /// and bloom draw on it, hue and saturation are the composite's.
-    func testTheUserAdjustmentLayerRunsOnlyForBlurOrBloom() {
+    /// The user adjustment layer exists only once an adjustment leaves its default; WE's effects
+    /// draw on it, hue, saturation, Color Pop and Dim are the composite's.
+    func testTheUserAdjustmentLayerRunsOnlyForItsEffects() {
         XCTAssertTrue(ScenePostProcess.AppExtras().isIdentity)
         XCTAssertFalse(ScenePostProcess.AppExtras(hue: 0.5).isIdentity)
+        XCTAssertTrue(ScenePostProcess.AppExtras(colorPopKey: SIMD3(0, 1, 0), tintColor: SIMD3(0, 0, 1)).isIdentity,
+                      "a colour alone changes nothing")
         XCTAssertFalse(SceneUserAdjustmentLayer.runs(.init()))
-        XCTAssertFalse(SceneUserAdjustmentLayer.runs(.init(saturation: 0.5, hue: 1)))
+        XCTAssertFalse(SceneUserAdjustmentLayer.runs(.init(saturation: 0.5, hue: 1, dim: 0.5, colorPop: 0.5)))
         XCTAssertTrue(SceneUserAdjustmentLayer.runs(.init(blur: 0.5)))
         XCTAssertTrue(SceneUserAdjustmentLayer.runs(.init(bloom: 0.5)))
-        XCTAssertEqual(SceneUserAdjustmentLayer.blurConstants(1.5),
+        for extras in [ScenePostProcess.AppExtras(tint: 0.5), .init(localContrast: 0.5), .init(chromaticAberration: 0.5),
+                       .init(vhs: 0.5), .init(filmGrain: 0.5)] {
+            XCTAssertTrue(SceneUserAdjustmentLayer.runs(extras))
+        }
+        XCTAssertEqual(SceneUserAdjustmentLayer.blur.constants(.init(blur: 1.5)),
                        [SceneScriptConstantWrite(material: nil, name: "scale", value: [1.5, 1.5])])
+        XCTAssertFalse(ScenePostProcess.AppExtras(tint: 1, localContrast: 1, chromaticAberration: 1).animates)
+        XCTAssertTrue(ScenePostProcess.AppExtras(vhs: 0.1).animates)
+        XCTAssertTrue(ScenePostProcess.AppExtras(filmGrain: 0.1).animates)
+    }
+
+    /// Dim darkens the composite's colour; Color Pop keys its colour with the slider's range.
+    func testDimAndColorPopAreTheComposites() {
+        let dimmed = ScenePostProcess.compositeUniform(placement, extras: .init(dim: 0.25))
+        XCTAssertEqual(dimmed.color.x, placement.color.x * 0.75, accuracy: 1e-6)
+        XCTAssertEqual(dimmed.color.w, placement.color.w)
+        XCTAssertEqual(ScenePostProcess.compositeUniform(placement, extras: .init()).colorPop, .zero)
+        let popped = ScenePostProcess.compositeUniform(placement, extras: .init(colorPop: 0.5, colorPopKey: SIMD3(0, 1, 0)))
+        XCTAssertEqual(popped.colorPop, SIMD4(0, 1, 0, 0.25))
+        let size = SIMD2(1920, 1080)
+        XCTAssertFalse(ScenePostProcess.compositeCopies(dimmed, size: size))
+        XCTAssertFalse(ScenePostProcess.compositeCopies(popped, size: size))
+    }
+
+    /// The colour rows' values: 0…1 or 0…255 components; the fallback for anything else.
+    func testAdjustmentColorsParse() {
+        XCTAssertEqual(SceneMetalRenderer.color("0 0.5 1", or: .zero), SIMD3(0, 0.5, 1))
+        XCTAssertEqual(SceneMetalRenderer.color("255 0 51", or: .zero), SIMD3(1, 0, 0.2))
+        XCTAssertEqual(SceneMetalRenderer.color(nil, or: SIMD3(1, 0, 0)), SIMD3(1, 0, 0))
+        XCTAssertEqual(SceneMetalRenderer.color("1 0", or: SIMD3(1, 1, 1)), SIMD3(1, 1, 1))
+    }
+
+    /// The User Adjustments apply in place: none rebuilds the scene.
+    func testEveryUserAdjustmentAppliesInPlace() {
+        for property in SceneUserPropertiesModel.userAdjustments() {
+            XCTAssertEqual(SceneChangeImpact.impact(of: property.id), .none, property.id)
+        }
     }
 
     // MARK: - Composite skip (efficiency-plan-2d notes WP3-A, S2)

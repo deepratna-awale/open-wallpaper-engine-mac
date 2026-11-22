@@ -2,7 +2,7 @@ import XCTest
 import Metal
 @testable import OpenWallpaperEngine
 
-/// The user adjustment layer (`SceneUserAdjustmentLayer`): WE's Blur effect and WE's bloom on the
+/// The user adjustment layer (`SceneUserAdjustmentLayer`): WE's effects and WE's bloom on the
 /// finished frame, planned on first use and drawing nothing at the defaults.
 final class SceneUserAdjustmentLayerTests: XCTestCase {
     private var device: MTLDevice!
@@ -107,5 +107,20 @@ final class SceneUserAdjustmentLayerTests: XCTestCase {
         let bloomed = try XCTUnwrap(try encode(.init(bloom: 1), on: input))
         XCTAssertGreaterThan(try red(bloomed, x: 21, y: 32), 0, "glow around the square")
         XCTAssertEqual(effects.failedPipelineCount, 0)
+    }
+
+    /// Each of WE's effects the layer stacks plans, compiles and draws.
+    func testEveryEffectDraws() throws {
+        let input = try frame()
+        let all: [(String, ScenePostProcess.AppExtras)] = [
+            ("tint", .init(tint: 1, tintColor: SIMD3(0, 0, 1))), ("localcontrast", .init(localContrast: 1)),
+            ("chromaticaberration", .init(chromaticAberration: 1)), ("vhs", .init(vhs: 1)), ("filmgrain", .init(filmGrain: 1))
+        ]
+        for (name, extras) in all {
+            XCTAssertNotNil(try encode(extras, on: input), name)
+            XCTAssertEqual(effects.failedPipelineCount, 0, name)
+        }
+        let tinted = try XCTUnwrap(try encode(.init(tint: 1, tintColor: SIMD3(0, 0, 1)), on: input))
+        XCTAssertLessThan(try red(tinted, x: 32, y: 32), 128, "a blue tint takes the white square's red")
     }
 }

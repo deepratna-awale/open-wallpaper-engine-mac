@@ -172,6 +172,20 @@ fragment float4 sceneCopyFragment(VertexOut input [[stage_in]], texture2d<float>
     return texture.sample(linearSampler, input.textureCoordinate);
 }
 
+/// Color pop (the User Adjustments): pixels whose colour is further than `key.w` from `key.rgb`
+/// turn grey, over a soft edge as wide again. The distance is mostly in chroma (YUV's UV), so a
+/// colour keeps across its light and dark shades.
+float3 colorPop(float3 color, float4 key) {
+    const float3 weights = float3(0.299, 0.587, 0.114);
+    const float y = dot(color, weights), keyY = dot(key.rgb, weights);
+    const float2 uv = float2(dot(color, float3(-0.147, -0.289, 0.436)), dot(color, float3(0.615, -0.515, -0.100)));
+    const float2 keyUV = float2(dot(key.rgb, float3(-0.147, -0.289, 0.436)), dot(key.rgb, float3(0.615, -0.515, -0.100)));
+    const float distanceToKey = length(uv - keyUV) + 0.25 * abs(y - keyY);
+    const float kept = 1.0 - smoothstep(key.w, key.w * 2.0, distanceToKey);
+    const float luminance = dot(color, float3(0.2126, 0.7152, 0.0722));
+    return mix(float3(luminance), color, kept);
+}
+
 fragment float4 sceneFragment(VertexOut input [[stage_in]], texture2d<float> texture [[texture(0)]],
                               constant LayerUniform *layers [[buffer(0)]]) {
     const LayerUniform layer = layers[input.instance];
@@ -207,6 +221,9 @@ fragment float4 sceneFragment(VertexOut input [[stage_in]], texture2d<float> tex
         color.rgb = float3(y + 0.956 * rotatedI + 0.621 * rotatedQ,
                            y - 0.272 * rotatedI - 0.647 * rotatedQ,
                            y - 1.106 * rotatedI + 1.703 * rotatedQ);
+    }
+    if (layer.colorPop.w > 0.0) {
+        color.rgb = colorPop(color.rgb, layer.colorPop);
     }
     color.rgb = pow(max(color.rgb, 0.0), float3(1.0 / max(layer.colorEffects.y, 0.001)));
     color.rgb *= max(layer.effects.x, 0.0);
