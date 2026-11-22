@@ -72,6 +72,8 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 
   <img src="../../docs/images/playlists.png" alt="Réglages des playlists" width="420">
 
+- **Ajustements et Détails uniquement** : toute scène ou vidéo peut recevoir Teinte, Saturation, Couleur sélective (avec une pipette), Assombrir, Flou lumineux, Flou ainsi que les effets Teinte, Contraste local, Aberration chromatique, VHS et Grain de film de Wallpaper Engine, plus la Vitesse d’animation et la mise en pause de l’animation ; chaque curseur peut suivre la musique. **Détails uniquement** (⇧⌘D) réduit la fenêtre aux réglages du fond d’écran, pour les modifier pendant qu’il s’anime.
+
 - **Contrôle** : des raccourcis pour les actions, les playlists, les fonds d’écran et les profils de moniteurs ; la [ligne de commande](../../docs/command-line.md) `-control` de Wallpaper Engine ; et le plug-in **Serveur MCP**, grâce auquel les clients MCP définissent les fonds d’écran, les playlists et les réglages et modifient les scènes, via une connexion locale que seul votre compte peut ouvrir.
 
   <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Serveur MCP" width="456">

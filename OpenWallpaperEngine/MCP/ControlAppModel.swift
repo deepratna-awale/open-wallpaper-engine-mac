@@ -76,6 +76,14 @@ struct ControlUserProperty: Equatable {
     var options: [Option]
     /// project.json's condition; nil when always shown.
     var condition: String?
+    /// A slider's Sync to Music (the app's, `<key>_musicSync`) and how far the music moves it
+    /// (`<key>_musicAmount`).
+    var musicSync = false
+    var musicAmount: Double = 0
+
+    /// The keys of a slider's Sync to Music and Music Amount.
+    static func musicSyncKey(of key: String) -> String { "\(key)_musicSync" }
+    static func musicAmountKey(of key: String) -> String { "\(key)_musicAmount" }
 }
 
 struct ControlPlayback: Equatable {

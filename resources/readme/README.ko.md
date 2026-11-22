@@ -72,6 +72,8 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   <img src="../../docs/images/playlists.png" alt="플레이리스트 설정" width="420">
 
+- **사용자 조정과 세부사항만**: 모든 장면이나 동영상 위에 색조, 채도, 컬러 팝(스포이트 포함), 어둡게, 블룸, 흐림 효과와 Wallpaper Engine의 틴트, 로컬 대비, 색수차, VHS, 필름 그레인을 더할 수 있고, 애니메이션 속도와 애니메이션 일시 정지도 있습니다. 모든 슬라이더는 음악을 따를 수 있습니다. **세부사항만**(⇧⌘D)은 창을 배경화면 설정만으로 줄여, 재생되는 모습을 보며 바꿀 수 있습니다.
+
 - **제어**: 동작, 플레이리스트, 배경화면, 디스플레이 프로필용 단축키, Wallpaper Engine의 `-control` [명령줄](../../docs/command-line.md), 그리고 **MCP 서버** 플러그인을 제공합니다. MCP 클라이언트는 이 플러그인을 통해 사용자 본인의 계정만 열 수 있는 로컬 연결로 배경화면, 플레이리스트, 설정을 지정하고 장면을 편집합니다.
 
   <img src="../../docs/images/mcp-plugin.png" alt="MCP 서버 플러그인" width="456">

@@ -72,6 +72,8 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 
   <img src="../../docs/images/playlists.png" alt="播放列表设置" width="420">
 
+- **用户调整与仅详细信息**：任何场景或视频都可以叠加色相、饱和度、色彩突显（带取色器）、调暗、泛光、模糊，以及 Wallpaper Engine 的色调、局部对比度、色差、VHS 和胶片颗粒，还有动画速度和暂停动画；每个滑块都可以随音乐变化。**仅详细信息**（⇧⌘D）把窗口缩小到壁纸的设置，让你在它播放时调整。
+
 - **控制**：用于操作、播放列表、墙纸和显示器配置文件的热键；Wallpaper Engine 的 `-control` [命令行](../../docs/command-line.md)；以及 **MCP 服务器** 插件，MCP 客户端可通过它设定墙纸、播放列表和设置并编辑场景，连接仅限本地，且只有你的账户可以打开。
 
   <img src="../../docs/images/mcp-plugin.png" alt="MCP 服务器插件" width="456">

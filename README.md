@@ -72,6 +72,8 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
   <img src="docs/images/playlists.png" alt="Playlist settings" width="420">
 
+- **User Adjustments and Details Only**: any scene or video can get Hue, Saturation, Color Pop (with an eyedropper), Dim, Bloom, Blur and Wallpaper Engine's Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain on top, plus Animation Speed and Pause Animation, and every slider can follow the music. **Details Only** (⇧⌘D) narrows the window to the wallpaper's settings, so you can change them while it plays.
+
 - **Control**: hotkeys for actions, playlists, wallpapers and display profiles; Wallpaper Engine's `-control` [command line](docs/command-line.md); and the **MCP Server** plugin, through which MCP clients set wallpapers, playlists and settings and edit scenes, over a local connection only your account can open.
 
   <img src="docs/images/mcp-plugin.png" alt="MCP Server plugin" width="456">

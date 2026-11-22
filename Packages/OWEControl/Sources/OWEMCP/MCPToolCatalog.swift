@@ -60,7 +60,7 @@ public enum MCPToolCatalog {
                 + (wallpapers.count > 10 ? ", …" : "")
         },
         MCPTool("get_wallpaper", title: "Get Wallpaper",
-                description: "A wallpaper's details: title, type, tags, folder, Workshop id, description, the displays showing it, and its user properties with their types, current values, defaults, ranges and options (the values set_user_property takes).",
+                description: "A wallpaper's details: title, type, tags, folder, Workshop id, description, the displays showing it, and its user properties with their types, current values, defaults, ranges and options (the values set_user_property takes). They include the app's User Adjustments (keys starting _owe_, such as _owe_hue, _owe_bloom, _owe_colorpop or _owe_pause), and every slider says whether it follows the music (music_sync, music_amount).",
                 input: JSONSchema.object(["id": wallpaperID], required: ["id"]), annotations: .readOnly) { result in
             let wallpaper = result["wallpaper"]
             let properties = wallpaper?["properties"]?.arrayValue ?? []
@@ -144,7 +144,7 @@ public enum MCPToolCatalog {
 
     private static let properties: [MCPTool] = [
         MCPTool("set_user_property", title: "Set User Property",
-                description: "Changes one of a wallpaper's user properties, as its Details panel does, and applies it at once on the displays showing it. The value is checked against the property's type: a number within a slider's range, true or false for a checkbox, one of a combo's option values, a colour as \"r g b\" with each 0 to 1 (or #rrggbb), or text. get_wallpaper lists the properties.",
+                description: "Changes one of a wallpaper's user properties, as its Details panel does, and applies it at once on the displays showing it. The value is checked against the property's type: a number within a slider's range, true or false for a checkbox, one of a combo's option values, a colour as \"r g b\" with each 0 to 1 (or #rrggbb), or text. get_wallpaper lists the properties. A slider's Sync to Music is the key <key>_musicSync (true or false) and its Music Amount <key>_musicAmount (a number up to the slider's span either way).",
                 input: JSONSchema.object([
                     "id": wallpaperID,
                     "key": JSONSchema.string("The property's key, from get_wallpaper.", minLength: 1),

@@ -72,6 +72,8 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
   <img src="../../docs/images/playlists.png" alt="Çalma listesi ayarları" width="420">
 
+- **Kullanıcı ayarları ve Yalnızca Ayrıntılar**: her sahne veya videonun üzerine renk özü, doygunluk, renk vurgusu (damlalıkla), karartma, Bloom, bulanıklık ve Wallpaper Engine'in renk tonu, yerel kontrast, renk sapması, VHS ve film grenliği efektleri eklenebilir; animasyon hızı ve animasyonu duraklatma da vardır ve her kaydırıcı müziği izleyebilir. **Yalnızca Ayrıntılar** (⇧⌘D) pencereyi duvar kâğıdının ayarlarına daraltır; oynarken değiştirebilirsiniz.
+
 - **Denetim**: eylemler, çalma listeleri, duvar kâğıtları ve ekran profilleri için kısayol tuşları; Wallpaper Engine’in `-control` [komut satırı](../../docs/command-line.md); ve MCP istemcilerinin, yalnızca sizin hesabınızın açabildiği yerel bir bağlantı üzerinden duvar kâğıtlarını, çalma listelerini ve ayarları belirleyip sahneleri düzenlediği **MCP Sunucusu** eklentisi.
 
   <img src="../../docs/images/mcp-plugin.png" alt="MCP Sunucusu eklentisi" width="456">
