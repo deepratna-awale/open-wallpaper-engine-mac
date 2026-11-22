@@ -68,6 +68,11 @@ struct UnpackedBundle: Equatable, Sendable {
         }
     }
 
+    /// What `scan` finds in `storage`, each with the package already on disk for it, if any.
+    static func scanWithPackages(storage: URL) -> [(bundle: UnpackedBundle, packageOnDisk: URL?)] {
+        scan(storage: storage).map { (bundle: $0, packageOnDisk: $0.packageOnDisk()) }
+    }
+
     /// The folder as an unpacked wallpaper, when it is one.
     static func bundle(at directory: URL, fileManager: FileManager = .default) -> UnpackedBundle? {
         let manifestURL = directory.appending(path: manifestName)
@@ -219,7 +224,8 @@ extension WorkshopDownloadService: UnpackedBundleDownloading {}
 /// disk is used, else the Workshop item is downloaded again. The loose copy goes only once the
 /// package is in hand and holds the scene, and never while the wallpaper is shown: that one waits
 /// until it isn't. Whatever can't be done (no Steam login, a local import, an item gone from the
-/// Workshop, a failed download) keeps its loose copy and is tried again on a later launch.
+/// Workshop, a failed download) keeps its loose copy and is tried again on a later launch; what
+/// only lacked the login, as soon as there is one (`steamLoginAvailable`).
 @MainActor
 final class UnpackedBundleRestorer {
     private let downloader: UnpackedBundleDownloading
@@ -231,6 +237,9 @@ final class UnpackedBundleRestorer {
     private(set) var pending: [(bundle: UnpackedBundle, package: URL)] = []
     /// Bundles left as they are this launch.
     private(set) var skipped: [UnpackedBundle] = []
+    /// Whether bundles were skipped because there was no Steam login.
+    private(set) var waitsForLogin = false
+    private var isRunning = false
     private var onFinished: (() -> Void)?
 
     init(downloader: UnpackedBundleDownloading,
@@ -245,9 +254,12 @@ final class UnpackedBundleRestorer {
     /// the app, `UnpackedBundle.packageOnDisk`).
     func run(_ bundles: [(bundle: UnpackedBundle, packageOnDisk: URL?)], onFinished: (() -> Void)? = nil) {
         self.onFinished = onFinished
+        isRunning = true
+        waitsForLogin = false
         skipped = []
         var downloads: [UnpackedBundle] = []
-        for (bundle, package) in bundles {
+        // A bundle still waiting on its wallpaper has its package in hand.
+        for (bundle, package) in bundles where !pending.contains(where: { $0.bundle == bundle }) {
             if let package {
                 OWELog.info(.importer, "Unpacked wallpapers: \(bundle.directory.lastPathComponent) has its package on disk")
                 ready(bundle, package: package)
@@ -258,14 +270,24 @@ final class UnpackedBundleRestorer {
                 downloads.append(bundle)
             }
         }
-        guard !downloads.isEmpty else { return done() }
-        guard downloader.isLoggedIn else {
-            OWELog.info(.importer, "Unpacked wallpapers: no Steam login; \(downloads.count) wallpaper(s) keep their loose copy until a later launch")
-            skipped += downloads
-            return done()
-        }
         queue = downloads
         next()
+    }
+
+    /// Call when a Steam login becomes available: if an earlier run skipped bundles for want of
+    /// one, runs again over what `scan` (off the main thread) finds now, since wallpapers may have
+    /// been edited, updated or deleted meanwhile.
+    func steamLoginAvailable(scan: @escaping @Sendable () -> [(bundle: UnpackedBundle, packageOnDisk: URL?)],
+                             onFinished: (() -> Void)? = nil) {
+        guard waitsForLogin, !isRunning else { return }
+        waitsForLogin = false
+        isRunning = true
+        self.onFinished = onFinished
+        DispatchQueue.global(qos: .utility).async {
+            let bundles = scan()
+            OWELog.info(.importer, "Unpacked wallpapers: logged in to Steam; \(bundles.count) to give their package back")
+            DispatchQueue.main.async { [weak self] in self?.run(bundles, onFinished: self?.onFinished) }
+        }
     }
 
     /// Call when the shown wallpapers change: finishes what was waiting on them.
@@ -289,6 +311,14 @@ final class UnpackedBundleRestorer {
 
     private func next() {
         guard !queue.isEmpty else { return done() }
+        // Also partway through: Steam can end the login meanwhile.
+        guard downloader.isLoggedIn else {
+            OWELog.info(.importer, "Unpacked wallpapers: no Steam login; \(queue.count) wallpaper(s) keep their loose copy until the next login")
+            skipped += queue
+            queue = []
+            waitsForLogin = true
+            return done()
+        }
         let bundle = queue.removeFirst()
         guard let workshopId = bundle.workshopId else { return next() }
         OWELog.info(.importer, "Unpacked wallpapers: downloading \(bundle.packageName) of \(workshopId) again")
@@ -300,12 +330,14 @@ final class UnpackedBundleRestorer {
             } else {
                 OWELog.info(.importer, "Unpacked wallpapers: \(workshopId) didn't download; its loose copy stays until a later launch")
                 self.skipped.append(bundle)
+                if !self.downloader.isLoggedIn { self.waitsForLogin = true }
             }
             self.next()
         }
     }
 
     private func done() {
+        isRunning = false
         onFinished?()
         onFinished = nil
     }

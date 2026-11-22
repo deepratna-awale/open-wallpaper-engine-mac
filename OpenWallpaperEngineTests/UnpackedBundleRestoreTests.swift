@@ -81,6 +81,17 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         await fulfillment(of: [finished], timeout: 5)
     }
 
+    /// Tells `restorer` about a login and waits until the run it starts is through.
+    @MainActor
+    private func logIn(_ restorer: UnpackedBundleRestorer) async {
+        let storage = self.storage!
+        let finished = expectation(description: "restore after the login finished")
+        restorer.steamLoginAvailable(scan: {
+            UnpackedBundle.scan(storage: storage, hasEdits: { _ in false }).map { (bundle: $0, packageOnDisk: $0.packageOnDisk()) }
+        }, onFinished: { finished.fulfill() })
+        await fulfillment(of: [finished], timeout: 5)
+    }
+
     @MainActor
     private func makeRestorer(_ downloader: FakePackageDownloader,
                               isShown: @escaping (URL) -> Bool = { _ in false }) -> UnpackedBundleRestorer {
@@ -142,6 +153,79 @@ final class UnpackedBundleRestoreTests: XCTestCase {
         XCTAssertEqual(downloader.requests, [])
         XCTAssertTrue(isUnpacked(folder))
         XCTAssertEqual(restorer.skipped.count, 1)
+        XCTAssertTrue(restorer.waitsForLogin)
+    }
+
+    /// Logging in later in the session downloads what was skipped, over what is on disk by then.
+    @MainActor
+    func testALoginRestoresWhatWaitedForIt() async throws {
+        let folder = try makeBundle("1000000001")
+        let deleted = try makeBundle("1000000002")
+        let downloader = FakePackageDownloader(result: .package(Self.scenePackage), isLoggedIn: false)
+        let restorer = makeRestorer(downloader)
+        await restore(restorer)
+        try fm.removeItem(at: deleted)
+
+        downloader.isLoggedIn = true
+        await logIn(restorer)
+        XCTAssertEqual(downloader.requests, ["1000000001"])
+        XCTAssertTrue(isAsDownloaded(folder))
+        XCTAssertFalse(restorer.waitsForLogin)
+
+        // The next login finds nothing waiting.
+        restorer.steamLoginAvailable(scan: { XCTFail("scanned again"); return [] })
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(downloader.requests, ["1000000001"])
+    }
+
+    /// A failed download isn't the login's: it waits for a later launch, not for a login.
+    @MainActor
+    func testALoginDoesNotRepeatAFailedDownload() async throws {
+        _ = try makeBundle("1000000001")
+        let downloader = FakePackageDownloader(result: .failure)
+        let restorer = makeRestorer(downloader)
+        await restore(restorer)
+        XCTAssertFalse(restorer.waitsForLogin)
+        restorer.steamLoginAvailable(scan: { XCTFail("scanned again"); return [] })
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(downloader.requests, ["1000000001"])
+    }
+
+    /// Steam ending the login partway stops the run; the next login carries on.
+    @MainActor
+    func testALoginLostPartwayContinuesWithTheNextOne() async throws {
+        let first = try makeBundle("1000000001")
+        let second = try makeBundle("1000000002")
+        let downloader = FakePackageDownloader(result: .package(Self.scenePackage))
+        downloader.onRequest = { downloader.isLoggedIn = false }
+        let restorer = makeRestorer(downloader)
+        await restore(restorer)
+        XCTAssertEqual(downloader.requests, ["1000000001"])
+        XCTAssertTrue(isAsDownloaded(first))
+        XCTAssertTrue(isUnpacked(second))
+        XCTAssertTrue(restorer.waitsForLogin)
+
+        downloader.onRequest = nil
+        downloader.isLoggedIn = true
+        await logIn(restorer)
+        XCTAssertEqual(downloader.requests, ["1000000001", "1000000002"])
+        XCTAssertTrue(isAsDownloaded(second))
+    }
+
+    /// A package in hand that waits on its shown wallpaper isn't taken up twice.
+    @MainActor
+    func testALoginLeavesAPackageWaitingOnItsWallpaperAlone() async throws {
+        let shown = try makeBundle("1000000001", archived: true)
+        let folder = try makeBundle("1000000002")
+        let downloader = FakePackageDownloader(result: .package(Self.scenePackage), isLoggedIn: false)
+        let restorer = makeRestorer(downloader, isShown: { $0.standardizedFileURL == shown.standardizedFileURL })
+        await restore(restorer)
+        XCTAssertEqual(restorer.pending.count, 1)
+
+        downloader.isLoggedIn = true
+        await logIn(restorer)
+        XCTAssertEqual(restorer.pending.count, 1)
+        XCTAssertTrue(isAsDownloaded(folder))
     }
 
     @MainActor
@@ -251,7 +335,9 @@ private final class FakePackageDownloader: UnpackedBundleDownloading {
     }
 
     let result: Result
-    let isLoggedIn: Bool
+    var isLoggedIn: Bool
+    /// Called as each request arrives.
+    var onRequest: (() -> Void)?
     private(set) var requests: [String] = []
 
     init(result: Result, isLoggedIn: Bool = true) {
@@ -262,6 +348,7 @@ private final class FakePackageDownloader: UnpackedBundleDownloading {
     func fetchPackage(workshopId: String, packageName: String, to destination: URL,
                       completion: @escaping @MainActor @Sendable (Bool) -> Void) {
         requests.append(workshopId)
+        onRequest?()
         var landed = false
         if case .package(let data) = result {
             do {

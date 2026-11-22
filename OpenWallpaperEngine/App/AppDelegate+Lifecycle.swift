@@ -99,8 +99,7 @@ extension AppDelegate {
 
         // Wallpapers an earlier version unpacked get their package back, in the background.
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let bundles = UnpackedBundle.scan(storage: FileManager.default.wallpapersDirectory)
-                .map { (bundle: $0, packageOnDisk: $0.packageOnDisk()) }
+            let bundles = UnpackedBundle.scanWithPackages(storage: FileManager.default.wallpapersDirectory)
             guard !bundles.isEmpty else { return }
             OWELog.info(.importer, "Unpacked wallpapers: \(bundles.count) to give their package back")
             // Later, so the Steam login restored at launch has had its turn.
@@ -160,6 +159,16 @@ extension AppDelegate {
             })
         unpackedBundleRestorer = restorer
         restorer.run(bundles)
+        // Those that had no Steam login to download with are tried again with the next one.
+        unpackedBundleLoginCancellable = contentViewModel.workshopDownloads.loginSucceeded
+            .receive(on: DispatchQueue.main)
+            .sink { [weak restorer] in
+                MainActor.assumeIsolated {
+                    restorer?.steamLoginAvailable {
+                        UnpackedBundle.scanWithPackages(storage: FileManager.default.wallpapersDirectory)
+                    }
+                }
+            }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {

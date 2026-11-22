@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Steam login survives a restart.** At launch, two requests arriving together each logged the Steam helper on; Steam answers the second logon on a connection with InvalidParam and drops the connection, and the app took that for a login Steam had ended, deleted it and asked you to log in again. The helper is now logged on once, and InvalidParam is asked again on a new connection before it counts as a login Steam no longer accepts. A login Steam has revoked or that has expired still asks you to log in again. ([#609](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/609))
+- **Unpacked wallpapers get their package back after a later login.** Without a Steam login shortly after launch, the download of their packages waited for the next launch. It now starts when you log in. ([#609](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/609))
+
 ## [1.0.0-beta.19] - 2026-11-21
 
 ### Removed

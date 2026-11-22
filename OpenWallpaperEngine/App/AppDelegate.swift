@@ -450,4 +450,5 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var windowOpenedObserver: NSObjectProtocol?
 
     var unpackedBundleRestorer: UnpackedBundleRestorer?
+    var unpackedBundleLoginCancellable: AnyCancellable?
 }
