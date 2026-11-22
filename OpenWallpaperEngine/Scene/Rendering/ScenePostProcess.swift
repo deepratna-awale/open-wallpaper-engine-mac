@@ -32,9 +32,31 @@ final class ScenePostProcess {
         var hue: Float = 0
         /// The `scale` of the layer's Blur effect; 0 is none.
         var blur: Float = 0
+        /// How much darker the wallpaper is drawn; 0 is as it is, 1 black.
+        var dim: Float = 0
+        /// Color pop: how far from `colorPopKey` colours keep theirs, the rest turning grey; 0 is off.
+        var colorPop: Float = 0
+        var colorPopKey = SIMD3<Float>(1, 0, 0)
+        /// The alpha of the layer's Tint effect, its colour `tintColor`; 0 is none.
+        var tint: Float = 0
+        var tintColor = SIMD3<Float>(1, 0.6, 0.2)
+        /// The strength of the layer's Local Contrast, Chromatic Aberration, VHS and Film Grain
+        /// effects; 0 is none.
+        var localContrast: Float = 0
+        var chromaticAberration: Float = 0
+        var vhs: Float = 0
+        var filmGrain: Float = 0
 
-        /// Every adjustment at its default: the layer doesn't exist.
-        var isIdentity: Bool { self == AppExtras() }
+        /// An effect on the layer moves on its own (VHS, Film Grain): the frame is redrawn as time passes.
+        var animates: Bool { vhs > 0 || filmGrain > 0 }
+
+        /// Every adjustment at its default: the layer doesn't exist. A colour alone changes nothing.
+        var isIdentity: Bool {
+            var plain = self
+            plain.colorPopKey = AppExtras().colorPopKey
+            plain.tintColor = AppExtras().tintColor
+            return plain == AppExtras()
+        }
     }
 
     struct Frame {
@@ -64,6 +86,8 @@ final class ScenePostProcess {
         var display = SceneDisplayOutput.standard
         /// The scene was drawn straight into the output (`passesThrough`, S2): nothing composites.
         var sceneIsOutput = false
+        /// The textures effects bind from assets (`util/noise`…), as the scene's effects get them.
+        var assetTexture: (String, SceneMetalTextureSource) -> MTLTexture? = { _, _ in nil }
 
         /// The size the bloom's texel steps and HDR levels are counted in.
         var bloomReferenceSize: SIMD2<Float> {
@@ -135,6 +159,8 @@ final class ScenePostProcess {
     private var reportedEncodeFailure = false
     /// The content's user adjustment layer, which plans what an adjustment needs on its first use.
     private var userAdjustments: SceneUserAdjustmentLayer?
+    /// An adjustment the user turned on is still being planned (`SceneUserAdjustmentLayer.isPlanning`).
+    var isPlanningUserAdjustments: Bool { userAdjustments?.isPlanning == true }
     /// The user adjustment layer's targets are held by the effect graph.
     private var holdsUserAdjustments = false
     /// The layer's blur and bloom were skipped on an EDR frame (logged once).
@@ -207,17 +233,18 @@ final class ScenePostProcess {
 
     /// How this frame's post-process lets text and the media artwork be drawn at the output's pixels
     /// (`SceneNativeDetailLayers`): nil when a step works on more than the pixel it writes, or
-    /// converts the frame (HDR, EDR, the user adjustment layer's blur and bloom); `.direct` when it
+    /// converts the frame (HDR, EDR, the user adjustment layer's effects); `.direct` when it
     /// only places the scene, so a layer drawn over the output after the composite looks as it
     /// would drawn into the scene; else
     /// `.patch`, every step per pixel (the bloom's combine, colour correction, the camera fade, the
-    /// app's saturation and hue), which `finishDetailPatch` runs on the layers' patch.
+    /// app's saturation, hue, Color Pop and Dim), which `finishDetailPatch` runs on the layers' patch.
     func detailMode(bloom: Bloom, extras: AppExtras, settings: SceneRenderSettings,
                     colorCorrection: SceneColorCorrectionSettings, display: SceneDisplayOutput,
                     fade: Float) -> SceneNativeDetailLayers.Mode? {
         guard !drawsHDR, !display.isExtended, !SceneUserAdjustmentLayer.runs(extras) else { return nil }
         let perPixel = Self.runsBloom(bloom, settings: settings) || !colorCorrection.isIdentity
             || (fade > 0 && cameraFade != nil) || extras.saturation != 1 || abs(extras.hue) > 0.0001
+            || extras.dim > 0 || extras.colorPop > 0
         return perPixel ? .patch : .direct
     }
 
@@ -239,6 +266,7 @@ final class ScenePostProcess {
             && uniform.effects.x == 1 && uniform.effects.y == 1 && uniform.effects.z == 1
             && uniform.colorEffects.x == 0 && uniform.colorEffects.y == 1 && abs(uniform.colorEffects.z) <= 0.0001
             && uniform.color.x == 1 && uniform.color.y == 1 && uniform.color.z == 1
+            && uniform.colorPop.w <= 0
     }
 
     /// Whether WE runs its bloom this frame (`0x140180a41`): the post-processing setting allows it
@@ -356,7 +384,7 @@ final class ScenePostProcess {
         holdsUserAdjustments = true
         return userAdjustments.encode(on: finished, extras: frame.extras, bloomThreshold: frame.bloom.threshold,
                                       effects: effects, builtins: frame.builtins, values: frame.values,
-                                      referenceSize: frame.bloomReferenceSize, commandBuffer: frame.commandBuffer)
+                                      assetTexture: frame.assetTexture, referenceSize: frame.bloomReferenceSize, commandBuffer: frame.commandBuffer)
     }
 
     /// Step 8: `finished` on the drawable at the user's placement, with the app's adjustments.
@@ -443,12 +471,16 @@ final class ScenePostProcess {
         }
     }
 
-    /// The composite's uniform: `placement` with the user adjustment layer's hue and saturation,
-    /// the last of its adjustments, per pixel.
+    /// The composite's uniform: `placement` with the user adjustment layer's last adjustments,
+    /// per pixel: saturation, hue, color pop and dim.
     static func compositeUniform(_ placement: LayerUniform, extras: AppExtras) -> LayerUniform {
         var uniform = placement
         uniform.effects = SIMD4<Float>(1, 1, extras.saturation, 0)
         uniform.colorEffects.z = extras.hue
+        let dim = 1 - min(max(extras.dim, 0), 1)
+        uniform.color = SIMD4(uniform.color.x * dim, uniform.color.y * dim, uniform.color.z * dim, uniform.color.w)
+        // The slider's 0…1 spans the chroma distances between colours (`colorPop` in the shader).
+        uniform.colorPop = extras.colorPop > 0 ? SIMD4(extras.colorPopKey, max(extras.colorPop, 0) * 0.5) : .zero
         return uniform
     }
 }
