@@ -192,10 +192,14 @@ enum SceneEffectParameters {
         }
     }
 
-    /// WE labels are localisation keys (`ui_editor_properties_speed`); show them as words when
-    /// WE's own translation table isn't available.
+    /// WE labels are localisation keys (`ui_editor_properties_speed`, an effect's name
+    /// `ui_editor_effect_water_ripple_title`); show them as words when WE's own translation table
+    /// isn't available.
     static func title(_ label: String) -> String {
         var words = label
+        if words.hasPrefix("ui_editor_effect_"), words.hasSuffix("_title"), words.count > "ui_editor_effect__title".count {
+            words = String(words.dropFirst("ui_editor_effect_".count).dropLast("_title".count))
+        }
         for prefix in ["ui_editor_properties_", "ui_editor_"] where words.hasPrefix(prefix) {
             words = String(words.dropFirst(prefix.count))
         }
