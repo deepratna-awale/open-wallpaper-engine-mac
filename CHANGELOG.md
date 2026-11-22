@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Details Only, as in Wallpaper Engine.** The button beside Details in the Installed toolbar (or View › Details Only, ⇧⌘D) narrows the window to the wallpaper's Details panel, so you can change its settings while watching it on the same desktop. Wallpaper Explorer (or ⇧⌘D again) brings back the whole window. ([#633](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/633))
 - **More User Adjustments.** Color Pop keeps one colour and turns the rest grey, with an eyedropper to pick the colour from anywhere on screen (on every colour setting). Dim darkens the wallpaper, Pause Animation holds its frame, and Wallpaper Engine's own Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain effects can be laid over any wallpaper. Each can follow the music. ([#631](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/631))
 
 ### Changed

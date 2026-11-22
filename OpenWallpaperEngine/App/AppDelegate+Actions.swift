@@ -47,6 +47,7 @@ extension AppDelegate {
     }
     
     @MainActor @objc func toggleFilter() {
+        mainWindowController?.setDetailsOnly(false)
         self.contentViewModel.navigation.toggleFilter()
     }
 

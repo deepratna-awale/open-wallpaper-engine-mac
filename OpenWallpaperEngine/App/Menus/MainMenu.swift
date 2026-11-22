@@ -78,6 +78,7 @@ extension AppDelegate {
             item(.playlists, #selector(showPlaylistsTab)),
             .separator(),
             item(.showFilters, #selector(toggleFilter)),
+            item(.detailsOnly, #selector(toggleDetailsOnly)),
             .separator(),
             item(.fullScreen, #selector(NSWindow.toggleFullScreen(_:))),
         ])
@@ -224,6 +225,9 @@ extension AppDelegate: NSMenuItemValidation {
             return wallpaperViewModel.canStepToPreviousWallpaper
         case #selector(showWallpaperEditorForDisplayedWallpaper):
             return WallpaperEditorController.canEdit(wallpaperViewModel.displayedWallpaper)
+        case #selector(toggleDetailsOnly):
+            menuItem.state = contentViewModel.navigation.isDetailsOnly ? .on : .off
+            return contentViewModel.allowsLibraryActions
         default:
             return true
         }

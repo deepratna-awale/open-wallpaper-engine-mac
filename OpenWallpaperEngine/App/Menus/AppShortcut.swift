@@ -11,7 +11,7 @@ struct AppShortcut: Identifiable, Equatable {
         case settings, hide, hideOthers, quit, checkForUpdates
         case importFolder, closeWindow
         case undo, redo, cut, copy, paste, selectAll, find
-        case installed, workshop, downloads, playlists, showFilters, fullScreen
+        case installed, workshop, downloads, playlists, showFilters, detailsOnly, fullScreen
         case pauseResume, muteUnmute, nextWallpaper, previousWallpaper
         case minimize, wallpaperExplorer, sceneInspector, wallpaperEditor
         case help
@@ -93,6 +93,7 @@ struct AppShortcut: Identifiable, Equatable {
         AppShortcut(name: .downloads, title: "Downloads", menu: .view, key: "3", modifiers: .command),
         AppShortcut(name: .playlists, title: "Playlists", menu: .view, key: "4", modifiers: .command),
         AppShortcut(name: .showFilters, title: "Show Filter Results", menu: .view, key: "s", modifiers: [.command, .control]),
+        AppShortcut(name: .detailsOnly, title: "Details Only", menu: .view, key: "d", modifiers: [.command, .shift]),
         AppShortcut(name: .fullScreen, title: "Enter Full Screen", menu: .view, key: "f", modifiers: [.command, .control]),
 
         AppShortcut(name: .pauseResume, title: "Pause or Resume Wallpapers", menu: .playback, key: "p", modifiers: [.command, .option]),

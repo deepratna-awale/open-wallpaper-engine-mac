@@ -70,35 +70,21 @@ struct ContentView: View {
         )
     }
 
+    private var isDetailsOnly: Bool { viewModel.navigation.isDetailsOnly }
+
     var body: some View {
-        NavigationSplitView(columnVisibility: sidebarVisibility) {
-            sidebar
-        } detail: {
-            detail
-                // Scenes can't draw without the assets; the library says so while they're missing.
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    if tab == 0 { AssetsMissingBanner(assets: AppDelegate.shared.assets) }
-                }
-                .inspector(isPresented: isDetailsPresented) {
-                    Group {
-                        if viewModel.navigation.isStaging {
-                            // Picking wallpapers for an export, Details (and its Set as Wallpaper)
-                            // is off. It stays in place: opening or closing the inspector then
-                            // changed the split view's sizes in a loop.
-                            WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                                .disabled(!viewModel.allowsLibraryActions)
-                                .opacity(viewModel.allowsLibraryActions ? 1 : 0.5)
-                        }
-                    }
-                    .inspectorColumnWidth(min: 280, ideal: 320, max: 420)
-                }
-                .toolbar { mainToolbar }
+        Group {
+            if isDetailsOnly { detailsOnly } else { library }
         }
         // Frosted: the live wallpaper shows through the window, blurred, under the panes.
         .frostedWindowBackground()
-        // Another tab shown by a menu or an MCP client leaves the export selection, as Cancel does.
+        // Another tab shown by a menu or an MCP client leaves the export selection, as Cancel does,
+        // and Details Only, which is the Installed tab's.
         .onChange(of: tab) { _, tab in
-            if tab != 0 { viewModel.androidBatchPicker?.cancel() }
+            if tab != 0 {
+                viewModel.androidBatchPicker?.cancel()
+                AppDelegate.shared.mainWindowController?.setDetailsOnly(false)
+            }
         }
         .confirmationDialog("Unsubscribe Confirmation",
                             isPresented: Bindable(viewModel.presentation).isUnsubscribeConfirming) {
@@ -202,7 +188,56 @@ struct ContentView: View {
         .overlay(alignment: .bottomTrailing) {
             if ThreadGuards.isDevBuild { ThreadGuardIndicator() }
         }
-        .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
+        // Details Only is the panel alone, as narrow as the inspector column it was.
+        .frame(minWidth: isDetailsOnly ? 300 : 1000, minHeight: isDetailsOnly ? 420 : 640, idealHeight: 800)
+    }
+
+    /// The library: the tab's sidebar, its content and, on Installed, the Details inspector.
+    private var library: some View {
+        NavigationSplitView(columnVisibility: sidebarVisibility) {
+            sidebar
+        } detail: {
+            detail
+                // Scenes can't draw without the assets; the library says so while they're missing.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if tab == 0 { AssetsMissingBanner(assets: AppDelegate.shared.assets) }
+                }
+                .inspector(isPresented: isDetailsPresented) {
+                    Group {
+                        if viewModel.navigation.isStaging {
+                            // Picking wallpapers for an export, Details (and its Set as Wallpaper)
+                            // is off. It stays in place: opening or closing the inspector then
+                            // changed the split view's sizes in a loop.
+                            WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                                .disabled(!viewModel.allowsLibraryActions)
+                                .opacity(viewModel.allowsLibraryActions ? 1 : 0.5)
+                        }
+                    }
+                    .inspectorColumnWidth(min: 280, ideal: 320, max: 420)
+                }
+                .toolbar { mainToolbar }
+        }
+    }
+
+    /// Details Only (`MainWindowController.setDetailsOnly`): the Installed tab's Details panel,
+    /// with a button back to the library.
+    private var detailsOnly: some View {
+        ZStack {
+            if viewModel.navigation.isStaging {
+                WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    AppDelegate.shared.mainWindowController?.setDetailsOnly(false)
+                } label: {
+                    Label("Wallpaper Explorer", systemImage: "arrow.up.backward.and.arrow.down.forward")
+                }
+                .help("Wallpaper Explorer", shortcut: .detailsOnly)
+            }
+        }
     }
 
     private var chromiumAdvicePresented: Binding<Bool> {

@@ -48,6 +48,14 @@ extension AppDelegate {
 
     private func showLibraryTab(_ tab: Int) {
         contentViewModel.navigation.topTabBarSelection = tab
+        mainWindowController?.setDetailsOnly(false)
+        openMainWindow()
+    }
+
+    /// View › Details Only: the main window narrowed to the Installed tab's Details panel, or back.
+    @objc func toggleDetailsOnly() {
+        guard let controller = mainWindowController else { return }
+        controller.setDetailsOnly(!contentViewModel.navigation.isDetailsOnly)
         openMainWindow()
     }
 
@@ -59,6 +67,7 @@ extension AppDelegate {
             return
         }
         if contentViewModel.navigation.topTabBarSelection > 1 { contentViewModel.navigation.topTabBarSelection = 0 }
+        mainWindowController?.setDetailsOnly(false)
         openMainWindow()
         DispatchQueue.main.async { [weak self] in
             guard let window = self?.mainWindowController.window else { return }

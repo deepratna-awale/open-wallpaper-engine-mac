@@ -45,10 +45,70 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
         // The tabs sit in the toolbar's centre; the title stays for the Window menu and Mission Control.
         window.titleVisibility = .hidden
         // The frame autosaves into UserDefaults.standard, which an isolated copy must not write.
-        if !AppStorageLocation.current.isIsolated { window.setFrameAutosaveName("MainWindow") }
+        if !AppStorageLocation.current.isIsolated { window.setFrameAutosaveName(frameAutosaveName) }
         return window
     }
     
+    /// The window's frame before Details Only narrowed it; restored when it ends.
+    private var libraryFrame: NSRect?
+    /// Details Only was asked for in full screen: it starts once the window has left it.
+    private var entersDetailsOnlyAfterFullScreen = false
+
+    private static let detailsOnlyWidth: CGFloat = 340
+    private static let frameAutosaveName = "MainWindow"
+
+    /// Narrows the window to the Installed tab's Details panel, kept where the panel was on screen
+    /// with the window's height, or gives the window back its library and its earlier frame.
+    func setDetailsOnly(_ detailsOnly: Bool, animate: Bool = true) {
+        let navigation = AppDelegate.shared.contentViewModel.navigation
+        guard let window, detailsOnly != navigation.isDetailsOnly else { return }
+        if detailsOnly, window.styleMask.contains(.fullScreen) {
+            entersDetailsOnlyAfterFullScreen = true
+            window.toggleFullScreen(nil)
+            return
+        }
+        if detailsOnly {
+            libraryFrame = window.frame
+            // The narrow frame isn't the library's: the saved one stays the full window's.
+            window.setFrameAutosaveName("")
+            navigation.topTabBarSelection = 0
+            navigation.isDetailsReveal = true
+        }
+        navigation.isDetailsOnly = detailsOnly
+        // The content's minimum size changes with the mode; the frame follows once it has.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let window = self.window, navigation.isDetailsOnly == detailsOnly else { return }
+            window.contentView?.layoutSubtreeIfNeeded()
+            let current = window.frame
+            var frame: NSRect
+            if detailsOnly {
+                frame = NSRect(x: current.maxX - Self.detailsOnlyWidth, y: current.minY,
+                               width: Self.detailsOnlyWidth, height: current.height)
+            } else {
+                let size = self.libraryFrame?.size ?? current.size
+                frame = NSRect(x: current.maxX - size.width, y: current.maxY - size.height,
+                               width: size.width, height: size.height)
+                if let screen = window.screen {
+                    // constrainFrameRect moves a frame only up or down.
+                    let visible = screen.visibleFrame
+                    frame.origin.x = max(visible.minX, min(frame.origin.x, visible.maxX - frame.width))
+                    frame = window.constrainFrameRect(frame, to: screen)
+                }
+                self.libraryFrame = nil
+            }
+            window.setFrame(frame, display: true, animate: animate && window.isVisible)
+            if !detailsOnly, !AppStorageLocation.current.isIsolated {
+                window.setFrameAutosaveName(Self.frameAutosaveName)
+            }
+        }
+    }
+
+    func windowDidExitFullScreen(_ notification: Notification) {
+        guard entersDetailsOnlyAfterFullScreen else { return }
+        entersDetailsOnlyAfterFullScreen = false
+        setDetailsOnly(true)
+    }
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -67,6 +127,7 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
     /// What Select All does in the tab shown; nil when it shows nothing to select.
     private static var selectAllAction: (() -> Void)? {
         let content = AppDelegate.shared.contentViewModel
+        guard !content.navigation.isDetailsOnly else { return nil }
         switch content.navigation.topTabBarSelection {
         case 0:
             let library = content.library
@@ -88,6 +149,8 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        // The window opens again with its library.
+        setDetailsOnly(false, animate: false)
         AppDelegate.shared.contentViewModel.navigation.isStaging = false
     }
     

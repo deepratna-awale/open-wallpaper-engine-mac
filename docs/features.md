@@ -151,5 +151,6 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Interface & languages
 - **Liquid Glass** on macOS 26 — a native split view, toolbar and inspector with glass controls. Earlier macOS versions keep the familiar look.
+- **Details Only** (the button beside Details in the Installed toolbar, or View › Details Only, ⇧⌘D), as in Wallpaper Engine — the window narrows to the selected wallpaper's Details panel, where it was on screen, so its properties can be changed while the wallpaper plays in view on the same desktop. **Wallpaper Explorer** in its toolbar (or ⇧⌘D again) brings back the whole window at its earlier size.
 - **15 languages besides English**: German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, chosen from the Language picker in Settings.
 - A new app icon, and a menu bar icon that follows the menu bar's appearance.
