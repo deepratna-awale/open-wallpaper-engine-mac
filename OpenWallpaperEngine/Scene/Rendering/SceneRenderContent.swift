@@ -313,6 +313,9 @@ struct SceneMetalContent {
     /// WE's camera fade, made for a scene with camera paths; nil otherwise or without a shader
     /// toolchain.
     var cameraFade: SceneCameraFade?
+    /// The user adjustment layer, which plans nothing until an adjustment leaves its default; nil
+    /// without a shader toolchain.
+    var userAdjustments: SceneUserAdjustmentLayer?
     /// A HDR video drawn as linear light (`VideoTextureStream` in HDR mode): the HDR frame is
     /// finished by `combine_video_hdr` instead of `combine_srgb` (WE's render flag 0x10000).
     var videoHDR = false

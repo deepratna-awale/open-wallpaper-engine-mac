@@ -34,6 +34,7 @@ extension SceneMetalRenderer {
         guard let unwrapped = content else {
             layerAnalysis = nil
             audioCaptureLease = nil
+            adjustmentAudioLease = nil
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -145,13 +146,14 @@ extension SceneMetalRenderer {
                 if needsAudio != (self.audioCaptureLease != nil) {
                     self.audioCaptureLease = needsAudio ? WallpaperServices.shared.acquireAudioCapture() : nil
                 }
-                self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
+                self.contentChangesOnItsOwn = FramePacing.changesOnItsOwn(
                     analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
                 self.framePacing.wake(.interactive, at: self.wallTime())
                 self.transforms = content.transforms
                 self.objectMotions = content.motions
                 self.objectIDs = content.objectIDs
                 self.wallpaperKey = content.wallpaperKey
+                self.updateAdjustmentMusicSync()
                 self.camera = content.camera
                 self.cameraGeneral = content.general
                 self.clearColor = content.clearColor

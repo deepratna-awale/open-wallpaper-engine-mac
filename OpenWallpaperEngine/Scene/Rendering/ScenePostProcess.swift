@@ -10,8 +10,9 @@ import simd
 /// post-processing setting; in a content drawn in HDR it is the HDR chain (`SceneHDRChain`), or
 /// `combine_srgb` while bloom doesn't run. Step 6 is WE's colour correction (`SceneColorCorrection`)
 /// when the user's image filter or colour options aren't identity. Step 7 is the camera fade
-/// (`SceneCameraFade`) while a camera path starts or ends. The composite then puts the frame on the
-/// drawable at the user's placement with the app's own adjustments (`AppExtras`), which aren't WE's.
+/// (`SceneCameraFade`) while a camera path starts or ends. The app's own adjustments (`AppExtras`),
+/// which aren't WE's, then go on as one layer over the finished frame (`SceneUserAdjustmentLayer`),
+/// and the composite puts the frame on the drawable at the user's placement.
 final class ScenePostProcess {
     /// The scene's bloom this frame, scripts' and timelines' values included.
     struct Bloom: Equatable {
@@ -23,13 +24,17 @@ final class ScenePostProcess {
     }
 
     /// The app's own adjustments, not WE's (the `_owe_bloom`, `_owe_saturation`, `_owe_hue` and
-    /// `_owe_blur` user properties); these defaults change nothing.
+    /// `_owe_blur` user properties), drawn by `SceneUserAdjustmentLayer`; these defaults change nothing.
     struct AppExtras: Equatable {
-        /// Multiplies WE's bloom strength; 1 is WE's bloom. A scene without bloom has none to scale.
-        var bloom: Float = 1
+        /// The strength of the layer's bloom, over any bloom of the scene's own; 0 is none.
+        var bloom: Float = 0
         var saturation: Float = 1
         var hue: Float = 0
-        var blur: Float = 1
+        /// The `scale` of the layer's Blur effect; 0 is none.
+        var blur: Float = 0
+
+        /// Every adjustment at its default: the layer doesn't exist.
+        var isIdentity: Bool { self == AppExtras() }
     }
 
     struct Frame {
@@ -128,6 +133,12 @@ final class ScenePostProcess {
     private var encodedView: (output: ObjectIdentifier, view: MTLTexture)?
     /// The composite pass failed once already (it is logged once, not every frame).
     private var reportedEncodeFailure = false
+    /// The content's user adjustment layer, which plans what an adjustment needs on its first use.
+    private var userAdjustments: SceneUserAdjustmentLayer?
+    /// The user adjustment layer's targets are held by the effect graph.
+    private var holdsUserAdjustments = false
+    /// The layer's blur and bloom were skipped on an EDR frame (logged once).
+    private var reportedExtendedAdjustments = false
 
     /// `layerDescriptor` is the scene's layer pipeline, whose functions and output format the
     /// composite shares. Nil when a pipeline can't be made.
@@ -149,6 +160,7 @@ final class ScenePostProcess {
         hdrChain = content.hdrChain
         colorCorrection = content.colorCorrection
         cameraFade = content.cameraFade
+        userAdjustments = content.userAdjustments
         drawsHDR = content.engineCombos.hdr
         videoHDR = content.videoHDR
         // The last frame's textures (a full-size float frame and combine at worst) go with it.
@@ -177,7 +189,7 @@ final class ScenePostProcess {
                            values: frame.values, commandBuffer: frame.commandBuffer)
         // The scene already is the output (S2); `passesThrough` held, so nothing above changed it.
         if frame.sceneIsOutput { return }
-        composite(finished, frame)
+        composite(adjusted(finished, frame) ?? finished, frame)
     }
 
     /// Whether this frame's post-process would leave the scene as it is and the composite would
@@ -189,20 +201,21 @@ final class ScenePostProcess {
                        colorCorrection: SceneColorCorrectionSettings, display: SceneDisplayOutput,
                        sceneSize: SIMD2<Int>, outputSize: SIMD2<Int>, placement: LayerUniform) -> Bool {
         guard !drawsHDR, !display.isExtended, !Self.runsBloom(bloom, settings: settings), colorCorrection.isIdentity,
-              sceneSize == outputSize else { return false }
+              !SceneUserAdjustmentLayer.runs(extras), sceneSize == outputSize else { return false }
         return Self.compositeCopies(Self.compositeUniform(placement, extras: extras), size: outputSize)
     }
 
     /// How this frame's post-process lets text and the media artwork be drawn at the output's pixels
     /// (`SceneNativeDetailLayers`): nil when a step works on more than the pixel it writes, or
-    /// converts the frame (HDR, EDR, the app's blur); `.direct` when it only places the scene, so a
-    /// layer drawn over the output after the composite looks as it would drawn into the scene; else
+    /// converts the frame (HDR, EDR, the user adjustment layer's blur and bloom); `.direct` when it
+    /// only places the scene, so a layer drawn over the output after the composite looks as it
+    /// would drawn into the scene; else
     /// `.patch`, every step per pixel (the bloom's combine, colour correction, the camera fade, the
     /// app's saturation and hue), which `finishDetailPatch` runs on the layers' patch.
     func detailMode(bloom: Bloom, extras: AppExtras, settings: SceneRenderSettings,
                     colorCorrection: SceneColorCorrectionSettings, display: SceneDisplayOutput,
                     fade: Float) -> SceneNativeDetailLayers.Mode? {
-        guard !drawsHDR, !display.isExtended, extras.blur <= 1 else { return nil }
+        guard !drawsHDR, !display.isExtended, !SceneUserAdjustmentLayer.runs(extras) else { return nil }
         let perPixel = Self.runsBloom(bloom, settings: settings) || !colorCorrection.isIdentity
             || (fade > 0 && cameraFade != nil) || extras.saturation != 1 || abs(extras.hue) > 0.0001
         return perPixel ? .patch : .direct
@@ -234,11 +247,6 @@ final class ScenePostProcess {
         settings.postProcessing.allowsBloom && bloom.enabled
     }
 
-    /// `g_BloomStrength`: the scene's, scaled by the app's bloom slider (1 = WE's).
-    static func bloomStrength(_ bloom: Bloom, extras: AppExtras) -> Float {
-        bloom.strength * max(extras.bloom, 0)
-    }
-
     /// Makes `chain` (a state id, nil for none) the one whose targets the effect graph holds.
     private func hold(_ chain: String?, in effects: EffectGraphRenderer) {
         guard heldChain != chain else { return }
@@ -258,7 +266,7 @@ final class ScenePostProcess {
         }
         hold(SceneBloomChain.stateID, in: effects)
         bloomFrames &+= 1
-        let strength = Self.bloomStrength(frame.bloom, extras: frame.extras)
+        let strength = frame.bloom.strength
         guard let bloomed = bloomChain.encode(on: frame.scene, strength: strength, threshold: frame.bloom.threshold,
                                               tint: frame.bloom.tint, effects: effects, builtins: frame.builtins,
                                               values: frame.values, frameIndex: bloomFrames,
@@ -292,8 +300,7 @@ final class ScenePostProcess {
         hold(SceneHDRChain.stateID, in: effects)
         bloomFrames &+= 1
         let levels = Self.hdrLevels(frame)
-        let constants = SceneHDRChain.Constants(frame.bloom.hdr, levels: levels ?? 1, tint: frame.bloom.tint,
-                                                strengthScale: max(frame.extras.bloom, 0))
+        let constants = SceneHDRChain.Constants(frame.bloom.hdr, levels: levels ?? 1, tint: frame.bloom.tint)
         guard let combined = hdrChain.encode(on: frame.scene, levels: levels, constants: constants, effects: effects,
                                              builtins: frame.builtins, values: frame.values, frameIndex: bloomFrames,
                                              referenceSize: frame.bloomReferenceSize, displayHDR: frame.display.renderVar,
@@ -328,6 +335,28 @@ final class ScenePostProcess {
                                                      commandBuffer: frame.commandBuffer) else { return nil }
         lastColorCorrection = (combined, corrected)
         return corrected
+    }
+
+    /// The user adjustment layer's blur and bloom on `finished`; nil when they don't run (every
+    /// adjustment but hue and saturation at its default: the layer's targets are released) or
+    /// aren't ready. Hue and saturation are the composite's.
+    private func adjusted(_ finished: MTLTexture, _ frame: Frame) -> MTLTexture? {
+        guard let effects = frame.effects else { return nil }
+        guard SceneUserAdjustmentLayer.runs(frame.extras), let userAdjustments, !frame.display.isExtended else {
+            if SceneUserAdjustmentLayer.runs(frame.extras), frame.display.isExtended, !reportedExtendedAdjustments {
+                reportedExtendedAdjustments = true
+                OWELog.info(.scene, "The Blur and Bloom adjustments don't run on an EDR frame; hue and saturation still apply")
+            }
+            if holdsUserAdjustments {
+                SceneUserAdjustmentLayer.release(userAdjustments, from: effects)
+                holdsUserAdjustments = false
+            }
+            return nil
+        }
+        holdsUserAdjustments = true
+        return userAdjustments.encode(on: finished, extras: frame.extras, bloomThreshold: frame.bloom.threshold,
+                                      effects: effects, builtins: frame.builtins, values: frame.values,
+                                      referenceSize: frame.bloomReferenceSize, commandBuffer: frame.commandBuffer)
     }
 
     /// Step 8: `finished` on the drawable at the user's placement, with the app's adjustments.
@@ -414,16 +443,12 @@ final class ScenePostProcess {
         }
     }
 
-    /// The composite's uniform: `placement` with the app's adjustments.
+    /// The composite's uniform: `placement` with the user adjustment layer's hue and saturation,
+    /// the last of its adjustments, per pixel.
     static func compositeUniform(_ placement: LayerUniform, extras: AppExtras) -> LayerUniform {
         var uniform = placement
-        // The app's saturation and hue are linear in colour, so on the composite they equal applying
-        // them to every layer, and layers keep drawing through their WE materials.
         uniform.effects = SIMD4<Float>(1, 1, extras.saturation, 0)
         uniform.colorEffects.z = extras.hue
-        // "_owe_blur" defaults to 1 (no extra blur); raising it above 1 blurs the whole composited scene,
-        // independent of any per-layer material blur, so the slider is guaranteed to have an effect.
-        uniform.blur = max(extras.blur - 1, 0) * 4
         return uniform
     }
 }
