@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.21] - 2026-11-22
+
 ### Changed
 
 - **Downloads lists the unpacked wallpapers being downloaded again.** The one running and the ones waiting appear in Downloads, after your own downloads, which now always go first. ([#616](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/616))
