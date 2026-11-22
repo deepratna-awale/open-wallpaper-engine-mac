@@ -88,7 +88,12 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
                 let size = self.libraryFrame?.size ?? current.size
                 frame = NSRect(x: current.maxX - size.width, y: current.maxY - size.height,
                                width: size.width, height: size.height)
-                if let screen = window.screen { frame = window.constrainFrameRect(frame, to: screen) }
+                if let screen = window.screen {
+                    // constrainFrameRect moves a frame only up or down.
+                    let visible = screen.visibleFrame
+                    frame.origin.x = max(visible.minX, min(frame.origin.x, visible.maxX - frame.width))
+                    frame = window.constrainFrameRect(frame, to: screen)
+                }
                 self.libraryFrame = nil
             }
             window.setFrame(frame, display: true, animate: animate && window.isVisible)
