@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Workshop downloads no longer fail now and then with a crash of the Steam helper.** The helper is no longer compressed inside its file, which .NET could crash on. The app takes about 96 MB more disk space; its download stays the same size, and the helper starts faster and with less memory. ([#620](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/620))
+
 ## [1.0.0-beta.21] - 2026-11-22
 
 ### Changed
