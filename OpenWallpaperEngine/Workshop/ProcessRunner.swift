@@ -44,6 +44,9 @@ final class ProcessCancellation: @unchecked Sendable {
 
 /// Runs a program to the end, collecting its output.
 enum ProcessRunner {
+    /// How long the output may stay open after the program exited.
+    private static let trailingOutputTimeout: TimeInterval = 2
+
     /// Runs `executable` with `standardInput` written to its stdin, which is then closed, and blocks
     /// until it exits or `timeout` passes (nil waits for as long as it takes). `onOutput` receives the
     /// output as it arrives, on a background queue; `cancellation` terminates the program.
@@ -62,14 +65,24 @@ enum ProcessRunner {
 
         // Read the pipe while the program runs, so a full pipe buffer can't block it.
         let outputData = OSAllocatedUnfairLock(initialState: Data())
+        let outputEnded = DispatchSemaphore(value: 0)
         let handle = outputPipe.fileHandleForReading
         handle.readabilityHandler = { fileHandle in
             let data = fileHandle.availableData
-            guard !data.isEmpty else { return }
+            guard !data.isEmpty else {
+                // At the end of the output the handler is called again and again until it's removed.
+                fileHandle.readabilityHandler = nil
+                outputEnded.signal()
+                return
+            }
             outputData.withLock { $0.append(data) }
             onOutput(String(decoding: data, as: UTF8.self))
         }
 
+        // Not `waitUntilExit`: off the thread that launched the program, its run loop can miss the
+        // exit and wait for ever.
+        let exited = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in exited.signal() }
         do {
             try process.run()
         } catch {
@@ -82,26 +95,16 @@ enum ProcessRunner {
         defer { cancellation.setCancelAction(nil) }
         write(standardInput, to: inputPipe)
 
-        let exited = DispatchGroup()
-        exited.enter()
-        DispatchQueue.global().async {
-            process.waitUntilExit()
-            exited.leave()
-        }
         if let timeout, exited.wait(timeout: .now() + timeout) == .timedOut {
             process.terminate()
             handle.readabilityHandler = nil
             return ProcessRun(output: "\(executable.lastPathComponent) timed out after \(Int(timeout))s", exitCode: -1)
         }
-        exited.wait()
+        if timeout == nil { exited.wait() }
 
-        handle.readabilityHandler = nil
-        let remaining = handle.readDataToEndOfFile()
-        if !remaining.isEmpty { onOutput(String(decoding: remaining, as: UTF8.self)) }
-        let output: Data = outputData.withLock {
-            $0.append(remaining)
-            return $0
-        }
+        // The rest of the output. Bounded: something the program started may still hold the pipe.
+        if outputEnded.wait(timeout: .now() + trailingOutputTimeout) == .timedOut { handle.readabilityHandler = nil }
+        let output: Data = outputData.withLock { $0 }
         return ProcessRun(output: String(decoding: output, as: UTF8.self), exitCode: process.terminationStatus)
     }
 
