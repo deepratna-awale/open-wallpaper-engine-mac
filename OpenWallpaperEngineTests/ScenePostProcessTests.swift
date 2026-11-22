@@ -13,13 +13,14 @@ final class ScenePostProcessTests: XCTestCase {
                                          effects: SIMD4(1, 1, 1, 0), blur: 0, colorEffects: SIMD4(0, 1, 0, 0.7),
                                          transform: SIMD4(0, 0, 0, 1), transformScaleY: 1)
 
-    /// The composite adds only the app's saturation, hue and blur; bloom is WE's chain, not the composite's.
+    /// The composite adds only the user adjustment layer's saturation and hue; its blur and bloom
+    /// are WE's Blur effect and bloom chain, not the composite's.
     func testCompositeUniformCarriesTheAppExtrasOnly() {
         let extras = ScenePostProcess.AppExtras(bloom: 1.5, saturation: 0.8, hue: 0.25, blur: 1.5)
         let uniform = ScenePostProcess.compositeUniform(placement, extras: extras)
         XCTAssertEqual(uniform.effects, SIMD4(1, 1, 0.8, 0), "no native bloom")
         XCTAssertEqual(uniform.colorEffects.z, 0.25)
-        XCTAssertEqual(uniform.blur, 2)
+        XCTAssertEqual(uniform.blur, 0, "no native blur")
         XCTAssertEqual(uniform.position, placement.position)
         let identity = ScenePostProcess.compositeUniform(placement, extras: .init())
         XCTAssertEqual(identity.effects, SIMD4(1, 1, 1, 0))
@@ -65,13 +66,17 @@ final class ScenePostProcessTests: XCTestCase {
         XCTAssertNil(ScenePostProcess.hdrLevels(frame), "a script turned bloom off: combine_srgb")
     }
 
-    /// The app's bloom slider scales WE's strength; 1 is WE's own.
-    func testTheAppsBloomSliderScalesWEsStrength() {
-        let bloom = ScenePostProcess.Bloom(enabled: true, strength: 2, threshold: 0.65, tint: SIMD3(repeating: 1))
-        XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init()), 2)
-        XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: 1.5)), 3)
-        XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: 0)), 0)
-        XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: -1)), 0)
+    /// The user adjustment layer exists only once an adjustment leaves its default; only its blur
+    /// and bloom draw on it, hue and saturation are the composite's.
+    func testTheUserAdjustmentLayerRunsOnlyForBlurOrBloom() {
+        XCTAssertTrue(ScenePostProcess.AppExtras().isIdentity)
+        XCTAssertFalse(ScenePostProcess.AppExtras(hue: 0.5).isIdentity)
+        XCTAssertFalse(SceneUserAdjustmentLayer.runs(.init()))
+        XCTAssertFalse(SceneUserAdjustmentLayer.runs(.init(saturation: 0.5, hue: 1)))
+        XCTAssertTrue(SceneUserAdjustmentLayer.runs(.init(blur: 0.5)))
+        XCTAssertTrue(SceneUserAdjustmentLayer.runs(.init(bloom: 0.5)))
+        XCTAssertEqual(SceneUserAdjustmentLayer.blurConstants(1.5),
+                       [SceneScriptConstantWrite(material: nil, name: "scale", value: [1.5, 1.5])])
     }
 
     // MARK: - Composite skip (efficiency-plan-2d notes WP3-A, S2)
@@ -86,10 +91,9 @@ final class ScenePostProcessTests: XCTestCase {
         XCTAssertFalse(ScenePostProcess.compositeCopies(placement, size: SIMD2(1920, 1200)))
         XCTAssertFalse(ScenePostProcess.compositeCopies(
             ScenePostProcess.compositeUniform(placement, extras: .init(saturation: 0.9)), size: size))
-        XCTAssertFalse(ScenePostProcess.compositeCopies(
-            ScenePostProcess.compositeUniform(placement, extras: .init(blur: 1.5)), size: size))
         XCTAssertTrue(ScenePostProcess.compositeCopies(
-            ScenePostProcess.compositeUniform(placement, extras: .init(bloom: 2)), size: size), "no bloom to scale")
+            ScenePostProcess.compositeUniform(placement, extras: .init(blur: 1.5)), size: size),
+                      "the blur is the adjustment layer's, which `passesThrough` checks")
     }
 
     /// Every CI scene drawn at its own size with the composite skipped equals, byte for byte (colour;

@@ -564,6 +564,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate, @unchecked Sendable {
     var layerAnalysis: SceneLayerAnalysis?
     /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
     var audioCaptureLease: AudioCaptureLease?
+    /// Keeps system audio capture on while a User Adjustment follows the music
+    /// (`updateAdjustmentMusicSync`).
+    var adjustmentAudioLease: AudioCaptureLease?
+    /// Whether the content changes without an event (`FramePacing.changesOnItsOwn`), before the
+    /// User Adjustments' music sync.
+    var contentChangesOnItsOwn = true
+    /// The User Adjustments the last analysed frame saw, and whether that frame's differed from the
+    /// one before: the post-process draws them, so a change redraws an idle scene.
+    var analysedExtras = ScenePostProcess.AppExtras()
+    var adjustmentsChanged = false
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
@@ -730,6 +740,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate, @unchecked Sendable {
     /// Structural changes arrive separately, as rebuilt objects (`replaceObjects`).
     func userPropertiesDidChange(_ names: Set<String>, owners: Set<UserPropertyBindingOwner>) {
         scripts.userPropertiesDidChange(names)
+        updateAdjustmentMusicSync()
         guard !owners.isEmpty else { return }
         if owners.contains(.scene) { refreshCamera() }
         bindingRevisions.bump(owners)

@@ -961,10 +961,10 @@ extension SceneMetalRenderer {
     /// The app's own whole-scene adjustments, from this wallpaper's user properties.
     func appExtras() -> ScenePostProcess.AppExtras {
         let services = WallpaperServices.shared
-        return ScenePostProcess.AppExtras(bloom: services.userPropertyValue("_owe_bloom", fallback: 1),
+        return ScenePostProcess.AppExtras(bloom: max(services.userPropertyValue("_owe_bloom", fallback: 0), 0),
                                           saturation: services.userPropertyValue("_owe_saturation", fallback: 1),
                                           hue: services.userPropertyValue("_owe_hue", fallback: 0),
-                                          blur: services.userPropertyValue("_owe_blur", fallback: 1))
+                                          blur: max(services.userPropertyValue("_owe_blur", fallback: 0), 0))
     }
 
     /// WE's image filter and colour options, from this wallpaper's user properties.
@@ -1077,10 +1077,15 @@ extension SceneMetalRenderer {
         // A compile can also start and land between two frames, unseen by `warming`.
         let warming = pipelinesCompiling
         let landed = pipelinesLanded
+        // The User Adjustments draw over the whole frame: a change (a slider, or the music they
+        // follow) redraws it.
+        let extras = appExtras()
+        adjustmentsChanged = extras != analysedExtras
+        analysedExtras = extras
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
             || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
             || scripts.userVisibilityRevision != analysedUserVisibility
-            || editorLive.revision != analysedEditorRevision
+            || editorLive.revision != analysedEditorRevision || adjustmentsChanged
         analysedUserVisibility = scripts.userVisibilityRevision
         analysedEditorRevision = editorLive.revision
         analysedLanded = landed
@@ -1102,9 +1107,11 @@ extension SceneMetalRenderer {
             particlesLive = true
             if system.configuration.controlPoints.contains(where: \.followsCursor) { particlesFollowCursor = true; break }
         }
-        let inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
+        var inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
                                        parallaxMoved: parallaxMoved, particlesLive: particlesLive,
                                        particlesFollowCursor: particlesFollowCursor)
+        // Adjustments moving with the music change frame after frame, as audio-reactive layers do.
+        if adjustmentsChanged, adjustmentsFollowMusic { inputs.sceneStagesAnimate = true }
         return framePacing.record(framePacing.classify(inputs), at: now) || !skipsIdleFrames
     }
 

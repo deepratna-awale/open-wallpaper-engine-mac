@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **User Adjustments are one layer over the wallpaper.** Hue, saturation, bloom and blur are drawn as one full-screen layer on top of the wallpaper, made only once one of them leaves its default. Blur is Wallpaper Engine's own Blur effect, and Blur and Bloom now start at 0 (off). ([#627](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/627))
+
 ### Fixed
 
+- **Sync to Music works on every User Adjustment.** Hue, saturation, bloom, blur, animation speed and parallax amount now follow the music on any wallpaper, and turning sync on starts with an amount, so it shows at once. ([#625](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/625))
+- **The Bloom adjustment works on every wallpaper.** It adds a glow of its own instead of only scaling a bloom the scene may not have. ([#626](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/626))
 - **Add Effect shows effect names again.** Without Wallpaper Engine's text files the Wallpaper Editor listed effects as "Effect Blur Title"; they now read "Blur". ([#628](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/628))
 
 ## [1.0.0-beta.22] - 2026-11-22
