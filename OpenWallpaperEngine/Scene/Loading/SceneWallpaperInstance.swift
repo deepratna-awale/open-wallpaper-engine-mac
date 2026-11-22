@@ -462,7 +462,6 @@ final class SceneWallpaperInstance {
                       self.runsWallpaper(in: directory), self.runsEditorDraft == draft else { return }
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
-                if changed.contains(ScenePlaybackSpeed.pauseKey) { self.update() }
                 if self.applyEditorEdits(overlay: overlay, base: base) { return }
                 // A drag in progress the renderer can't draw live waits for its commit.
                 guard !transient else { return }
@@ -483,7 +482,6 @@ final class SceneWallpaperInstance {
                 self.viewModel.setEditorAssets(assets)
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
-                if changed.contains(ScenePlaybackSpeed.pauseKey) { self.update() }
                 if !objectIDs.isEmpty { self.scheduleObjectRebuild(objectIDs) }
                 guard !paths.isEmpty else { return }
                 self.viewModel.particleObjectIDsAsync(using: paths) { [weak self] ids in
