@@ -58,10 +58,18 @@ they belong to, or none for the connection's own.
 Error codes: `invalidRequest`, `unknownMethod`, `notLoggedOn`, `tokenRejected` (sign in again),
 `wrongPassword`, `cancelled`, `network`, `steam`, `internal`.
 
-Connection events: `loggedOff` `{eresult}` and `disconnected`. After either, the next call logs on
-again with the last `logOn`'s account by itself; concurrent calls share that one logon. If Steam
-refuses the token then, that call and every later one fail with `tokenRejected` until the next
-`logOn`.
+Connection events: `loggedOff` `{eresult, afterSeconds}` and `disconnected` `{afterSeconds}`, with
+how long the logon had lasted. After either, the next call logs on again with the last `logOn`'s
+account by itself; concurrent calls share that one logon. If Steam refuses the token then, that call
+and every later one fail with `tokenRejected` until the next `logOn`.
+
+Steam answers a second logon on one connection with InvalidParam and drops the connection. So a
+`logOn` with the account the helper is already logged on with sends nothing, and every logon goes
+out on a connection that has carried none. InvalidParam doesn't end the login at once: the helper
+asks again on a fresh connection, up to three times over 20 seconds (a `logOnRetried`
+`{eresult, attempt}` event each), and fails with `tokenRejected` if Steam still answers it then.
+AccessDenied, Revoked, Expired, InvalidSignature and InvalidPassword fail with `tokenRejected` at
+once.
 
 While logged on, Steam tells the helper when the account subscribes to a Workshop item or
 unsubscribes anywhere (the Steam app, the website, the phone): `workshopItemSubscribed` and

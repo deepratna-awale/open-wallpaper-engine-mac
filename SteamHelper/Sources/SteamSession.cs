@@ -35,7 +35,7 @@ namespace OWESteamHelper
     /// One SteamKit2 client connection, kept while the app runs. Callbacks run on a pump thread;
     /// every awaited completion continues off it. A call after a disconnect logs on again with the
     /// account it last logged on with.
-    sealed class SteamSession : ISteamSession
+    sealed class SteamSession : ISteamSession, ILogOnConnection
     {
         /// Steam signs out an earlier session that logs on with the same LoginID from the same
         /// address; the helper's own ids keep the Steam app on this Mac signed in.
@@ -53,23 +53,26 @@ namespace OWESteamHelper
         readonly Action<string, JsonObject> onEvent;
         readonly Thread pump;
         readonly SemaphoreSlim connecting = new(1, 1);
-        // One logon at a time: concurrent calls after a disconnect share the first one's.
-        readonly SemaphoreSlim loggingOn = new(1, 1);
+        readonly LogOnKeeper logOn;
         volatile bool running = true;
         // Read and written on the pump thread and under `connecting`; volatile for the reads elsewhere.
         volatile bool isConnected;
         volatile bool isLoggedOn;
+        // Whether this connection has carried a logon, whatever Steam answered.
+        volatile bool hasSentLogOn;
+        // `Environment.TickCount64` at the logon, for the events that end it.
+        long loggedOnAt;
         TaskCompletionSource? connected;
+        TaskCompletionSource? disconnected;
         TaskCompletionSource<EResult>? loggedOn;
-        (string Account, string Token)? login;
         // The account's licenses, which Steam sends after each logon.
         TaskCompletionSource<SteamApps.LicenseListCallback.License[]> licenses = NewLicenses();
-        // Why Steam refused `login`, kept after it is forgotten so later calls fail the same way.
-        HelperException? rejection;
 
         public SteamSession(Action<string, JsonObject> onEvent)
         {
             this.onEvent = onEvent;
+            logOn = new LogOnKeeper(this, (result, times) =>
+                onEvent("logOnRetried", new JsonObject { ["eresult"] = (int)result, ["attempt"] = times }));
             manager = new CallbackManager(client);
             user = client.GetHandler<SteamUser>()!;
             apps = client.GetHandler<SteamApps>()!;
@@ -80,6 +83,7 @@ namespace OWESteamHelper
             manager.Subscribe<SteamClient.ConnectedCallback>(_ =>
             {
                 isConnected = true;
+                hasSentLogOn = false;
                 connected?.TrySetResult();
             });
             manager.Subscribe<SteamClient.DisconnectedCallback>(cb =>
@@ -89,9 +93,19 @@ namespace OWESteamHelper
                 isLoggedOn = false;
                 connected?.TrySetException(new HelperException(ErrorCode.Network, "Couldn't connect to Steam."));
                 loggedOn?.TrySetResult(EResult.NoConnection);
-                if (wasLoggedOn && !cb.UserInitiated) onEvent("disconnected", new JsonObject());
+                disconnected?.TrySetResult();
+                if (wasLoggedOn && !cb.UserInitiated)
+                    onEvent("disconnected", new JsonObject { ["afterSeconds"] = SecondsLoggedOn() });
             });
-            manager.Subscribe<SteamUser.LoggedOnCallback>(cb => loggedOn?.TrySetResult(cb.Result));
+            manager.Subscribe<SteamUser.LoggedOnCallback>(cb =>
+            {
+                if (cb.Result == EResult.OK)
+                {
+                    loggedOnAt = Environment.TickCount64;
+                    isLoggedOn = true;
+                }
+                loggedOn?.TrySetResult(cb.Result);
+            });
             manager.Subscribe<SteamApps.LicenseListCallback>(cb =>
             {
                 if (cb.Result == EResult.OK) licenses.TrySetResult(cb.LicenseList.ToArray());
@@ -99,7 +113,7 @@ namespace OWESteamHelper
             manager.Subscribe<SteamUser.LoggedOffCallback>(cb =>
             {
                 isLoggedOn = false;
-                onEvent("loggedOff", new JsonObject { ["eresult"] = (int)cb.Result });
+                onEvent("loggedOff", new JsonObject { ["eresult"] = (int)cb.Result, ["afterSeconds"] = SecondsLoggedOn() });
             });
             pump = new Thread(() =>
             {
@@ -110,11 +124,31 @@ namespace OWESteamHelper
 
         public bool IsLoggedOn => isLoggedOn;
 
-        async Task EnsureConnectedAsync(CancellationToken cancellation)
+        public ulong SteamID => client.SteamID?.ConvertToUInt64() ?? 0;
+
+        /// How long the logon lasted, in seconds; on the pump thread.
+        double SecondsLoggedOn() => Math.Round((Environment.TickCount64 - loggedOnAt) / 1000.0, 1);
+
+        Task EnsureConnectedAsync(CancellationToken cancellation) => ConnectAsync(unusedByLogOn: false, cancellation);
+
+        public Task ConnectFreshAsync(CancellationToken cancellation) => ConnectAsync(unusedByLogOn: true, cancellation);
+
+        async Task ConnectAsync(bool unusedByLogOn, CancellationToken cancellation)
         {
             await connecting.WaitAsync(cancellation);
             try
             {
+                if (unusedByLogOn)
+                {
+                    // Set before the check, so a disconnect after it completes it.
+                    var gone = disconnected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    if (isConnected && hasSentLogOn)
+                    {
+                        isLoggedOn = false;
+                        client.Disconnect();
+                        await gone.Task.WaitAsync(StepTimeout, cancellation);
+                    }
+                }
                 if (isConnected) return;
                 connected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 client.Connect();
@@ -208,83 +242,36 @@ namespace OWESteamHelper
             throw new HelperException(ErrorCode.Internal, "Steam's token names no account.");
         }
 
-        public async Task<ulong> LogOnAsync(string accountName, string refreshToken, CancellationToken cancellation)
-        {
-            await loggingOn.WaitAsync(cancellation);
-            try
-            {
-                login = (accountName, refreshToken);
-                rejection = null;
-                return await LogOnRememberedAsync(cancellation);
-            }
-            finally
-            {
-                loggingOn.Release();
-            }
-        }
+        public Task<ulong> LogOnAsync(string accountName, string refreshToken, CancellationToken cancellation) =>
+            logOn.LogOnAsync(accountName, refreshToken, cancellation);
 
-        /// Logs on with `login`; callers hold `loggingOn`.
-        async Task<ulong> LogOnRememberedAsync(CancellationToken cancellation)
+        public async Task<EResult> SendLogOnAsync(string accountName, string refreshToken, CancellationToken cancellation)
         {
-            if (login is not { } remembered)
-                throw rejection ?? new HelperException(ErrorCode.NotLoggedOn, "Not signed in to Steam.");
-            var (account, token) = remembered;
-            await EnsureConnectedAsync(cancellation);
             if (licenses.Task.IsCompleted) licenses = NewLicenses();
-            loggedOn = new TaskCompletionSource<EResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var answer = loggedOn = new TaskCompletionSource<EResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            hasSentLogOn = true;
             user.LogOn(new SteamUser.LogOnDetails
             {
-                Username = account,
-                AccessToken = token,
+                Username = accountName,
+                AccessToken = refreshToken,
                 ShouldRememberPassword = true,
                 LoginID = ServeLoginID,
             });
-            EResult result;
             try
             {
-                result = await loggedOn.Task.WaitAsync(StepTimeout, cancellation);
+                return await answer.Task.WaitAsync(StepTimeout, cancellation);
             }
             catch (TimeoutException)
             {
                 throw new HelperException(ErrorCode.Network, "Timed out signing in to Steam.");
             }
-            switch (result)
-            {
-                case EResult.OK:
-                    isLoggedOn = true;
-                    return client.SteamID?.ConvertToUInt64() ?? 0;
-                // InvalidParam: a saved sign-in Steam no longer takes for a client logon. Seen on every
-                // launch until the user signed in again, which fixed it.
-                case EResult.AccessDenied or EResult.Revoked or EResult.Expired or EResult.InvalidSignature
-                    or EResult.InvalidPassword or EResult.InvalidParam:
-                    login = null;
-                    rejection = new HelperException(ErrorCode.TokenRejected, $"Steam refused the saved sign-in ({result}).", (int)result);
-                    throw rejection;
-                case EResult.NoConnection or EResult.ServiceUnavailable or EResult.TryAnotherCM or EResult.Timeout:
-                    throw new HelperException(ErrorCode.Network, $"Steam is unavailable ({result}).", (int)result);
-                default:
-                    throw new HelperException(ErrorCode.Steam, $"Steam logon failed ({result}).", (int)result);
-            }
         }
 
-        async Task EnsureLoggedOnAsync(CancellationToken cancellation)
-        {
-            if (isLoggedOn) return;
-            await loggingOn.WaitAsync(cancellation);
-            try
-            {
-                if (!isLoggedOn) await LogOnRememberedAsync(cancellation);
-            }
-            finally
-            {
-                loggingOn.Release();
-            }
-        }
+        Task EnsureLoggedOnAsync(CancellationToken cancellation) => logOn.EnsureLoggedOnAsync(cancellation);
 
         public void LogOff()
         {
-            login = null;
-            rejection = null;
+            logOn.Forget();
             if (isLoggedOn) user.LogOff();
             isLoggedOn = false;
         }
