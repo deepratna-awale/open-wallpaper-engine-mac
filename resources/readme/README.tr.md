@@ -72,7 +72,7 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
   <img src="../../docs/images/playlists.png" alt="Çalma listesi ayarları" width="720">
 
-- **Kullanıcı ayarları ve Yalnızca Ayrıntılar**: her sahne veya videonun üzerine renk özü, doygunluk, renk vurgusu (damlalıkla), karartma, Bloom, bulanıklık ve Wallpaper Engine'in renk tonu, yerel kontrast, renk sapması, VHS ve film grenliği efektleri eklenebilir; animasyon hızı ve animasyonu duraklatma da vardır ve her kaydırıcı müziği izleyebilir. **Yalnızca Ayrıntılar** (⇧⌘D) pencereyi duvar kâğıdının ayarlarına daraltır; oynarken değiştirebilirsiniz.
+- **Kullanıcı ayarları ve Yalnızca Ayrıntılar**: her sahnenin üzerine renk özü, doygunluk, renk vurgusu (damlalıkla), karartma, Bloom, bulanıklık ve Wallpaper Engine'in renk tonu, yerel kontrast, renk sapması, VHS ve film grenliği efektleri eklenebilir; animasyon hızı ve animasyonu duraklatma da vardır ve her kaydırıcı müziği izleyebilir. **Yalnızca Ayrıntılar** (⇧⌘D) pencereyi duvar kâğıdının ayarlarına daraltır; oynarken değiştirebilirsiniz.
 
   <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
 

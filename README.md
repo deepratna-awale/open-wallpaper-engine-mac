@@ -72,7 +72,7 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
   <img src="docs/images/playlists.png" alt="Playlist settings" width="720">
 
-- **User Adjustments and Details Only**: any scene or video can get Hue, Saturation, Color Pop (with an eyedropper), Dim, Bloom, Blur and Wallpaper Engine's Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain on top, plus Animation Speed and Pause Animation, and every slider can follow the music. **Details Only** (⇧⌘D) narrows the window to the wallpaper's settings, so you can change them while it plays.
+- **User Adjustments and Details Only**: any scene can get Hue, Saturation, Color Pop (with an eyedropper), Dim, Bloom, Blur and Wallpaper Engine's Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain on top, plus Animation Speed and Pause Animation, and every slider can follow the music. **Details Only** (⇧⌘D) narrows the window to the wallpaper's settings, so you can change them while it plays.
 
   <img src="docs/images/details-only.png" alt="Details Only" width="720">
 

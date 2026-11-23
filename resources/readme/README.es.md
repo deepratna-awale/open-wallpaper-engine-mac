@@ -72,7 +72,7 @@ Open Wallpaper Engine es una app gratuita y de código abierto para macOS que re
 
   <img src="../../docs/images/playlists.png" alt="Ajustes de playlists" width="720">
 
-- **Ajustes de usuario y Solo detalles**: cualquier escena o vídeo puede llevar encima Tono, Saturación, Realce de color (con cuentagotas), Atenuar, Resplandor, Desenfoque y los efectos Tinte, Contraste local, Aberración cromática, VHS y Grano de película de Wallpaper Engine, además de Velocidad de animación y Pausar animación; cada control puede seguir la música. **Solo detalles** (⇧⌘D) reduce la ventana a los ajustes del fondo, para cambiarlos mientras se reproduce.
+- **Ajustes de usuario y Solo detalles**: cualquier escena puede llevar encima Tono, Saturación, Realce de color (con cuentagotas), Atenuar, Resplandor, Desenfoque y los efectos Tinte, Contraste local, Aberración cromática, VHS y Grano de película de Wallpaper Engine, además de Velocidad de animación y Pausar animación; cada control puede seguir la música. **Solo detalles** (⇧⌘D) reduce la ventana a los ajustes del fondo, para cambiarlos mientras se reproduce.
 
   <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
 
