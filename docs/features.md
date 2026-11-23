@@ -62,7 +62,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Wallpaper Engine favourites** — Wallpaper Engine keeps its favourites in your Steam account (they are your Workshop favourites), not in its folder. Once the assets are installed or a Wallpaper Engine folder is chosen, the setup assistant and Settings › Assets ask whether to add them to My Favourites, showing how many are new; your current favourites stay, and importing again adds only new ones. It needs the Steam login. *Import Wallpaper Engine Favourites…* in Settings › Assets checks again.
 - **The [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — guides, settings reference and troubleshooting; Support & FAQ in the app opens it.
 - **Dock and menu bar** — Settings › General › macOS has *Show in Dock* and *Show in Menu Bar*; with both off, the app keeps running in the background once its windows close.
-- **Automatic updates** — signed updates install by themselves (on quit, after 10 minutes away, or within a day, then a quick relaunch restores your wallpapers). Settings › Updates lets you only check, or turn checks off, and opt into beta updates. Check for Updates… is in the app menu and the menu bar menu.
+- **Automatic updates** — signed updates install by themselves (on quit, after 10 minutes away, or within a day, then a quick relaunch restores your wallpapers). Settings › Updates lets you only check, or turn checks off, and opt into beta updates. Check for Updates… is in the app menu and the menu bar menu; while a downloaded update waits, it reads **Install Update and Relaunch** and installs it at once, as does the button in Settings › Updates.
 
 ### Scene rendering
 - **Wallpaper Engine's own shaders** — layers, effects and materials now draw through each wallpaper's original shaders, translated to Metal, including effects that Workshop authors made themselves.
@@ -152,6 +152,6 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Interface & languages
 - **Liquid Glass** on macOS 26 — a native split view, toolbar and inspector with glass controls. Earlier macOS versions keep the familiar look.
-- **Details Only** (the button beside Details in the Installed toolbar, or View › Details Only, ⇧⌘D), as in Wallpaper Engine — the window narrows to the selected wallpaper's Details panel, where it was on screen, so its properties can be changed while the wallpaper plays in view on the same desktop. **Wallpaper Explorer** in its toolbar (or ⇧⌘D again) brings back the whole window at its earlier size.
+- **Details Only** (the button beside Details in the Installed toolbar, View › Details Only, ⇧⌘D, or Show Details in the menu bar menu), as in Wallpaper Engine — the window narrows to the selected wallpaper's Details panel, where it was on screen, so its properties can be changed while the wallpaper plays in view on the same desktop. **Wallpaper Explorer** in its toolbar (or ⇧⌘D again) brings back the whole window at its earlier size.
 - **15 languages besides English**: German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, chosen from the Language picker in Settings.
 - A new app icon, and a menu bar icon that follows the menu bar's appearance.

@@ -59,6 +59,12 @@ extension AppDelegate {
         openMainWindow()
     }
 
+    /// The menu bar menu's Show Details: the main window in Details Only.
+    @objc func showDetailsOnly() {
+        mainWindowController?.setDetailsOnly(true)
+        openMainWindow()
+    }
+
     /// Edit › Find: the search field of the settings window when it's in front, otherwise the
     /// library's.
     @objc func focusSearch() {

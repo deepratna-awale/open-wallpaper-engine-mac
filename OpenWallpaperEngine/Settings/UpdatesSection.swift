@@ -17,7 +17,11 @@ struct UpdatesSection: View {
                 Toggle("Receive beta updates", isOn: $updater.receivesBetaUpdates)
                     .help("Also offers pre-release versions, which get new features first and may be less stable.")
                 HStack {
-                    if let date = updater.lastUpdateCheckDate {
+                    if let version = updater.readyUpdateVersion {
+                        Text("Version \(version) is ready to install",
+                             comment: "Settings › Updates: %@ is the downloaded app version")
+                            .foregroundStyle(.secondary)
+                    } else if let date = updater.lastUpdateCheckDate {
                         Text("Last checked: \(date.formatted(date: .abbreviated, time: .shortened))",
                              comment: "%@ is a date and time")
                             .foregroundStyle(.secondary)
@@ -26,8 +30,12 @@ struct UpdatesSection: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Check Now") { updater.checkForUpdates() }
-                        .disabled(!updater.canCheckForUpdates)
+                    if updater.readyUpdateVersion != nil {
+                        Button("Install Update and Relaunch") { updater.checkForUpdates() }
+                    } else {
+                        Button("Check Now") { updater.checkForUpdates() }
+                            .disabled(!updater.canCheckForUpdates)
+                    }
                 }
             } else {
                 Text("Updates are off in this build because it has no update signing key. Builds from GitHub Releases update themselves.")

@@ -26,6 +26,8 @@ final class AppUpdater: NSObject, ObservableObject {
 
     @Published private(set) var canCheckForUpdates = false
     @Published private(set) var lastUpdateCheckDate: Date?
+    /// The downloaded update waiting to install (`holdPendingInstall`); Sparkle can't check meanwhile.
+    @Published private(set) var readyUpdateVersion: String?
     private var observations: [NSKeyValueObservation] = []
     private let installPolicy: PendingUpdateInstallPolicy
     private var pendingInstall: (readySince: Date, install: () -> Void)?
@@ -91,8 +93,13 @@ final class AppUpdater: NSObject, ObservableObject {
         shaderPrewarmer?.cancel()
     }
 
+    /// Installs the update that is ready, if any, instead of checking.
     func checkForUpdates() {
-        controller?.checkForUpdates(nil)
+        if pendingInstall != nil {
+            installPendingUpdate()
+        } else {
+            controller?.checkForUpdates(nil)
+        }
     }
 
     /// Checks, downloads and installs by itself. Turning it off keeps automatic checks (Sparkle then
@@ -138,8 +145,9 @@ final class AppUpdater: NSObject, ObservableObject {
 
     // MARK: Installing a downloaded update
 
-    fileprivate func holdPendingInstall(_ install: @escaping () -> Void) {
+    fileprivate func holdPendingInstall(version: String, _ install: @escaping () -> Void) {
         pendingInstall = (pendingInstall?.readySince ?? Date(), install)
+        readyUpdateVersion = version
         OWELog.info(.app, "An update is ready; it installs on quit, when the Mac is idle, or within a day")
         guard pendingInstallTimer == nil else { return }
         pendingInstallTimer = Timer.scheduledTimer(withTimeInterval: installPolicy.pollInterval, repeats: true) { [weak self] _ in
@@ -152,10 +160,16 @@ final class AppUpdater: NSObject, ObservableObject {
         // Any input: keyboard, mouse, trackpad.
         let idle: TimeInterval = CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: CGEventType(rawValue: ~0)!)
         guard installPolicy.shouldInstall(readySince: pendingInstall.readySince, now: Date(), userIdleSeconds: idle) else { return }
+        installPendingUpdate()
+    }
+
+    private func installPendingUpdate() {
+        guard let pendingInstall else { return }
         OWELog.info(.app, "Installing the downloaded update and relaunching")
         pendingInstallTimer?.invalidate()
         pendingInstallTimer = nil
         self.pendingInstall = nil
+        readyUpdateVersion = nil
         pendingInstall.install()
     }
 }
@@ -216,7 +230,8 @@ extension AppUpdater: SPUUpdaterDelegate {
                              immediateInstallationBlock immediateInstallHandler: @escaping () -> Void) -> Bool {
         // Sparkle's block, called once on the main thread.
         nonisolated(unsafe) let immediateInstallHandler = immediateInstallHandler
-        MainActor.assumeIsolated { holdPendingInstall(immediateInstallHandler) }
+        let version: String = item.displayVersionString
+        MainActor.assumeIsolated { holdPendingInstall(version: version, immediateInstallHandler) }
         return true
     }
 }
