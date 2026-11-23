@@ -271,8 +271,6 @@ struct WEObjectEffect: Decodable {
 
 /// Per-instance overrides for one pass of an effect.
 struct WEObjectEffectPass: Decodable {
-    /// Legacy view of the constants (number/string/script only), used by the current renderer.
-    let constantshadervalues: [String: WEEffectConstant]?
     /// Every constant with its full authored form.
     let constants: [String: SceneRawValue]
     /// Texture slots; nil entries are kept so indices match the material.
@@ -287,33 +285,10 @@ struct WEObjectEffectPass: Decodable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let info = decoder.userInfo
         constants = c.decodeEntries(SceneRawValue.self, forKey: .constantshadervalues, userInfo: info) ?? [:]
-        // Failures are already reported by `constants` above.
-        constantshadervalues = try? c.decodeIfPresent([String: WEEffectConstant].self, forKey: .constantshadervalues)
         textures = c.decodeElements(String?.self, forKey: .textures, userInfo: info)
         combos = c.decodeEntries(Int.self, forKey: .combos, userInfo: info)
         usertextures = c.decodeLogged(SceneJSON.self, forKey: .usertextures, userInfo: info)
     }
-}
-
-struct WEEffectConstant: Decodable {
-    let number: Double?
-    let string: String?
-    let script: String?
-
-    init(from decoder: Decoder) throws {
-        if let container = try? decoder.container(keyedBy: CodingKeys.self) {
-            number = try? container.decodeIfPresent(Double.self, forKey: .value)
-            string = try? container.decodeIfPresent(String.self, forKey: .value)
-            script = try? container.decodeIfPresent(String.self, forKey: .script)
-        } else {
-            let container = try decoder.singleValueContainer()
-            number = try? container.decode(Double.self)
-            string = try? container.decode(String.self)
-            script = nil
-        }
-    }
-
-    enum CodingKeys: String, CodingKey { case value, script }
 }
 
 struct WEConditionalBool: Decodable {

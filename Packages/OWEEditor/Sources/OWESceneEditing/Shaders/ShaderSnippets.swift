@@ -66,9 +66,6 @@ public enum ShaderSnippets {
             default: return nil
             }
         }
-
-        /// Combos come after a divider in WE's menu.
-        public var isCombo: Bool { combo != nil }
     }
 
     /// Replace Shader's items: WE's snippet files (`ui/dist/monaco/snippets/<file>.js`) by stage.
@@ -80,7 +77,6 @@ public enum ShaderSnippets {
         public var id: String { rawValue }
         /// The snippet file's name without `.js`.
         public var file: String { rawValue }
-        public var isVertex: Bool { self == .basicVertex || self == .maskedVertex }
     }
 
     /// Add Include's headers.

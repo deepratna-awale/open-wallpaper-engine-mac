@@ -192,8 +192,6 @@ Wallpaper tab edits the running wallpaper, which shows the change at once.
 | `scene_undo`, `scene_redo` | `wallpaper_id` | Undoes or redoes the client's last step. `done` says whether there was one. |
 | `wallpaper_editor_save` | `wallpaper_id` | File › Save: the draft (the client's edits and an open window's) becomes the wallpaper's edits, which every running copy of it applies once. `saved` is false when there was nothing to save. |
 | `wallpaper_editor_save_as_new` | `wallpaper_id`, `title?` | File › Save as New Wallpaper: a new wallpaper with the draft's edits baked in, added to the library; the wallpaper and its draft stay as they are. Returns its `id`. |
-| `scene_save` | `wallpaper_id` | **Deprecated:** the older name of `wallpaper_editor_save`, which it does exactly. |
-| `scene_save_as_local_wallpaper` | `wallpaper_id`, `title?` | **Deprecated:** the older name of `wallpaper_editor_save_as_new`, which it does exactly. |
 | `scene_revert` | `wallpaper_id` | File › Revert to Saved: the draft goes back to the wallpaper as last saved, one undo step. |
 | `effects_catalog` | `wallpaper_id`, `query?` | The effects `add_effect` takes (Wallpaper Engine's built-in effects and the Workshop effects the wallpaper uses), each with `file`, `title`, `group`, `passes` and its parameters: `constants` (`key`, `default`, `min`, `max`, `integer`, `color`), `combos` (`name`, `options`), `textures` (`slot`, `mask`). Empty without WE's assets. |
 | `particles_catalog` | `wallpaper_id`, `query?` | The systems `add_particle_system` takes: WE's default systems (`system:particles/…`) and every preset's variants (`preset:<preset>/<variant>`). Empty without WE's assets. |

@@ -165,8 +165,6 @@ final class ScreenSaverFrameService: NSObject, NSXPCListenerDelegate, @unchecked
         for client in all { client.proxy?.show(ring: ring, stamp: stamp) }
     }
 
-    var connectedClients: Int { lock.withLock { clients.count } }
-
     // MARK: Connections
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {

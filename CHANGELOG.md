@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **User Adjustments are one layer over the wallpaper.** Hue, saturation, bloom and blur are drawn as one full-screen layer on top of the wallpaper, made only once one of them leaves its default. Blur is Wallpaper Engine's own Blur effect, and Blur and Bloom now start at 0 (off). ([#627](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/627))
 
+### Removed
+
+- **The deprecated MCP tools `scene_save` and `scene_save_as_local_wallpaper`.** Use `wallpaper_editor_save` and `wallpaper_editor_save_as_new`, which do the same. Code and a hidden setting nothing used any more are gone too. ([#639](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/639))
+
 ### Fixed
 
 - **Sync to Music works on every User Adjustment.** Hue, saturation, bloom, blur, animation speed and parallax amount now follow the music on any wallpaper, and turning sync on starts with an amount, so it shows at once. ([#625](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/625))
