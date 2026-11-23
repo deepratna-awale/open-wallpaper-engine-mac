@@ -312,16 +312,6 @@ final class MCPSceneRouterTests: XCTestCase {
         XCTAssertEqual(again["saved"], false, "nothing left to save")
     }
 
-    func testTheOlderSaveToolsStillWork() async throws {
-        _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
-        let saved = try await result("scene_save", ["wallpaper_id": "fixture"])
-        XCTAssertEqual(saved["saved"], true, "scene_save saves the draft, as wallpaper_editor_save does")
-        XCTAssertEqual(try savedOverlay().field("alpha", of: 4), .number(0.5))
-        let copy = try await result("scene_save_as_local_wallpaper", ["wallpaper_id": "fixture", "title": "Old Name"])
-        XCTAssertEqual(copy["title"], "Old Name")
-        XCTAssertEqual(editors.savedCopies, ["Old Name"], "as wallpaper_editor_save_as_new does")
-    }
-
     func testRevertToSavedAndSaveAsNew() async throws {
         _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
         _ = try await result("wallpaper_editor_save", ["wallpaper_id": "fixture"])

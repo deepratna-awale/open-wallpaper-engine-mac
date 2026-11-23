@@ -10,7 +10,6 @@ import OWESceneEditing
 final class SceneControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
         "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "wallpaper_editor_save", "wallpaper_editor_save_as_new",
-        "scene_save", "scene_save_as_local_wallpaper",
         "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
         "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
         "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
@@ -61,9 +60,8 @@ final class SceneControlRequests: ControlRequestGroup {
         case "scene_get": return SceneControlSnapshot.scene(document)
         case "scene_apply_edits": return try applyEdits(params, document)
         case "scene_undo", "scene_redo": return undo(document, redo: method == "scene_redo")
-        // The older names (deprecated) do the same, so existing clients keep working.
-        case "wallpaper_editor_save", "scene_save": return try save(document)
-        case "wallpaper_editor_save_as_new", "scene_save_as_local_wallpaper": return try saveAsNew(params, document)
+        case "wallpaper_editor_save": return try save(document)
+        case "wallpaper_editor_save_as_new": return try saveAsNew(params, document)
         case "scene_revert": return revert(params, document)
         case "effects_catalog":
             return SceneControlSnapshot.effects(document, query: try params.string("query") ?? "")

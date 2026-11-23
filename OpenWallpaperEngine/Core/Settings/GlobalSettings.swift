@@ -405,9 +405,6 @@ struct GlobalSettings: Codable, Equatable {
     
     // MARK: Developer
     var logLevel = GSLogLevel.error
-    
-    // MARK: Misc
-    var autoRefresh = true
 
     // MARK: Audio recording
     /// WE's "Audio recording device" (`audioinputdevice`, default "default"): nil is WE's default,
@@ -444,7 +441,7 @@ struct GlobalSettings: Codable, Equatable {
         case showInDock, showInMenuBar
         case lockScreenPicture, screenSaver
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
-        case restartAfterCrashing, autoRefresh
+        case restartAfterCrashing
         case logLevel = "logLevelChoice"
         case syncPropertiesAcrossDisplays
         case mediaIntegration
@@ -516,7 +513,6 @@ extension GlobalSettings {
         read(.pauseOnVRAMExhausted, &pauseOnVRAMExhausted)
         read(.restartAfterCrashing, &restartAfterCrashing)
         read(.logLevel, &logLevel)
-        read(.autoRefresh, &autoRefresh)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
         read(.mediaIntegration, &mediaIntegration)
         read(.cheaperShadows, &cheaperShadows)
