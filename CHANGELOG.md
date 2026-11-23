@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Show Details in the menu bar menu.** It opens the main window in Details Only, with the wallpaper's settings. ([#646](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/646))
+- **Install a downloaded update right away.** While an update waits to install, Check for Updates… reads Install Update and Relaunch (in the app menu and the menu bar menu) and Settings › Updates names the version that is ready, with the same button. Before, the update waited for quit, idle time or a day, and Check for Updates was greyed out meanwhile. ([#647](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/647))
+
 ### Fixed
 
 - **Mouse Parallax no longer shows the wallpaper's edges.** Turned on in User Adjustments for a 2D scene that has no parallax of its own, it now zooms the scene in just enough that the layers never slide past its edges; a scene with its own parallax zooms only for a Parallax Amount above 1. ([#644](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/644))

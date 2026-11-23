@@ -136,7 +136,7 @@ extension AppDelegate {
         }
     }
 
-    /// Disabled (see `validateMenuItem`) while Sparkle is off or busy.
+    /// Installs a downloaded update instead while one is ready (`validateMenuItem` renames it).
     @objc func checkForUpdates() {
         updater.checkForUpdates()
     }
@@ -185,7 +185,11 @@ extension AppDelegate: NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
         case #selector(checkForUpdates):
-            return updater.canCheckForUpdates
+            menuItem.title = updater.readyUpdateVersion == nil
+                ? String(localized: "Check for Updates…") : String(localized: "Install Update and Relaunch")
+            return updater.canCheckForUpdates || updater.readyUpdateVersion != nil
+        case #selector(showDetailsOnly):
+            return contentViewModel.allowsLibraryActions
         case #selector(togglePauseWallpapers):
             menuItem.title = wallpaperViewModel.playRate == 0 || videoMemoryWatch.exhausted
                 ? String(localized: "Resume Wallpapers") : String(localized: "Pause Wallpapers")

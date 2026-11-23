@@ -107,6 +107,7 @@ extension AppDelegate {
         setUpAssets.isHidden = !assetsMissing
         return [
             item("Show Open Wallpaper Engine", "photo", #selector(openMainWindow), .wallpaperExplorer),
+            item("Show Details", "arrow.down.forward.and.arrow.up.backward", #selector(showDetailsOnly)),
             recentWallpapers,
             .separator(),
             setUpAssets,
