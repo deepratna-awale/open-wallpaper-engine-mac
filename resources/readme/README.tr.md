@@ -62,26 +62,30 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi üzerinden gönder" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi üzerinden gönder" width="720">
 
 - **Ekranlar**: Wallpaper Engine’deki gibi her ekrana ayrı bir duvar kâğıdı, tüm ekranlara yayılan ya da her birine kopyalanan tek bir duvar kâğıdı; ayrıca gruplar, bölmeler ve profiller. **Pencerede Oynat** bir duvar kâğıdını kendi penceresinde oynatır.
 
-  <img src="../../docs/images/displays.png" alt="Ekranlar" width="400">
+  <img src="../../docs/images/displays.png" alt="Ekranlar" width="720">
 
 - **Çalma listeleri**: duvar kâğıtlarını zamanlayıcıyla, oturum açılışında, günün saatine veya haftanın gününe göre, Wallpaper Engine’in geçişleriyle değiştirin.
 
-  <img src="../../docs/images/playlists.png" alt="Çalma listesi ayarları" width="420">
+  <img src="../../docs/images/playlists.png" alt="Çalma listesi ayarları" width="720">
 
 - **Kullanıcı ayarları ve Yalnızca Ayrıntılar**: her sahne veya videonun üzerine renk özü, doygunluk, renk vurgusu (damlalıkla), karartma, Bloom, bulanıklık ve Wallpaper Engine'in renk tonu, yerel kontrast, renk sapması, VHS ve film grenliği efektleri eklenebilir; animasyon hızı ve animasyonu duraklatma da vardır ve her kaydırıcı müziği izleyebilir. **Yalnızca Ayrıntılar** (⇧⌘D) pencereyi duvar kâğıdının ayarlarına daraltır; oynarken değiştirebilirsiniz.
 
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **Denetim**: eylemler, çalma listeleri, duvar kâğıtları ve ekran profilleri için kısayol tuşları; Wallpaper Engine’in `-control` [komut satırı](../../docs/command-line.md); ve MCP istemcilerinin, yalnızca sizin hesabınızın açabildiği yerel bir bağlantı üzerinden duvar kâğıtlarını, çalma listelerini ve ayarları belirleyip sahneleri düzenlediği **MCP Sunucusu** eklentisi.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="MCP Sunucusu eklentisi" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP Sunucusu eklentisi" width="720">
 
 - **Güç**: duvar kâğıtları ekran kilitliyken duraklar, Wallpaper Engine’in *Dizüstü bilgisayar pille çalışırken* kuralına uyar ve pilde ya da Düşük Güç Modu’nda daha düşük bir kalite ön ayarına ve kare hızına geçebilir.
 - **Renk Teması**: menü çubuğu, vurgu rengi ve renklendirilmiş simgeler ile klasörler duvar kâğıdının rengine uyar; Open Wallpaper Engine’in kendi pencereleri tam rengi kullanabilir.
 
-  <img src="../../docs/images/theming.png" alt="Renk Teması" width="540">
+  <img src="../../docs/images/theming.png" alt="Renk Teması" width="720">
 
 Geri kalan her şey, alan alan: [docs/features.md](../../docs/features.md).
 

@@ -62,26 +62,30 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="通过 Wi-Fi 发送" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="通过 Wi-Fi 发送" width="720">
 
 - **显示器**：与 Wallpaper Engine 一样：每台显示器一张墙纸、一张墙纸横跨所有显示器或在每台显示器上克隆，并支持分组、分割和配置文件。**在窗口中播放** 可在单独的窗口中播放墙纸。
 
-  <img src="../../docs/images/displays.png" alt="显示器" width="400">
+  <img src="../../docs/images/displays.png" alt="显示器" width="720">
 
 - **播放列表**：按计时器、登录时、一天中的时段或星期几更换墙纸，并使用 Wallpaper Engine 的过渡效果。
 
-  <img src="../../docs/images/playlists.png" alt="播放列表设置" width="420">
+  <img src="../../docs/images/playlists.png" alt="播放列表设置" width="720">
 
 - **用户调整与仅详细信息**：任何场景或视频都可以叠加色相、饱和度、色彩突显（带取色器）、调暗、泛光、模糊，以及 Wallpaper Engine 的色调、局部对比度、色差、VHS 和胶片颗粒，还有动画速度和暂停动画；每个滑块都可以随音乐变化。**仅详细信息**（⇧⌘D）把窗口缩小到壁纸的设置，让你在它播放时调整。
 
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **控制**：用于操作、播放列表、墙纸和显示器配置文件的热键；Wallpaper Engine 的 `-control` [命令行](../../docs/command-line.md)；以及 **MCP 服务器** 插件，MCP 客户端可通过它设定墙纸、播放列表和设置并编辑场景，连接仅限本地，且只有你的账户可以打开。
 
-  <img src="../../docs/images/mcp-plugin.png" alt="MCP 服务器插件" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 服务器插件" width="720">
 
 - **电源**：屏幕锁定时墙纸会暂停，遵循 Wallpaper Engine 的 *笔记本电脑使用电池时* 规则，并可在使用电池或处于低电量模式时降至较低的画质预设和帧速率。
 - **主题颜色**：菜单栏、强调色以及着色的图标和文件夹会跟随墙纸的颜色变化；Open Wallpaper Engine 自己的窗口可以使用墙纸的准确颜色。
 
-  <img src="../../docs/images/theming.png" alt="主题颜色" width="540">
+  <img src="../../docs/images/theming.png" alt="主题颜色" width="720">
 
 其他所有功能（按领域分类）：[docs/features.md](../../docs/features.md)。
 

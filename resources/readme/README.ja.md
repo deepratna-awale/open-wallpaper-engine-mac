@@ -62,26 +62,30 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi で送信" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi で送信" width="720">
 
 - **ディスプレイ**：Wallpaper Engine と同じく、ディスプレイごとの壁紙、複数ディスプレイへの引き伸ばしや複製、グループ、分割、プロファイルに対応します。**ウインドウで再生** で、壁紙を専用のウインドウで再生できます。
 
-  <img src="../../docs/images/displays.png" alt="ディスプレイ" width="400">
+  <img src="../../docs/images/displays.png" alt="ディスプレイ" width="720">
 
 - **プレイリスト**：タイマー、ログイン時、時間帯、曜日に応じて壁紙を切り替えます。Wallpaper Engine のトランジションも使えます。
 
-  <img src="../../docs/images/playlists.png" alt="プレイリストの設定" width="420">
+  <img src="../../docs/images/playlists.png" alt="プレイリストの設定" width="720">
 
 - **ユーザー調整と詳細のみ**: どのシーンや動画にも、色相、彩度、カラーポップ(スポイト付き)、減光、ブルーム、ぼかし、そして Wallpaper Engine の色合い、ローカルコントラスト、色収差、VHS、フィルムグレインを重ねられ、アニメーション速度とアニメーションの一時停止も使えます。どのスライダーも音楽に合わせられます。**詳細のみ**(⇧⌘D)はウインドウを壁紙の設定だけに縮め、再生を見ながら変更できます。
 
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **コントロール**：アクション、プレイリスト、壁紙、ディスプレイプロファイル用のホットキー、Wallpaper Engine の `-control` [コマンドライン](../../docs/command-line.md)、そして **MCP サーバ** プラグインを備えています。MCP クライアントはこのプラグインを通じて、あなたのアカウントからしか開けないローカル接続で、壁紙、プレイリスト、設定を変更したり、シーンを編集したりできます。
 
-  <img src="../../docs/images/mcp-plugin.png" alt="MCP サーバプラグイン" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP サーバプラグイン" width="720">
 
 - **電源**：画面がロックされている間は壁紙が一時停止し、Wallpaper Engine の *バッテリー駆動中のノートブック* ルールに従います。バッテリー駆動時や低電力モードでは、より低い品質プリセットとフレームレートに下げることもできます。
 - **テーマ設定**：メニューバー、アクセントカラー、アイコンとフォルダの色合いが壁紙の色に合わせて変わります。Open Wallpaper Engine 自身のウインドウでは、壁紙の色そのものを使うこともできます。
 
-  <img src="../../docs/images/theming.png" alt="テーマ設定" width="540">
+  <img src="../../docs/images/theming.png" alt="テーマ設定" width="720">
 
 そのほかの機能の分野別一覧：[docs/features.md](../../docs/features.md)
 

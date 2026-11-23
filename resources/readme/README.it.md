@@ -62,26 +62,30 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Invia via Wi-Fi" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Invia via Wi-Fi" width="720">
 
 - **Schermi**: uno sfondo per schermo, uno solo esteso su tutti o clonato su ciascuno, gruppi, suddivisioni e profili, come in Wallpaper Engine. **Riproduci in una finestra** riproduce uno sfondo in una finestra tutta sua.
 
-  <img src="../../docs/images/displays.png" alt="Schermi" width="400">
+  <img src="../../docs/images/displays.png" alt="Schermi" width="720">
 
 - **Playlist**: cambia sfondo con un timer, all’accesso, in base all’ora del giorno o al giorno della settimana, con le transizioni di Wallpaper Engine.
 
-  <img src="../../docs/images/playlists.png" alt="Impostazioni delle playlist" width="420">
+  <img src="../../docs/images/playlists.png" alt="Impostazioni delle playlist" width="720">
 
 - **Regolazioni utente e Solo dettagli**: ogni scena o video può avere sopra Tonalità, Saturazione, Colore selettivo (con contagocce), Oscura, Bloom, Sfocatura e gli effetti Tinta, Contrasto locale, Aberrazione cromatica, VHS e Grana della pellicola di Wallpaper Engine, oltre a Velocità animazione e Pausa dell’animazione; ogni cursore può seguire la musica. **Solo dettagli** (⇧⌘D) riduce la finestra alle impostazioni dello sfondo, per cambiarle mentre è in riproduzione.
 
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **Controllo**: tasti di scelta rapida per azioni, playlist, sfondi e profili degli schermi; la [riga di comando](../../docs/command-line.md) `-control` di Wallpaper Engine; e il plug-in **Server MCP**, tramite il quale i client MCP impostano sfondi, playlist e impostazioni e modificano le scene, attraverso una connessione locale che solo il tuo account può aprire.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Server MCP" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Server MCP" width="720">
 
 - **Alimentazione**: gli sfondi vanno in pausa mentre lo schermo è bloccato, seguono la regola *Portatile a batteria* di Wallpaper Engine e possono passare a un preset di qualità e a una frequenza fotogrammi inferiori a batteria o in modalità Risparmio energetico.
 - **Tema colore**: la barra dei menu, il colore di evidenziazione e le icone e le cartelle colorate seguono il colore dello sfondo; le finestre di Open Wallpaper Engine possono usare il colore esatto.
 
-  <img src="../../docs/images/theming.png" alt="Tema colore" width="540">
+  <img src="../../docs/images/theming.png" alt="Tema colore" width="720">
 
 Tutto il resto, area per area: [docs/features.md](../../docs/features.md).
 

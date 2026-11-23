@@ -62,26 +62,30 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="透過 Wi-Fi 傳送" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="透過 Wi-Fi 傳送" width="720">
 
 - **顯示器**：與 Wallpaper Engine 相同：每台顯示器一張背景圖片、一張背景圖片橫跨所有顯示器或在每台顯示器上複製，並支援群組、分割與設定檔。**在視窗中播放** 可在獨立的視窗中播放背景圖片。
 
-  <img src="../../docs/images/displays.png" alt="顯示器" width="400">
+  <img src="../../docs/images/displays.png" alt="顯示器" width="720">
 
 - **播放列表**：依計時器、登入時、一天中的時段或星期幾更換背景圖片，並使用 Wallpaper Engine 的轉場效果。
 
-  <img src="../../docs/images/playlists.png" alt="播放列表設定" width="420">
+  <img src="../../docs/images/playlists.png" alt="播放列表設定" width="720">
 
 - **使用者調整與僅詳細資訊**：任何場景或影片都可以疊加色相、飽和度、色彩突顯（附取色器）、調暗、光暈、模糊，以及 Wallpaper Engine 的色調、局部對比度、色差、VHS 和底片顆粒，還有動畫速度與暫停動畫；每個滑桿都能隨音樂變化。**僅詳細資訊**（⇧⌘D）把視窗縮小到桌布的設定，讓你在它播放時調整。
 
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **控制**：用於動作、播放列表、背景圖片與顯示器設定檔的快速鍵；Wallpaper Engine 的 `-control` [命令列](../../docs/command-line.md)；以及 **MCP 伺服器** 外掛，MCP 用戶端可透過它設定背景圖片、播放列表與設定並編輯場景，連線僅限本機，且只有你的帳號可以開啟。
 
-  <img src="../../docs/images/mcp-plugin.png" alt="MCP 伺服器外掛" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 伺服器外掛" width="720">
 
 - **電源**：螢幕鎖定時背景圖片會暫停，遵循 Wallpaper Engine 的 *筆記型電腦使用電池時* 規則，並可在使用電池或處於低耗電模式時降至較低的畫質預設與畫面播放速率。
 - **主題顏色**：選單列、強調色以及著色的圖像與檔案夾會跟隨背景圖片的顏色變化；Open Wallpaper Engine 自己的視窗可以使用背景圖片的準確顏色。
 
-  <img src="../../docs/images/theming.png" alt="主題顏色" width="540">
+  <img src="../../docs/images/theming.png" alt="主題顏色" width="720">
 
 其他所有功能（依領域分類）：[docs/features.md](../../docs/features.md)。
 

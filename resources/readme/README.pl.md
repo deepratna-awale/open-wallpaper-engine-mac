@@ -62,26 +62,30 @@ Open Wallpaper Engine to darmowa aplikacja open source dla macOS, która odtwarz
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Wysyłanie przez Wi-Fi" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Wysyłanie przez Wi-Fi" width="720">
 
 - **Wyświetlacze**: osobna tapeta na każdym wyświetlaczu, jedna rozciągnięta na wszystkie lub sklonowana na każdy, grupy, podziały i profile, tak jak w Wallpaper Engine. **Odtwórz w oknie** odtwarza tapetę we własnym oknie.
 
-  <img src="../../docs/images/displays.png" alt="Wyświetlacze" width="400">
+  <img src="../../docs/images/displays.png" alt="Wyświetlacze" width="720">
 
 - **Playlisty**: zmieniaj tapety według minutnika, przy logowaniu, o określonej porze dnia lub w wybrane dni tygodnia, z przejściami z Wallpaper Engine.
 
-  <img src="../../docs/images/playlists.png" alt="Ustawienia playlisty" width="420">
+  <img src="../../docs/images/playlists.png" alt="Ustawienia playlisty" width="720">
 
 - **Dostosowania użytkownika i Tylko szczegóły**: każda scena lub wideo może dostać barwę, nasycenie, wyróżnienie koloru (z pipetą), przyciemnienie, Bloom, rozmycie oraz efekty Wallpaper Engine: zabarwienie, kontrast lokalny, aberrację chromatyczną, VHS i ziarno filmowe, a także szybkość i wstrzymanie animacji; każdy suwak może podążać za muzyką. **Tylko szczegóły** (⇧⌘D) zwęża okno do ustawień tapety, by zmieniać je w trakcie odtwarzania.
 
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **Sterowanie**: klawisze dostępu dla akcji, playlist, tapet i profili wyświetlaczy; [wiersz poleceń](../../docs/command-line.md) `-control` z Wallpaper Engine; oraz wtyczka **Serwer MCP**, przez którą klienty MCP ustawiają tapety, playlisty i ustawienia oraz edytują sceny, przez lokalne połączenie, które może otworzyć tylko Twoje konto.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="Wtyczka Serwer MCP" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="Wtyczka Serwer MCP" width="720">
 
 - **Zasilanie**: tapety wstrzymują się, gdy ekran jest zablokowany, stosują regułę *Laptop na baterii* z Wallpaper Engine i mogą przejść na niższy preset jakości i niższą liczbę klatek na baterii lub w trybie niskiego zużycia energii.
 - **Motyw kolorów**: pasek menu, kolor akcentu oraz zabarwione ikony i foldery dopasowują się do koloru tapety; własne okna Open Wallpaper Engine mogą używać dokładnie tego koloru.
 
-  <img src="../../docs/images/theming.png" alt="Motyw kolorów" width="540">
+  <img src="../../docs/images/theming.png" alt="Motyw kolorów" width="720">
 
 Wszystko inne, obszar po obszarze: [docs/features.md](../../docs/features.md).
 

@@ -62,26 +62,30 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 
   <a href="docs/media/demo/android-export.webm"><img src="docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="docs/images/send-over-wifi.png" alt="Send over Wi-Fi" width="456">
+  <img src="docs/images/send-over-wifi.png" alt="Send over Wi-Fi" width="720">
 
 - **Displays**: a wallpaper per display, one stretched across them or cloned onto each, groups, splits and profiles, as in Wallpaper Engine. **Play in Window** plays a wallpaper in a window of its own.
 
-  <img src="docs/images/displays.png" alt="Displays" width="400">
+  <img src="docs/images/displays.png" alt="Displays" width="720">
 
 - **Playlists**: change wallpapers on a timer, at login, by time of day or day of week, with Wallpaper Engine's transitions.
 
-  <img src="docs/images/playlists.png" alt="Playlist settings" width="420">
+  <img src="docs/images/playlists.png" alt="Playlist settings" width="720">
 
 - **User Adjustments and Details Only**: any scene or video can get Hue, Saturation, Color Pop (with an eyedropper), Dim, Bloom, Blur and Wallpaper Engine's Tint, Local Contrast, Chromatic Aberration, VHS and Film Grain on top, plus Animation Speed and Pause Animation, and every slider can follow the music. **Details Only** (⇧⌘D) narrows the window to the wallpaper's settings, so you can change them while it plays.
 
+  <img src="docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="docs/images/user-adjustments.png" alt="User Adjustments" width="720">
+
 - **Control**: hotkeys for actions, playlists, wallpapers and display profiles; Wallpaper Engine's `-control` [command line](docs/command-line.md); and the **MCP Server** plugin, through which MCP clients set wallpapers, playlists and settings and edit scenes, over a local connection only your account can open.
 
-  <img src="docs/images/mcp-plugin.png" alt="MCP Server plugin" width="456">
+  <img src="docs/images/mcp-plugin.png" alt="MCP Server plugin" width="720">
 
 - **Power**: wallpapers pause while the screen is locked, follow Wallpaper Engine's *Laptop on battery* rule, and can drop to a lower quality preset and frame rate on battery or in Low Power Mode.
 - **Theming**: the menu bar, the accent colour and tinted icons and folders follow the wallpaper's colour; Open Wallpaper Engine's own windows can use the exact colour.
 
-  <img src="docs/images/theming.png" alt="Theming" width="540">
+  <img src="docs/images/theming.png" alt="Theming" width="720">
 
 Everything else, area by area: [docs/features.md](docs/features.md).
 
