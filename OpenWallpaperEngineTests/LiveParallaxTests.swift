@@ -60,4 +60,40 @@ final class LiveParallaxTests: XCTestCase {
         XCTAssertFalse(parallax.isActive, "stops once eased out")
         XCTAssertEqual(parallax.offset(rootOrigin: .zero, rootDepth: SIMD2(1, 1), amount: 1), .zero)
     }
+
+    /// Parallax the scene doesn't have of its own (User Adjustments) zooms the scene just enough
+    /// that a scene-sized layer still covers the screen with the cursor in any corner.
+    func testAddedParallaxZoomsToHideTheEdges() {
+        let amount: Float = 0.5, influence: Float = 0.5
+        let factor = SceneCameraParallax.coverZoom(reach: amount * influence, authoredReach: 0)
+        XCTAssertEqual(factor, 1 / (1 - amount * influence), accuracy: 1e-6)
+        let zoom = SceneOrthographicZoom(factor: factor, sceneSize: size)
+        var parallax = SceneCameraParallax(sceneSize: size)
+        for corner in [SIMD2<Float>(0, 0), SIMD2(1, 0), SIMD2(0, 1), SIMD2(1, 1)] {
+            parallax.update(cursor: corner, eye: .zero, sceneSize: size, influence: influence, delay: 0, deltaTime: 1 / 60)
+            let offset = zoom.plane.linear * parallax.offset(rootOrigin: size / 2, rootDepth: SIMD2(1, 1), amount: amount)
+            let low = zoom.plane.apply(.zero) + offset, high = zoom.plane.apply(size) + offset
+            XCTAssertLessThanOrEqual(low.x, 1e-2, "\(corner)")
+            XCTAssertLessThanOrEqual(low.y, 1e-2, "\(corner)")
+            XCTAssertGreaterThanOrEqual(high.x, size.x - 1e-2, "\(corner)")
+            XCTAssertGreaterThanOrEqual(high.y, size.y - 1e-2, "\(corner)")
+            XCTAssertNotEqual(offset.x, 0, "moves sideways")
+            XCTAssertNotEqual(offset.y, 0, "moves up and down")
+        }
+    }
+
+    /// A scene's own parallax is drawn as WE draws it; only the app's amount above 1 zooms.
+    func testOwnParallaxZoomsOnlyForTheExtraAmount() {
+        XCTAssertEqual(SceneCameraParallax.coverZoom(reach: 0.25, authoredReach: 0.25), 1)
+        XCTAssertEqual(SceneCameraParallax.coverZoom(reach: 0.1, authoredReach: 0.25), 1)
+        XCTAssertEqual(SceneCameraParallax.coverZoom(reach: 0.5, authoredReach: 0.25), 1 / 0.75, accuracy: 1e-6)
+        XCTAssertEqual(SceneCameraParallax.coverZoom(reach: 0, authoredReach: 0), 1, "off or eased out")
+        XCTAssertEqual(SceneCameraParallax.coverZoom(reach: 5, authoredReach: 0), SceneCameraParallax.maximumCoverZoom)
+    }
+
+    func testCameraRigCarriesTheCoverZoom() {
+        var input = SceneCameraRigInput(sceneSize: size, aspect: size.x / size.y, time: 0, deltaTime: 0)
+        input.parallaxCoverZoom = 1.25
+        XCTAssertEqual(SceneOrthographicCameraRig(zoom: 2).frameCamera(input).drawnSpace.factor, 2.5, accuracy: 1e-6)
+    }
 }
