@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.24] - 2026-11-23
+
 ### Added
 
 - **Show Details in the menu bar menu.** It opens the main window in Details Only, with the wallpaper's settings. ([#646](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/646))
