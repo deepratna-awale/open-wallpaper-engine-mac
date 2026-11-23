@@ -81,8 +81,8 @@ final class WallpaperEditorCoreEditingTests: XCTestCase {
         let effect = try XCTUnwrap(scene.objects[0].effects?.first)
         XCTAssertEqual(effect.file, "effects/tint/effect.json")
         let pass = try XCTUnwrap(effect.passes?.first)
-        XCTAssertEqual(pass.constantshadervalues?["color"]?.string, "0 1 0", "the effect parameter reaches the renderer's model")
-        XCTAssertEqual(pass.constantshadervalues?["alpha"]?.number, 0.5)
+        XCTAssertEqual(pass.constants["color"], .string("0 1 0"), "the effect parameter reaches the renderer's model")
+        XCTAssertEqual(pass.constants["alpha"], .number(0.5))
         XCTAssertEqual(scene.objects[2].textValue, "12:34", "the text layer")
     }
 

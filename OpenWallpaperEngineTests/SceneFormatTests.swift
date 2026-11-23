@@ -44,7 +44,6 @@ final class SceneFormatTests: XCTestCase {
         XCTAssertEqual(passes[0].constants["scale"], .string("2 2"))
         XCTAssertEqual(passes[0].constants["strength"],
                        .object(.init(value: .number(0.25), userName: "blurstrength")))
-        XCTAssertEqual(passes[0].constantshadervalues?["strength"]?.number, 0.25)
 
         XCTAssertEqual(passes[1].combos, ["VERTICAL": 1])
         XCTAssertEqual(passes[1].constants["scale"], .number(3))

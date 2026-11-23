@@ -12,8 +12,6 @@ import SwiftUI
 struct ExplorerTopBar: ViewModifier {
     var viewModel: ContentViewModel
 
-    @EnvironmentObject var globalSettingsViewModel: GlobalSettingsViewModel
-
     /// Opens the sheet that adds a video or image by URL.
     let onAddURL: () -> Void
 
@@ -46,14 +44,12 @@ struct ExplorerTopBar: ViewModifier {
                         .help("Unsubscribe from the selected wallpapers")
                         .disabled(!isLibrary)
                     }
-                    if globalSettingsViewModel.settings.autoRefresh {
-                        Button {
-                            viewModel.refresh()
-                        } label: {
-                            Label("Refresh", systemImage: "arrow.triangle.2.circlepath")
-                        }
-                        .help("Refresh the wallpaper list")
+                    Button {
+                        viewModel.refresh()
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.triangle.2.circlepath")
                     }
+                    .help("Refresh the wallpaper list")
                 }
                 ToolbarItemGroup {
                     Button {

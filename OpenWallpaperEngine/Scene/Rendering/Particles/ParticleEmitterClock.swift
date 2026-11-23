@@ -109,16 +109,13 @@ struct ParticleEmitterClock: Equatable {
     }
 }
 
-/// One emitter's running state: its clock, the fraction of a particle its rate carries into the next
-/// step and what the rate emitted this period. WE keeps these per emitter record
-/// (`wallpaper64.exe` 0x1402379aa…0x140237b74: carry at +0x24, the period's count at +0x3c), so
-/// every emitter of a system counts on its own.
+/// One emitter's running state: its clock and the fraction of a particle its rate carries into the
+/// next step. WE keeps these per emitter record (`wallpaper64.exe` 0x1402379aa…0x140237b74: carry
+/// at +0x24), so every emitter of a system counts on its own.
 struct ParticleEmitterState: Equatable {
     var clock = ParticleEmitterClock()
     var remainder: Float = 0
-    var periodEmitted = 0
-    /// Spawned this step and whether a period started (an instance's, `ParticleGPUInstance`).
-    var spawnCount = 0
+    /// Whether a period started this step (an instance's, `ParticleGPUInstance`).
     var startsPeriod = false
     /// A `layerimage` emitter's layer world (`ParticleEmitterStep.layerWorld`) at its last step that
     /// spawned, and the one before, which this step's spawns inherit the layer's motion from: WE
