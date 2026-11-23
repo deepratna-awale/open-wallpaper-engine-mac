@@ -50,6 +50,8 @@ public enum AppMain {
                                                        xcTestLoaded: NSClassFromString("XCTestCase") != nil,
                                                        loadedBundlePaths: Bundle.allBundles.map(\.bundlePath))
             if !isTestHost {
+                // Before anything loads a wallpaper's saved properties.
+                UserAdjustmentBlurReset.runOnce()
                 // Open Wallpaper Engine, or the Wallpaper Editor in a process of its own (`AppLaunchPlan`).
                 let mode: AppLaunchMode = AppLaunchMode.parse(ProcessInfo.processInfo.arguments)
                 delegate = AppLaunchPlan.plan(for: mode).makeDelegate()
