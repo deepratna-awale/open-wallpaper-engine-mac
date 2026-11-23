@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Mouse Parallax no longer shows the wallpaper's edges.** Turned on in User Adjustments for a 2D scene that has no parallax of its own, it now zooms the scene in just enough that the layers never slide past its edges; a scene with its own parallax zooms only for a Parallax Amount above 1. ([#644](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/644))
+
 ## [1.0.0-beta.23] - 2026-11-22
 
 ### Added

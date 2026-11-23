@@ -62,6 +62,20 @@ struct SceneCameraParallax: Equatable {
         return SIMD2<Float>(repeating: 0.5) + (full - SIMD2<Float>(repeating: 0.5)) * weight
     }
 
+    /// How far the scene zooms in so the parallax never uncovers its edges. With depth 1 and the
+    /// cursor at a display edge, a layer covering the scene shifts by `reach · size / 2`
+    /// (`reach` = weight · amount · influence). A scene whose own parallax is on is taken to be
+    /// sized for its own reach (`authoredReach`), so only the reach beyond it zooms; one without it
+    /// (the User Adjustments' Mouse Parallax) zooms for all of it. An app extra: WE doesn't zoom.
+    static func coverZoom(reach: Float, authoredReach: Float) -> Float {
+        let margin = 1 + max(authoredReach, 0) - max(reach, 0)
+        guard margin < 1 else { return 1 }
+        return 1 / max(margin, 1 / maximumCoverZoom)
+    }
+
+    /// Beyond this the edges show rather than the scene filling the screen with a sliver of itself.
+    static let maximumCoverZoom: Float = 2
+
     /// How far an object is drawn from where its transform puts it. `origin` and `depth` are
     /// its root object's `origin` and `parallaxDepth`.
     func offset(rootOrigin: SIMD2<Float>, rootDepth: SIMD2<Float>, amount: Float) -> SIMD2<Float> {

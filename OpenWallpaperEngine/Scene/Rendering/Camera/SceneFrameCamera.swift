@@ -58,6 +58,9 @@ struct SceneCameraRigInput {
     /// The scene's default camera as `thisScene.setCameraTransforms` set it; nil keeps the
     /// `camera` block.
     var scriptCamera: SceneCameraPose?
+    /// How far an orthographic scene zooms in to keep the parallax inside its edges
+    /// (`SceneCameraParallax.coverZoom`); 1 is none.
+    var parallaxCoverZoom: Float = 1
 }
 
 /// Where a frame's camera comes from: WE's camera layers, the scene's camera paths, or the
@@ -140,7 +143,7 @@ final class SceneOrthographicCameraRig: SceneCameraRig {
             pose = path
         }
         let view = pose.map { SceneCamera.lookAt(eye: $0.eye, center: $0.center, up: $0.up) } ?? matrix_identity_float4x4
-        let drawn = SceneOrthographicZoom(factor: zoom * (pose?.zoom ?? input.scriptCamera?.zoom ?? 1),
+        let drawn = SceneOrthographicZoom(factor: zoom * (pose?.zoom ?? input.scriptCamera?.zoom ?? 1) * input.parallaxCoverZoom,
                                           sceneSize: input.sceneSize, view: view)
         let depth = drawn.orthographicDepth
         var camera = SceneFrameCamera(projection: SceneCamera.orthographic(left: 0, right: size.x, bottom: 0, top: size.y,
@@ -154,7 +157,8 @@ final class SceneOrthographicCameraRig: SceneCameraRig {
     /// The zoom this frame: `general` × the camera's, as `thisScene.setCameraTransforms` set it
     /// (1 until a script does).
     static func frameZoom(general: Float, input: SceneCameraRigInput) -> SceneOrthographicZoom {
-        SceneOrthographicZoom(factor: general * (input.scriptCamera?.zoom ?? 1), sceneSize: input.sceneSize)
+        SceneOrthographicZoom(factor: general * (input.scriptCamera?.zoom ?? 1) * input.parallaxCoverZoom,
+                              sceneSize: input.sceneSize)
     }
 }
 

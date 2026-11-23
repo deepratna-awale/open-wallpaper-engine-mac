@@ -38,10 +38,7 @@ extension SceneMetalRenderer {
                                   delay: settles ? 0 : sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
                                   deltaTime: deltaTime)
             parallaxSettledPointer = fixedPointer
-            // `_owe_effect_parallax_amount` is an app extra, 1 (WE's amount) by default.
-            let amount = (sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount)
-                * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)
-            if camera.orthographic { parallax = (cameraParallax, amount) }
+            if camera.orthographic { parallax = (cameraParallax, parallaxAmount) }
         }
         // WE moves the camera by the shake (0x140199580). A perspective scene's camera carries it;
         // an orthographic scene's layers are drawn without the camera, so they move the other way.
@@ -51,6 +48,25 @@ extension SceneMetalRenderer {
         }
         return CameraMotion(parallax: parallax, shake: SIMD2(shake.x, shake.y),
                             audioLevel: WallpaperServices.shared.audioLevel)
+    }
+
+    /// `cameraparallaxamount` this frame times the app's `_owe_effect_parallax_amount` (1, WE's
+    /// amount, by default).
+    private var parallaxAmount: Float {
+        (sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount)
+            * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)
+    }
+
+    /// The zoom that keeps an orthographic scene's parallax inside its edges
+    /// (`SceneCameraParallax.coverZoom`): only parallax the scene doesn't have of its own, or the
+    /// app's amount above 1, zooms.
+    var parallaxCoverZoom: Float {
+        guard camera.orthographic, cameraParallax.isActive else { return 1 }
+        let influence = sceneSetting(.cameraparallaxmouseinfluence) ?? camera.parallaxMouseInfluence
+        let ownAmount = sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount
+        let own = scripts.state.scene.flag(.cameraparallax) ?? camera.parallax
+        return SceneCameraParallax.coverZoom(reach: cameraParallax.weight * parallaxAmount * influence,
+                                             authoredReach: own ? ownAmount * influence : 0)
     }
 
     /// A number of the scene's settings this frame: a script's, else its timeline's; nil leaves
@@ -80,6 +96,7 @@ extension SceneMetalRenderer {
         input.nearZ = sceneSetting(.nearz)
         input.farZ = sceneSetting(.farz)
         input.cameraFade = scripts.state.scene.flag(.camerafade)
+        input.parallaxCoverZoom = parallaxCoverZoom
         input.scriptCamera = scripts.state.scene.scriptCamera
         return input
     }
@@ -273,8 +290,8 @@ extension SceneMetalRenderer {
     private func orthographicZoom() -> SceneOrthographicZoom {
         guard !isPerspective else { return .none }
         let general = Float(spatial.camera.zoom)
-        return SceneOrthographicZoom(factor: general * (scripts.state.scene.scriptCamera?.zoom ?? 1), sceneSize: sceneSize,
-                                     view: frameZoom.view)
+        return SceneOrthographicZoom(factor: general * (scripts.state.scene.scriptCamera?.zoom ?? 1) * parallaxCoverZoom,
+                                     sceneSize: sceneSize, view: frameZoom.view)
     }
 
     /// A particle system's emitter transform this frame: its object's, parents included, moved by
