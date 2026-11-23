@@ -16,11 +16,9 @@ link it to the `.webm`, with an explicit width so every clip shows at the same s
 ```
 
 Screenshots (`docs/images/`) get a width too, because GitHub otherwise shows each at its own pixel
-size up to the column's width, so a small dialog came out larger than a whole window. Whole-window
-shots use 720, like the clips; dialogs and settings panes use about 0.6 of their pixel width
-(`displays.png` 400, `playlists.png` 420, `mcp-plugin.png` and `send-over-wifi.png` 456,
-`theming.png` 540), so a dialog's text comes out about the size of a window's. Use the same widths in every translated
-README.
+size up to the column's width. Every picture in the README, clip or screenshot, uses 720, so they
+line up. Shoot or lay out a screenshot at least 720 pixels wide, so it isn't stretched; a tall, narrow
+panel is laid out in columns (`user-adjustments.png`). Use the same width in every translated README.
 
 Pages that can play video (the website) can use the `.webm` with the `.mp4` as a fallback and the
 `.png` as `poster`.

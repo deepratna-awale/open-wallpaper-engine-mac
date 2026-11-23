@@ -198,12 +198,39 @@ final class ControlRequestRouter {
         let key = try params.required("key")
         guard let value = params.raw["value"] else { throw ControlError(.invalidParams, "value is required.") }
         let properties = model.properties(of: wallpaper)
+        if let musicSync = try setMusicSync(key, value, of: wallpaper, properties: properties) { return musicSync }
         guard let property = properties.first(where: { $0.key == key }) else {
             let keys = properties.filter { !["text", "group", ""].contains($0.type) }.map(\.key).sorted().joined(separator: ", ")
             throw ControlError(.notFound, "\"\(wallpaper.title)\" has no user property \"\(key)\". "
                                + (keys.isEmpty ? "It has none to set." : "Its properties: \(keys)."))
         }
         let stored = try ControlUserPropertyValue.stored(value, for: property)
+        let stores = model.setUserProperty(key, to: stored, of: wallpaper)
+        return [
+            "id": .string(wallpaper.id), "title": .string(wallpaper.title), "key": .string(key),
+            "value": .string(stored), "stores": .array(stores.map { .string($0) }),
+        ]
+    }
+
+    /// A slider's Sync to Music (`<key>_musicSync`, true or false) or Music Amount
+    /// (`<key>_musicAmount`, up to the slider's span either way), as the Details panel sets them:
+    /// turning sync on without an amount starts at a quarter of the span. nil for any other key.
+    private func setMusicSync(_ key: String, _ value: JSONValue, of wallpaper: ControlWallpaper,
+                              properties: [ControlUserProperty]) throws -> JSONValue? {
+        guard let slider = properties.first(where: {
+            $0.type == "slider" && (key == ControlUserProperty.musicSyncKey(of: $0.key)
+                                    || key == ControlUserProperty.musicAmountKey(of: $0.key))
+        }) else { return nil }
+        let span = max(slider.maximum - slider.minimum, 0.001)
+        let isSync = key == ControlUserProperty.musicSyncKey(of: slider.key)
+        let companion = ControlUserProperty(
+            key: key, title: "\(slider.title) \(isSync ? "Sync to Music" : "Music Amount")", type: isSync ? "bool" : "slider",
+            value: "", defaultValue: isSync ? "false" : "0", minimum: isSync ? 0 : -span, maximum: isSync ? 1 : span,
+            step: nil, fraction: true, editable: false, options: [])
+        let stored = try ControlUserPropertyValue.stored(value, for: companion)
+        if isSync, stored == "true", abs(slider.musicAmount) < 0.0001 {
+            _ = model.setUserProperty(ControlUserProperty.musicAmountKey(of: slider.key), to: String(span / 4), of: wallpaper)
+        }
         let stores = model.setUserProperty(key, to: stored, of: wallpaper)
         return [
             "id": .string(wallpaper.id), "title": .string(wallpaper.title), "key": .string(key),
@@ -283,6 +310,8 @@ final class ControlRequestRouter {
             object["max"] = .number(property.maximum)
             object["step"] = property.step.map { .number($0) } ?? .null
             object["whole_numbers"] = .bool(!property.fraction)
+            object["music_sync"] = .bool(property.musicSync)
+            object["music_amount"] = .number(property.musicAmount)
         }
         if property.type == "combo" {
             object["options"] = .array(property.options.map { ["label": .string($0.label), "value": .string($0.value)] })

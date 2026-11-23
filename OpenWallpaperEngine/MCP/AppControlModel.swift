@@ -51,7 +51,9 @@ final class AppControlModel: ControlAppModel {
                                 maximum: property.maximum, step: property.step, fraction: property.fraction,
                                 editable: property.editable,
                                 options: property.options.map { ControlUserProperty.Option(label: $0.title, value: $0.value) },
-                                condition: conditions[property.id])
+                                condition: conditions[property.id],
+                                musicSync: model.values[ControlUserProperty.musicSyncKey(of: property.id)]?.lowercased() == "true",
+                                musicAmount: Double(model.values[ControlUserProperty.musicAmountKey(of: property.id)] ?? "") ?? 0)
         }
     }
 

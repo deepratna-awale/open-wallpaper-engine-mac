@@ -62,24 +62,30 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi पर भेजें" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi पर भेजें" width="720">
 
 - **डिस्प्ले**: हर डिस्प्ले पर अलग वॉलपेपर, एक वॉलपेपर सभी डिस्प्ले पर फैला हुआ या हर डिस्प्ले पर क्लोन किया हुआ, साथ ही ग्रुप, स्प्लिट और प्रोफ़ाइल — बिल्कुल Wallpaper Engine की तरह. **विंडो में चलाएँ** किसी वॉलपेपर को उसकी अपनी विंडो में चलाता है.
 
-  <img src="../../docs/images/displays.png" alt="डिस्प्ले" width="400">
+  <img src="../../docs/images/displays.png" alt="डिस्प्ले" width="720">
 
 - **प्लेलिस्ट**: टाइमर पर, लॉगिन पर, दिन के समय या हफ़्ते के दिन के हिसाब से वॉलपेपर बदलें, Wallpaper Engine के ट्रांज़िशन के साथ.
 
-  <img src="../../docs/images/playlists.png" alt="प्लेलिस्ट सेटिंग" width="420">
+  <img src="../../docs/images/playlists.png" alt="प्लेलिस्ट सेटिंग" width="720">
+
+- **यूज़र एडजस्टमेंट और केवल विवरण**: किसी भी सीन या वीडियो पर ह्यू, सैचुरेशन, कलर पॉप (आईड्रॉपर के साथ), मंद करें, ब्लूम, ब्लर और Wallpaper Engine के टिंट, स्थानीय कंट्रास्ट, क्रोमैटिक एबरेशन, VHS और फ़िल्म ग्रेन लगाए जा सकते हैं, साथ में ऐनिमेशन स्पीड और ऐनिमेशन रोकें भी; हर स्लाइडर संगीत के साथ चल सकता है। **केवल विवरण** (⇧⌘D) विंडो को वॉलपेपर की सेटिंग तक छोटा कर देता है, ताकि चलते हुए उसे बदल सकें।
+
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
 
 - **कंट्रोल**: ऐक्शन, प्लेलिस्ट, वॉलपेपर और डिस्प्ले प्रोफ़ाइल के लिए हॉटकी; Wallpaper Engine की `-control` [कमांड लाइन](../../docs/command-line.md); और **MCP सर्वर** प्लग-इन, जिसके ज़रिए MCP क्लाइंट वॉलपेपर, प्लेलिस्ट और सेटिंग सेट करते हैं और सीन एडिट करते हैं, एक लोकल कनेक्शन पर जिसे सिर्फ़ आपका अकाउंट खोल सकता है.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="MCP सर्वर प्लग-इन" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP सर्वर प्लग-इन" width="720">
 
 - **पावर**: स्क्रीन लॉक रहने पर वॉलपेपर रुक जाते हैं, Wallpaper Engine के *लैपटॉप बैटरी पर हो तब* नियम का पालन करते हैं, और बैटरी पर या लो पावर मोड में कम क्वालिटी प्रीसेट और कम फ़्रेम रेट पर जा सकते हैं.
 - **थीमिंग**: मेन्यू बार, एक्सेंट कलर और टिंट किए गए आइकन और फ़ोल्डर वॉलपेपर के रंग के हिसाब से बदलते हैं; Open Wallpaper Engine की अपनी विंडो ठीक वही रंग इस्तेमाल कर सकती हैं.
 
-  <img src="../../docs/images/theming.png" alt="थीमिंग" width="540">
+  <img src="../../docs/images/theming.png" alt="थीमिंग" width="720">
 
 बाकी सब कुछ, हिस्से के हिसाब से: [docs/features.md](../../docs/features.md).
 

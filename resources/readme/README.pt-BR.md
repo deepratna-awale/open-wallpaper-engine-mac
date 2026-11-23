@@ -62,24 +62,30 @@ O Open Wallpaper Engine é um app gratuito e de código aberto para macOS que re
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Enviar por Wi-Fi" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Enviar por Wi-Fi" width="720">
 
 - **Telas**: uma imagem de fundo por tela, uma esticada em todas ou clonada em cada uma, grupos, divisões e perfis, como no Wallpaper Engine. **Reproduzir em Janela** reproduz uma imagem de fundo em uma janela própria.
 
-  <img src="../../docs/images/displays.png" alt="Telas" width="400">
+  <img src="../../docs/images/displays.png" alt="Telas" width="720">
 
 - **Playlists**: troque de imagem de fundo com um timer, no login, pela hora do dia ou pelo dia da semana, com as transições do Wallpaper Engine.
 
-  <img src="../../docs/images/playlists.png" alt="Ajustes de playlist" width="420">
+  <img src="../../docs/images/playlists.png" alt="Ajustes de playlist" width="720">
+
+- **Ajustes do usuário e Somente Detalhes**: qualquer cena ou vídeo pode receber Matiz, Saturação, Destaque de cor (com conta-gotas), Escurecer, Bloom, Desfoque e os efeitos Tonalidade, Contraste local, Aberração cromática, VHS e Granulação de filme do Wallpaper Engine, além de Velocidade da Animação e Pausar animação; cada controle pode seguir a música. **Somente Detalhes** (⇧⌘D) reduz a janela aos ajustes do papel de parede, para alterá-los enquanto ele roda.
+
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
 
 - **Controle**: atalhos para ações, playlists, imagens de fundo e perfis de tela; a [linha de comando](../../docs/command-line.md) `-control` do Wallpaper Engine; e o plug-in **Servidor MCP**, por meio do qual clientes MCP definem imagens de fundo, playlists e ajustes e editam cenas, por uma conexão local que só a sua conta pode abrir.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Servidor MCP" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Servidor MCP" width="720">
 
 - **Energia**: as imagens de fundo pausam enquanto a tela está bloqueada, seguem a regra *Notebook na bateria* do Wallpaper Engine e podem passar para uma predefinição de qualidade e uma taxa de quadros menores na bateria ou no Modo de Baixa Energia.
 - **Temas de Cor**: a barra de menus, a cor de destaque e os ícones e pastas tingidos acompanham a cor da imagem de fundo; as próprias janelas do Open Wallpaper Engine podem usar a cor exata.
 
-  <img src="../../docs/images/theming.png" alt="Temas de Cor" width="540">
+  <img src="../../docs/images/theming.png" alt="Temas de Cor" width="720">
 
 Todo o resto, área por área: [docs/features.md](../../docs/features.md).
 

@@ -237,6 +237,28 @@ final class MCPControlRouterTests: XCTestCase {
         XCTAssertEqual(model.propertyCalls.count, 3, "nothing invalid reaches the app")
     }
 
+    /// A slider's Sync to Music and Music Amount are set as the Details panel sets them, and listed.
+    func testASlidersMusicSync() async throws {
+        let listed = try await result("get_wallpaper", ["id": "100"])["wallpaper"]?["properties"]?.arrayValue ?? []
+        let speed = listed.first { $0["key"] == "speed" }
+        XCTAssertEqual(speed?["music_sync"], false)
+        XCTAssertEqual(speed?["music_amount"], 0)
+        XCTAssertNil(listed.first { $0["key"] == "rain" }?["music_sync"], "only sliders sync")
+
+        let synced = try await result("set_user_property", ["id": "100", "key": "speed_musicSync", "value": true])
+        XCTAssertEqual(synced["value"], "true")
+        XCTAssertEqual(model.propertyCalls.map(\.0), ["speed_musicAmount", "speed_musicSync"], "starts at a quarter of the span")
+        XCTAssertEqual(model.propertyCalls.first?.1, "0.5")
+        _ = try await result("set_user_property", ["id": "100", "key": "speed_musicAmount", "value": -1.5])
+        XCTAssertEqual(model.propertyCalls.last?.1, "-1.5")
+
+        let tooFar = await error("set_user_property", ["id": "100", "key": "speed_musicAmount", "value": 3])
+        XCTAssertEqual(tooFar?.code, .invalidParams)
+        let notASlider = await error("set_user_property", ["id": "100", "key": "rain_musicSync", "value": true])
+        XCTAssertEqual(notASlider?.code, .notFound)
+        XCTAssertEqual(model.propertyCalls.count, 3)
+    }
+
     func testPlaylistsAndStepping() async throws {
         let playlists = try await result("list_playlists")["playlists"]?.arrayValue ?? []
         XCTAssertEqual(playlists.first?["name"], "Evening")

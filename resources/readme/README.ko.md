@@ -62,24 +62,30 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi로 보내기" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi로 보내기" width="720">
 
 - **디스플레이**: Wallpaper Engine처럼 디스플레이마다 다른 배경화면, 여러 디스플레이에 걸쳐 늘리거나 각 디스플레이에 복제한 배경화면, 그룹, 분할, 프로필을 지원합니다. **윈도우에서 재생**은 배경화면을 별도의 윈도우에서 재생합니다.
 
-  <img src="../../docs/images/displays.png" alt="디스플레이" width="400">
+  <img src="../../docs/images/displays.png" alt="디스플레이" width="720">
 
 - **플레이리스트**: 타이머, 로그인 시, 시간대, 요일에 따라 Wallpaper Engine의 전환 효과와 함께 배경화면을 바꿉니다.
 
-  <img src="../../docs/images/playlists.png" alt="플레이리스트 설정" width="420">
+  <img src="../../docs/images/playlists.png" alt="플레이리스트 설정" width="720">
+
+- **사용자 조정과 세부사항만**: 모든 장면이나 동영상 위에 색조, 채도, 컬러 팝(스포이트 포함), 어둡게, 블룸, 흐림 효과와 Wallpaper Engine의 틴트, 로컬 대비, 색수차, VHS, 필름 그레인을 더할 수 있고, 애니메이션 속도와 애니메이션 일시 정지도 있습니다. 모든 슬라이더는 음악을 따를 수 있습니다. **세부사항만**(⇧⌘D)은 창을 배경화면 설정만으로 줄여, 재생되는 모습을 보며 바꿀 수 있습니다.
+
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
 
 - **제어**: 동작, 플레이리스트, 배경화면, 디스플레이 프로필용 단축키, Wallpaper Engine의 `-control` [명령줄](../../docs/command-line.md), 그리고 **MCP 서버** 플러그인을 제공합니다. MCP 클라이언트는 이 플러그인을 통해 사용자 본인의 계정만 열 수 있는 로컬 연결로 배경화면, 플레이리스트, 설정을 지정하고 장면을 편집합니다.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="MCP 서버 플러그인" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 서버 플러그인" width="720">
 
 - **전원**: 화면이 잠겨 있는 동안 배경화면이 일시 정지되고, Wallpaper Engine의 *노트북 배터리 사용 시* 규칙을 따르며, 배터리 또는 저전력 모드에서는 더 낮은 품질 프리셋과 프레임 속도로 낮출 수 있습니다.
 - **테마**: 메뉴 막대, 강조 색상, 색이 입혀진 아이콘과 폴더가 배경화면의 색상을 따라갑니다. Open Wallpaper Engine 자체의 윈도우에는 배경화면의 정확한 색상을 사용할 수 있습니다.
 
-  <img src="../../docs/images/theming.png" alt="테마" width="540">
+  <img src="../../docs/images/theming.png" alt="테마" width="720">
 
 그 밖의 모든 기능은 영역별로 [docs/features.md](../../docs/features.md)에서 확인하세요.
 

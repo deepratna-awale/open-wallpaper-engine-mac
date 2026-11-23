@@ -64,24 +64,30 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="الإرسال عبر Wi-Fi" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="الإرسال عبر Wi-Fi" width="720">
 
 - **شاشات العرض**: خلفية لكل شاشة، أو خلفية واحدة ممتدة عبر الشاشات أو مكرّرة على كل منها، مع المجموعات والتقسيمات والملفات الشخصية، كما في Wallpaper Engine. يشغّل **تشغيل في نافذة** خلفيةً في نافذة خاصة بها.
 
-  <img src="../../docs/images/displays.png" alt="شاشات العرض" width="400">
+  <img src="../../docs/images/displays.png" alt="شاشات العرض" width="720">
 
 - **قوائم التشغيل**: بدّل الخلفيات وفق مؤقّت، أو عند تسجيل الدخول، أو حسب وقت اليوم أو يوم الأسبوع، مع انتقالات Wallpaper Engine.
 
-  <img src="../../docs/images/playlists.png" alt="إعدادات قائمة التشغيل" width="420">
+  <img src="../../docs/images/playlists.png" alt="إعدادات قائمة التشغيل" width="720">
+
+- **تعديلات المستخدم والتفاصيل فقط**: يمكن أن يُضاف فوق أي مشهد أو فيديو تدرج اللون والتشبع وإبراز اللون (مع قطّارة) والتعتيم والتوهج والتمويه، ومؤثرات Wallpaper Engine للتلوين والتباين المحلي والزيغ اللوني وVHS وحبيبات الفيلم، إضافةً إلى سرعة الحركة وإيقاف الحركة مؤقتًا، ويمكن لكل منزلق أن يتبع الموسيقى. **التفاصيل فقط** (⇧⌘D) تضيّق النافذة إلى إعدادات الخلفية لتغييرها أثناء تشغيلها.
+
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
 
 - **التحكم**: اختصارات للإجراءات وقوائم التشغيل والخلفيات والملفات الشخصية للشاشات؛ و[سطر الأوامر](../../docs/command-line.md) `-control` الخاص بـ Wallpaper Engine؛ وإضافة **خادم MCP** التي يعيّن عبرها عملاء MCP الخلفيات وقوائم التشغيل والإعدادات ويحرّرون المشاهد، عبر اتصال محلي لا يستطيع فتحه سوى حسابك.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="إضافة خادم MCP" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="إضافة خادم MCP" width="720">
 
 - **الطاقة**: تتوقف الخلفيات مؤقتًا أثناء قفل الشاشة، وتتبع قاعدة *جهاز محمول يعمل بالبطارية* في Wallpaper Engine، ويمكنها الانتقال إلى إعداد جودة أقل ومعدل إطارات أقل عند العمل بالبطارية أو في وضع الطاقة المنخفضة.
 - **التلوين**: يتبع شريط القوائم ولون التمييز والأيقونات والمجلدات الملوّنة لونَ الخلفية؛ ويمكن لنوافذ Open Wallpaper Engine نفسها استخدام اللون الدقيق.
 
-  <img src="../../docs/images/theming.png" alt="التلوين" width="540">
+  <img src="../../docs/images/theming.png" alt="التلوين" width="720">
 
 كل ما عدا ذلك، مرتّبًا حسب المجال: [docs/features.md](../../docs/features.md).
 

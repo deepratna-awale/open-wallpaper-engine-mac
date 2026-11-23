@@ -62,24 +62,30 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 
   <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  <img src="../../docs/images/send-over-wifi.png" alt="Über WLAN senden" width="456">
+  <img src="../../docs/images/send-over-wifi.png" alt="Über WLAN senden" width="720">
 
 - **Displays**: ein Hintergrundbild pro Display, eines über alle gestreckt oder auf jedes geklont, Gruppen, Teilungen und Profile, wie in Wallpaper Engine. **In Fenster abspielen** spielt ein Hintergrundbild in einem eigenen Fenster ab.
 
-  <img src="../../docs/images/displays.png" alt="Displays" width="400">
+  <img src="../../docs/images/displays.png" alt="Displays" width="720">
 
 - **Playlists**: Hintergrundbilder per Timer, bei der Anmeldung, nach Tageszeit oder Wochentag wechseln, mit den Übergängen von Wallpaper Engine.
 
-  <img src="../../docs/images/playlists.png" alt="Playlist-Einstellungen" width="420">
+  <img src="../../docs/images/playlists.png" alt="Playlist-Einstellungen" width="720">
+
+- **Benutzeranpassungen und Nur Details**: Jede Szene und jedes Video kann Farbton, Sättigung, Farbakzent (mit Pipette), Abdunkeln, Bloom, Weichzeichnen sowie die Effekte Tönung, Lokaler Kontrast, Chromatische Aberration, VHS und Filmkörnung von Wallpaper Engine darüber erhalten, dazu Animationsgeschwindigkeit und Animation anhalten; jeder Regler kann der Musik folgen. **Nur Details** (⇧⌘D) verkleinert das Fenster auf die Einstellungen des Hintergrundbilds, damit Sie sie ändern können, während es läuft.
+
+  <img src="../../docs/images/details-only.png" alt="Details Only" width="720">
+
+  <img src="../../docs/images/user-adjustments.png" alt="User Adjustments" width="720">
 
 - **Steuerung**: Tastenkombinationen für Aktionen, Playlists, Hintergrundbilder und Display-Profile; die `-control`-[Befehlszeile](../../docs/command-line.md) von Wallpaper Engine; und das Plug-in **MCP-Server**, über das MCP-Clients Hintergrundbilder, Playlists und Einstellungen festlegen und Szenen bearbeiten, über eine lokale Verbindung, die nur Ihr Benutzeraccount öffnen kann.
 
-  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in MCP-Server" width="456">
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in MCP-Server" width="720">
 
 - **Energie**: Hintergrundbilder pausieren, solange der Bildschirm gesperrt ist, folgen der Regel *Laptop im Batteriebetrieb* von Wallpaper Engine und können im Batteriebetrieb oder im Stromsparmodus auf eine niedrigere Qualitätsvoreinstellung und Bildrate wechseln.
 - **Farbanpassung**: Menüleiste, Akzentfarbe sowie eingefärbte Symbole und Ordner übernehmen die Farbe des Hintergrundbilds; die Fenster von Open Wallpaper Engine selbst können genau diese Farbe verwenden.
 
-  <img src="../../docs/images/theming.png" alt="Farbanpassung" width="540">
+  <img src="../../docs/images/theming.png" alt="Farbanpassung" width="720">
 
 Alles Weitere, Bereich für Bereich: [docs/features.md](../../docs/features.md).
 
