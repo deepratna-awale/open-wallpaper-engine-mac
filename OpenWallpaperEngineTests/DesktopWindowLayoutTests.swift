@@ -183,7 +183,7 @@ final class DesktopWindowLayoutTests: XCTestCase {
     func testASeeThroughWindowOverAnOpaqueOneStillCovers() {
         let whole = DesktopWindow(ownerPID: app, bounds: left.visibleFrame, id: 21)
         let glass = DesktopWindow(ownerPID: other, bounds: left.visibleFrame, id: 22)
-        let opacity = [21: mask(opaque: true), 22: mask(opaque: false)]
+        let opacity: [CGWindowID: WindowOpacityMask] = [21: mask(opaque: true), 22: mask(opaque: false)]
         XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [glass, whole], displays: displays, opacity: opacity), ["1"])
         XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [whole, glass], displays: displays, opacity: opacity), ["1"])
     }
