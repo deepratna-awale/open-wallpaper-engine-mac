@@ -42,6 +42,8 @@ struct LibrarySetting: Equatable {
                        "What wallpapers do while another app's window fills their display; stop frees the wallpaper's memory."),
         LibrarySetting("other_application_fullscreen", .choice([running, "mute", "pause", "pause_all", "stop"]),
                        "What wallpapers do while another app is in full screen on their display."),
+        LibrarySetting("applications_cover_display", .choice([running, "pause"]),
+                       "What wallpapers do while app windows together cover their display (tiled windows); pause stops drawing frames no one sees."),
         LibrarySetting("other_application_playing_audio", .choice([running, "mute", "pause"]),
                        "What wallpapers do while another app plays sound."),
         LibrarySetting("display_asleep", .choice([running, "pause", "stop"]),

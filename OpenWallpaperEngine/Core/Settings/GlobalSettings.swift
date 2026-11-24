@@ -284,6 +284,12 @@ struct GlobalSettings: Codable, Equatable {
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
     var laptopOnBattery = GSPlayback.keepRunning
+    /// "Applications Cover the Display": Keep Running or Pause (`PlaybackRules.covered`). Pause by
+    /// default: a display hidden under windows doesn't draw frames nobody sees.
+    var applicationsCoverDisplay = GSPlayback.pause
+    /// "Check for see-through windows" (`WindowOpacityProbe`): off by default, as it needs
+    /// Screen Recording.
+    var seeThroughWindows = false
     /// "On battery: use a lower quality preset" (`BatteryQuality`): off by default, as WE has no such setting.
     var batteryQuality = false
     /// The preset `batteryQuality` applies; Medium by default.
@@ -429,6 +435,7 @@ struct GlobalSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep, applicationRules
+        case applicationsCoverDisplay, seeThroughWindows
         case batteryQuality, batteryQualityPreset, batteryFrameRateCap
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget
         case webStandardResolution, reducedResolutionParticles
@@ -475,6 +482,8 @@ extension GlobalSettings {
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)
         read(.laptopOnBattery, &laptopOnBattery)
+        read(.applicationsCoverDisplay, &applicationsCoverDisplay)
+        read(.seeThroughWindows, &seeThroughWindows)
         read(.batteryQuality, &batteryQuality)
         read(.batteryQualityPreset, &batteryQualityPreset)
         read(.batteryFrameRateCap, &batteryFrameRateCap)

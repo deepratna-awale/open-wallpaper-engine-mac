@@ -158,6 +158,52 @@ final class DesktopWindowLayoutTests: XCTestCase {
         XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [spanning], displays: displays), ["1", "2"])
     }
 
+    // MARK: See-through windows
+
+    /// A grid that is opaque everywhere, or nowhere.
+    private func mask(opaque: Bool) -> WindowOpacityMask {
+        WindowOpacityMask(columns: 4, rows: 3, opaque: Array(repeating: opaque, count: 12))
+    }
+
+    /// A see-through window over a covered display lets the wallpaper show; opaque grids, or
+    /// grids not yet known, leave it covered.
+    func testSeeThroughWindowsUncoverADisplay() {
+        let leftHalf = DesktopWindow(ownerPID: app, bounds: CGRect(x: 6, y: 31, width: 948, height: 973), id: 11)
+        let rightHalf = DesktopWindow(ownerPID: other, bounds: CGRect(x: 966, y: 31, width: 948, height: 973), id: 12)
+        let windows = [leftHalf, rightHalf]
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: windows, displays: displays, opacity: [:]), ["1"])
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(
+            windows: windows, displays: displays, opacity: [11: mask(opaque: true), 12: mask(opaque: true)]), ["1"])
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(
+            windows: windows, displays: displays, opacity: [12: mask(opaque: false)]), [])
+    }
+
+    /// Where an opaque window lies under a see-through one, the wallpaper is still hidden: the
+    /// order of the windows doesn't matter.
+    func testASeeThroughWindowOverAnOpaqueOneStillCovers() {
+        let whole = DesktopWindow(ownerPID: app, bounds: left.visibleFrame, id: 21)
+        let glass = DesktopWindow(ownerPID: other, bounds: left.visibleFrame, id: 22)
+        let opacity = [21: mask(opaque: true), 22: mask(opaque: false)]
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [glass, whole], displays: displays, opacity: opacity), ["1"])
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [whole, glass], displays: displays, opacity: opacity), ["1"])
+    }
+
+    /// A window opaque but for a strip (a see-through sidebar) uncovers the display once the strip
+    /// is more than the sliver `coveredShare` allows.
+    func testAPartlySeeThroughWindowUncoversByItsShare() {
+        let window = DesktopWindow(ownerPID: app, bounds: left.visibleFrame, id: 31)
+        // 10 columns, the first see-through: a tenth of the display shows the wallpaper.
+        let sidebar = WindowOpacityMask(columns: 10, rows: 1, opaque: (0..<10).map { $0 != 0 })
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [window], displays: displays, opacity: [31: sidebar]), [])
+    }
+
+    func testCoveringWindowsAreTheCountedOnesOverTheDisplay() {
+        let onLeft = DesktopWindow(ownerPID: app, bounds: CGRect(x: 100, y: 100, width: 800, height: 600), id: 1)
+        let onRight = DesktopWindow(ownerPID: app, bounds: CGRect(x: 2000, y: 100, width: 800, height: 600), id: 2)
+        let overlay = DesktopWindow(ownerPID: app, bounds: left.frame, layer: 25, id: 3)
+        XCTAssertEqual(DesktopWindowLayout.coveringWindows([onLeft, onRight, overlay], on: [left]).map(\.id), [1])
+    }
+
     func testUnionAreaCountsOverlapsOnce() {
         XCTAssertEqual(DesktopWindowLayout.unionArea([]), 0)
         XCTAssertEqual(DesktopWindowLayout.unionArea([CGRect(x: 0, y: 0, width: 10, height: 10),

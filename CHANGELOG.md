@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Applications Cover the Display** (Settings › Performance › Playback). A display hidden under app windows, such as two or four tiled windows, stops drawing its wallpaper as before, but Keep Running now keeps it playing however your windows are arranged. **Check for see-through windows** (off by default) keeps the wallpaper playing when the windows over it are see-through, such as a terminal with a transparent background. It needs the Screen & System Audio Recording permission: it takes tiny snapshots of only the covering windows, only while a display is covered, checks them for transparency in memory and discards them at once. ([#653](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/653))
+
 ## [1.0.0-beta.24] - 2026-11-23
 
 ### Added

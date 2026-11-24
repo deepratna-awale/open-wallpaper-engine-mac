@@ -19,8 +19,6 @@ extension AppDelegate {
         }, apply: { [weak self] states in
             self?.applyDisplayPlayback(states)
         })
-        // A display hidden under windows stops drawing (`WallpaperViewModel.coveredScreens`).
-        monitor.watchesCoverage = true
         return monitor
     }
 

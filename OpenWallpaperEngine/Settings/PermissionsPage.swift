@@ -121,9 +121,27 @@ enum PermissionHelper {
         }
     }
 
+    /// Performance › "Check for see-through windows" snapshots the windows covering a display,
+    /// which needs Screen Recording (Screen & System Audio Recording).
+    static var hasScreenRecordingPermission: Bool { CGPreflightScreenCaptureAccess() }
+
+    /// Only for the user turning "Check for see-through windows" on: prompts the first time;
+    /// once denied, macOS answers without prompting and the setting offers System Settings.
+    static func requestScreenRecordingAccess() {
+        if !CGPreflightScreenCaptureAccess() { _ = CGRequestScreenCaptureAccess() }
+    }
+
+    /// System Settings › Privacy & Security › Screen & System Audio Recording.
+    static func openScreenRecordingSettings() {
+        openPrivacySettings(anchor: "Privacy_ScreenCapture")
+    }
+
     /// System Settings › Privacy & Security, on the pane that lists the permission.
     static func openAudioCaptureSettings() {
-        let anchor = usesSystemAudioRecording ? "Privacy_AudioCapture" : "Privacy_ScreenCapture"
+        openPrivacySettings(anchor: usesSystemAudioRecording ? "Privacy_AudioCapture" : "Privacy_ScreenCapture")
+    }
+
+    private static func openPrivacySettings(anchor: String) {
         let candidates = [
             "x-apple.systempreferences:com.apple.preference.security?\(anchor)",
             "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",

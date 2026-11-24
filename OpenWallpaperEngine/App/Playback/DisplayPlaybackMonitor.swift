@@ -17,8 +17,11 @@ import IOKit.ps
 /// its applications runs, since zooming a window posts no event: a window-list read costs about
 /// 0.1 ms of CPU.
 ///
-/// While `watchesCoverage` is on (always, in the app) it also follows which displays windows cover
-/// (`DesktopWindowLayout.coveredDisplays`) and polls for it, since moving a window posts no event.
+/// While "Applications Cover the Display" is on (`PlaybackRules.watchesCoverage`) it also follows
+/// which displays windows cover (`DesktopWindowLayout.coveredDisplays`) and polls for it, since
+/// moving a window posts no event. With "Check for see-through windows" on, a covered display
+/// stays uncovered where the covering windows' snapshots (`DisplayPlaybackSources.windowOpacity`)
+/// show the wallpaper through them.
 ///
 /// Besides each display's playback, the answer names what the first matching rule with a load
 /// action loads (`onLoad`, `ApplicationRuleLoader`).
@@ -55,15 +58,6 @@ final class DisplayPlaybackMonitor {
     /// The displays windows cover (`DesktopWindowLayout.coveredDisplays`), last handed to
     /// `onCoverage`.
     private(set) var coveredDisplays: Set<String> = []
-    /// Whether to follow which displays windows cover, whatever the rules: a covered display's
-    /// wallpaper stops drawing frames nobody sees (`SceneWallpaperInstance`).
-    var watchesCoverage = false {
-        didSet {
-            guard watchesCoverage != oldValue else { return }
-            updatePolling()
-            evaluate()
-        }
-    }
     private var evaluationPending = false
     private var pollTimer: DispatchSourceTimer?
     private var pollTimerInterval: TimeInterval?
@@ -183,8 +177,7 @@ final class DisplayPlaybackMonitor {
                             displaysAsleep: displaysAsleep,
                             applications: rules.watchesApplications ? sources.applications() : [:],
                             videoMemoryExhausted: videoMemoryExhausted,
-                            sessionInactive: sessionInactive,
-                            watchesCoverage: watchesCoverage)
+                            sessionInactive: sessionInactive)
         shared.set(inputs: inputs)
         let maximizedRuns = !rules.maximizedRuleApplications.isDisjoint(with: inputs.applications.values)
         if maximizedRuns != maximizedRuleApplicationRuns {
@@ -237,7 +230,7 @@ final class DisplayPlaybackMonitor {
     nonisolated private static func playback(_ inputs: Inputs, sources: DisplayPlaybackSources) -> Outcome {
         let rules = inputs.rules
         let windowRules = rules.watchesWindows || rules.applicationRulesWatchWindows
-        let windows = windowRules || inputs.watchesCoverage ? sources.windows() : []
+        let windows = windowRules || rules.watchesCoverage ? sources.windows() : []
         let conditions = windowRules
             ? DesktopWindowLayout.conditions(windows: windows, displays: inputs.displays,
                                              frontmostPID: inputs.frontmostPID, ignoredPIDs: [sources.ownPID],
@@ -253,8 +246,21 @@ final class DisplayPlaybackMonitor {
             sessionInactive: inputs.sessionInactive)
         return Outcome(states: rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system),
                        load: rules.load(conditions: conditions, system: system),
-                       covered: inputs.watchesCoverage
-                        ? DesktopWindowLayout.coveredDisplays(windows: windows, displays: inputs.displays) : [])
+                       covered: rules.watchesCoverage ? coveredDisplays(windows, inputs, sources: sources) : [])
+    }
+
+    /// The displays `windows` cover. With "Check for see-through windows" on, the windows over a
+    /// covered display are looked at for where they let the wallpaper show through; until their
+    /// snapshots are in, they count as opaque. Runs on the scan queue.
+    nonisolated private static func coveredDisplays(_ windows: [DesktopWindow], _ inputs: Inputs,
+                                                    sources: DisplayPlaybackSources) -> Set<String> {
+        let covered = DesktopWindowLayout.coveredDisplays(windows: windows, displays: inputs.displays)
+        guard inputs.rules.seesThroughWindows, !covered.isEmpty else { return covered }
+        let displays = inputs.displays.filter { covered.contains($0.id) }
+        // This app's windows (the library) are its own to know: they count as opaque.
+        let candidates = DesktopWindowLayout.coveringWindows(windows, on: displays).filter { $0.ownerPID != sources.ownPID }
+        let opacity = sources.windowOpacity(candidates)
+        return DesktopWindowLayout.coveredDisplays(windows: windows, displays: displays, opacity: opacity)
     }
 
     /// One poll on the scan queue: hops to the main thread only when the answer changed.
@@ -281,12 +287,11 @@ final class DisplayPlaybackMonitor {
         var applications: [pid_t: String] = [:]
         var videoMemoryExhausted = false
         var sessionInactive = false
-        var watchesCoverage = false
 
         /// Whether the answer needs a read that is too slow for the main thread.
         var needsScan: Bool {
             rules.watchesWindows || rules.applicationRulesWatchWindows || rules.watchesAudio || rules.watchesPower
-                || watchesCoverage
+                || rules.watchesCoverage
         }
     }
 
@@ -305,7 +310,7 @@ final class DisplayPlaybackMonitor {
     /// The poll's interval while a rule needs it; nil: no poll.
     var neededPollInterval: TimeInterval? {
         guard !displaysAsleep, !sessionInactive else { return nil }
-        if rules.watchesWindows || rules.watchesAudio || watchesCoverage { return Self.pollInterval }
+        if rules.watchesWindows || rules.watchesAudio || rules.watchesCoverage { return Self.pollInterval }
         if maximizedRuleApplicationRuns { return Self.maximizedRulePollInterval }
         return nil
     }

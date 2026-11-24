@@ -447,6 +447,7 @@ return the playlist as `list_playlists` writes it, plus `change_when_video_ends`
 |---|---|---|
 | `other_application_focused` | `keep_running`, `mute`, `pause`, `pause_all` | Performance › Other Application Focused |
 | `other_application_maximized`, `other_application_fullscreen` | `keep_running`, `mute`, `pause`, `pause_all`, `stop` | Other Application Maximized / Fullscreen |
+| `applications_cover_display` | `keep_running`, `pause` | Applications Cover the Display |
 | `other_application_playing_audio` | `keep_running`, `mute`, `pause` | Other Application Playing Audio |
 | `display_asleep`, `laptop_on_battery` | `keep_running`, `pause`, `stop` | Display asleep, Laptop on battery |
 | `quality_preset` | `low`, `medium`, `high`, `ultra` (an action; reads as null) | The Preset buttons (`setQuality`) |

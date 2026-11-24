@@ -5967,6 +5967,101 @@
         }
       }
     },
+    "Applications Cover the Display" : {
+      "comment" : "Settings › Performance › Playback: what the wallpaper does while app windows together cover a display's visible area (tiled windows)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند تغطية التطبيقات لشاشة العرض"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps verdecken das Display"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps cubren la pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps couvrant le moniteur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप्स से डिस्प्ले ढक जाने पर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applicazioni che coprono lo schermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリケーションがディスプレイを覆っているとき"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "응용 프로그램이 디스플레이를 덮은 경우"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikacje zasłaniają wyświetlacz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps Cobrindo a Tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложения закрывают дисплей"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamalar Ekranı Kapladığında"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Програми закривають дисплей"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用程序遮盖显示器时"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "應用程式遮蓋顯示器時"
+          }
+        }
+      }
+    },
     "AVKit plays videos with Apple's player. Metal draws them through the scene renderer so their effects apply; it needs the Wallpaper Engine assets, and without them videos play through AVKit." : {
       "localizations" : {
         "ar" : {
@@ -22393,6 +22488,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "電腦成像"
+          }
+        }
+      }
+    },
+    "Check for see-through windows" : {
+      "comment" : "Settings › Performance › Playback: keep a covered display's wallpaper playing when the windows over it are transparent (uses Screen Recording)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من النوافذ الشفافة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf durchsichtige Fenster prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectar ventanas transparentes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détecter les fenêtres transparentes"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पारदर्शी विंडो की जाँच करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rileva finestre trasparenti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透けているウインドウを確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "투명한 윈도우 확인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wykrywaj przezroczyste okna"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificar janelas transparentes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учитывать прозрачные окна"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saydam pencereleri denetle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Враховувати прозорі вікна"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查透明窗口"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查透明視窗"
           }
         }
       }
@@ -72185,6 +72375,100 @@
         }
       }
     },
+    "Keeps a covered display's wallpaper playing when the windows over it are see-through. Tiny snapshots of those windows are checked for transparency in memory and discarded at once; nothing is saved or shared." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُبقي خلفية شاشة العرض المغطاة قيد التشغيل عندما تكون النوافذ فوقها شفافة. تُفحص لقطات صغيرة جدًا لتلك النوافذ بحثًا عن الشفافية في الذاكرة وتُحذف فورًا؛ ولا يُحفظ أي شيء أو يُشارك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lässt das Hintergrundbild eines verdeckten Displays weiterlaufen, wenn die Fenster darüber durchsichtig sind. Winzige Schnappschüsse dieser Fenster werden im Arbeitsspeicher auf Transparenz geprüft und sofort verworfen; nichts wird gespeichert oder weitergegeben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantiene en reproducción el fondo de pantalla de una pantalla cubierta cuando las ventanas que tiene encima son transparentes. Se comprueba la transparencia de capturas diminutas de esas ventanas en memoria y se descartan al momento; no se guarda ni se comparte nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laisse tourner le fond d’écran d’un moniteur couvert quand les fenêtres qui le couvrent sont transparentes. De minuscules captures de ces fenêtres sont vérifiées en mémoire et supprimées aussitôt ; rien n’est enregistré ni partagé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ढके हुए डिस्प्ले का वॉलपेपर चलता रहने देता है, जब उसके ऊपर की विंडो पारदर्शी हों। उन विंडो के बहुत छोटे स्नैपशॉट मेमोरी में पारदर्शिता के लिए जाँचे जाते हैं और तुरंत हटा दिए जाते हैं; कुछ भी सहेजा या शेयर नहीं किया जाता।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantiene in riproduzione lo sfondo di uno schermo coperto quando le finestre sopra di esso sono trasparenti. Minuscole istantanee di quelle finestre vengono controllate in memoria e scartate subito; niente viene salvato o condiviso."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "覆われたディスプレイの上のウインドウが透けているとき、壁紙を再生し続けます。それらのウインドウのごく小さなスナップショットをメモリ内で透明度の確認に使い、すぐに破棄します。何も保存・共有されません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "덮인 디스플레이 위의 윈도우가 투명하면 배경화면을 계속 재생합니다. 해당 윈도우의 아주 작은 스냅샷을 메모리에서 투명도만 확인한 후 즉시 버리며, 아무것도 저장하거나 공유하지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odtwarza dalej tapetę zasłoniętego wyświetlacza, gdy okna nad nim są przezroczyste. Malutkie zrzuty tych okien są sprawdzane w pamięci pod kątem przezroczystości i od razu usuwane; nic nie jest zapisywane ani udostępniane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantém a imagem de fundo de uma tela coberta em reprodução quando as janelas sobre ela são transparentes. Capturas minúsculas dessas janelas são verificadas na memória e descartadas na hora; nada é salvo ou compartilhado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои закрытого дисплея продолжают воспроизводиться, если окна над ним прозрачные. Крошечные снимки этих окон проверяются на прозрачность в памяти и сразу удаляются; ничего не сохраняется и никуда не передаётся."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaplanan bir ekranın üzerindeki pencereler saydamsa duvar kâğıdını oynatmaya devam eder. Bu pencerelerin çok küçük anlık görüntüleri bellekte saydamlık için denetlenir ve hemen atılır; hiçbir şey kaydedilmez veya paylaşılmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери закритого дисплея продовжують відтворюватися, якщо вікна над ним прозорі. Крихітні знімки цих вікон перевіряються на прозорість у памʼяті й одразу видаляються; нічого не зберігається і нікуди не передається."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当遮盖显示器的窗口为透明时，继续播放该显示器的墙纸。这些窗口的极小快照仅在内存中检查透明度，随即丢弃；不会保存或共享任何内容。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當遮蓋顯示器的視窗為透明時，繼續播放該顯示器的背景圖片。這些視窗的極小快照僅在記憶體中檢查透明度，隨即捨棄；不會儲存或分享任何內容。"
+          }
+        }
+      }
+    },
     "Keeps only the outlines in the image." : {
       "comment" : "Scene Edit / Export tooltip for the edgedetection effect",
       "localizations" : {
@@ -88338,6 +88622,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要 macOS 14.2 或以上版本"
+          }
+        }
+      }
+    },
+    "Needs the Screen & System Audio Recording permission." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتطلب إذن تسجيل الشاشة وصوت النظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erfordert die Berechtigung „Aufnahme von Bildschirm & Systemaudio“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requiere el permiso de grabación de pantalla y del audio del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nécessite l’autorisation « Enregistrement de l’écran et des sons du système »."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन और सिस्टम ऑडियो रिकॉर्डिंग अनुमति आवश्यक है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiede l’autorizzazione Registrazione schermo e audio di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「画面収録とシステムオーディオ録音」の許可が必要です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 및 시스템 오디오 녹음 권한이 필요합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymaga pozwolenia „Nagrywanie ekranu i dźwięku systemowego”."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requer a permissão de Gravação do Áudio do Sistema e da Tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Требуется разрешение «Запись экрана и системного звука»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran ve Sistem Sesi Kaydı izni gerekir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібен дозвіл «Записування системного звуку й екрана»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要“录屏与系统录音”权限。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要「螢幕與系統錄音」權限。"
           }
         }
       }
@@ -176421,6 +176799,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "其他 App 的視窗處於使用中時背景圖片的行為。「依顯示器暫停」只暫停該視窗所在的顯示器；「全部暫停」暫停所有顯示器。"
+          }
+        }
+      }
+    },
+    "What wallpapers do while app windows together cover their display, as tiled windows do. Pause stops drawing frames no one can see." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ما تفعله الخلفيات أثناء تغطية نوافذ التطبيقات لشاشة العرض الخاصة بها معًا، كما تفعل النوافذ المتجاورة. ويوقف الإيقاف المؤقت رسم إطارات لا يراها أحد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was Hintergrundbilder tun, während App-Fenster zusammen ihr Display verdecken, wie nebeneinander angeordnete Fenster. Pausieren zeichnet keine Bilder mehr, die niemand sieht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que hacen los fondos de pantalla mientras las ventanas de las apps cubren juntas su pantalla, como hacen las ventanas en mosaico. Pausar deja de dibujar fotogramas que nadie ve."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que font les fonds d’écran quand des fenêtres d’apps couvrent ensemble leur moniteur, comme des fenêtres en mosaïque. Pause cesse de dessiner des images que personne ne voit."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जब ऐप विंडो मिलकर उनके डिस्प्ले को ढक लें, जैसे साथ-साथ लगी विंडो करती हैं, तब वॉलपेपर क्या करें। पॉज़ ऐसे फ़्रेम बनाना बंद कर देता है जिन्हें कोई नहीं देख रहा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa fanno gli sfondi mentre le finestre delle app coprono insieme il loro schermo, come fanno le finestre affiancate. Pausa smette di disegnare fotogrammi che nessuno vede."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "並べて配置したウインドウのように、App のウインドウがまとまってディスプレイを覆っているときの壁紙の動作です。一時停止では、見えないフレームを描画しなくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "바둑판식으로 배열된 윈도우처럼 앱 윈도우들이 함께 해당 디스플레이를 덮을 때 배경화면의 동작입니다. 일시 정지는 보이지 않는 프레임을 그리지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Co robią tapety, gdy okna aplikacji razem zasłaniają ich wyświetlacz, jak okna ułożone obok siebie. Wstrzymanie przestaje rysować klatki, których nikt nie widzi."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O que as imagens de fundo fazem enquanto janelas de apps cobrem juntas a tela delas, como janelas lado a lado. Pausar para de desenhar quadros que ninguém vê."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что делают обои, пока окна приложений вместе закрывают их дисплей, как окна, расположенные рядом. Пауза прекращает отрисовку кадров, которых никто не видит."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama pencereleri, yan yana dizilmiş pencerelerde olduğu gibi birlikte ekranlarını kapladığında duvar kâğıtlarının ne yaptığı. Duraklat, kimsenin görmediği kareleri çizmeyi bırakır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що роблять шпалери, поки вікна програм разом закривають їхній дисплей, як вікна, розташовані поруч. Пауза припиняє малювання кадрів, яких ніхто не бачить."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 窗口共同遮盖墙纸所在显示器时（如平铺的窗口）墙纸的行为。“暂停”会停止绘制无人看到的帧。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 視窗共同遮蓋背景圖片所在顯示器時（如並排的視窗）背景圖片的行為。「暫停」會停止繪製無人看到的影格。"
           }
         }
       }

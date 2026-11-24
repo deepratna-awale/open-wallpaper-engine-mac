@@ -14,6 +14,8 @@ struct PerformancePage: SettingsPage {
     private let displayHDR = DisplayHDRSupport.isAvailable()
     @State private var isEditingApplicationRules = false
     @StateObject private var renderSizes = RenderResolutionSizesModel()
+    /// Screen Recording is allowed, so "Check for see-through windows" can work.
+    @State private var hasScreenRecording = PermissionHelper.hasScreenRecordingPermission
     
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -69,6 +71,36 @@ struct PerformancePage: SettingsPage {
         }
     }
 
+    /// "Check for see-through windows" (`WindowOpacityProbe`), under "Applications Cover the
+    /// Display" while that pauses. Turning it on asks for Screen Recording.
+    @ViewBuilder
+    private var seeThroughWindows: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Toggle("Check for see-through windows", isOn: Binding(
+                get: { viewModel.settings.seeThroughWindows },
+                set: { isOn in
+                    viewModel.settings.seeThroughWindows = isOn
+                    guard isOn else { return }
+                    PermissionHelper.requestScreenRecordingAccess()
+                    hasScreenRecording = PermissionHelper.hasScreenRecordingPermission
+                }))
+            if viewModel.settings.seeThroughWindows && !hasScreenRecording {
+                HStack {
+                    Text("Needs the Screen & System Audio Recording permission.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("Open Privacy Settings") { PermissionHelper.openScreenRecordingSettings() }
+                        .controlSize(.small)
+                }
+            }
+        }
+        .changedFromDefault(viewModel.isChanged(\.seeThroughWindows))
+        .help("Keeps a covered display's wallpaper playing when the windows over it are see-through. Tiny snapshots of those windows are checked for transparency in memory and discarded at once; nothing is saved or shared.")
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            hasScreenRecording = PermissionHelper.hasScreenRecordingPermission
+        }
+    }
+
     var body: some View {
         SettingsForm {
             Section {
@@ -97,6 +129,17 @@ struct PerformancePage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationFullscreen))
                 .help("What wallpapers do while another app is in full screen on their display. Pause and Stop save the work of drawing a wallpaper no one can see.")
+
+                Picker("Applications Cover the Display", selection: $viewModel.settings.applicationsCoverDisplay) {
+                    Text("Keep Running").tag(GSPlayback.keepRunning)
+                    Text("Pause").tag(GSPlayback.pause)
+                }
+                .changedFromDefault(viewModel.isChanged(\.applicationsCoverDisplay))
+                .help("What wallpapers do while app windows together cover their display, as tiled windows do. Pause stops drawing frames no one can see.")
+
+                if viewModel.settings.applicationsCoverDisplay != .keepRunning {
+                    seeThroughWindows
+                }
                 
                 Picker("Other Application Playing Audio", selection: $viewModel.settings.otherApplicationPlayingAudio) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
