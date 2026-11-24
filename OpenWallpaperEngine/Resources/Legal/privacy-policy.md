@@ -1,6 +1,6 @@
 # Open Wallpaper Engine — Privacy Policy
 
-**Version 1.4 · Effective date: 2026-11-15**
+**Version 1.5 · Effective date: 2026-11-24**
 
 ---
 
@@ -101,7 +101,8 @@ OWE may ask for the following macOS permissions. Each is optional; the app works
 | **Microphone** | Only when you choose a recording device (a microphone or a loopback device) in Settings › Optimizations › Audio, so audio-reactive wallpapers hear it instead of the audio your Mac plays. | Audio is analysed on your Mac in real time to drive the wallpaper's visuals. It is never recorded, saved or sent anywhere. |
 | **Photos** | Only when you turn on "Also Save to Photos Album" for iPhone & iPad exports. | The app finds or creates the album you chose and adds your exported Live Photos to it. Nothing else is read, stored or transmitted. |
 | **Local Network** | Send over Wi-Fi advertises the share's name on your local network. | Only the packages you selected are served, to devices on your local network. Nothing goes over the internet. |
-| **Window information** (no prompt) | To pause wallpapers when a window covers a display, saving power. | The app only checks window positions and sizes on your Mac. Nothing is stored or transmitted. |
+| **Window information** (no prompt) | To pause wallpapers when windows cover a display, saving power (Settings › Performance › Applications Cover the Display). | The app only checks window positions and sizes on your Mac. Nothing is stored or transmitted. |
+| **Screen & System Audio Recording** | Only when you turn on "Check for see-through windows" (Settings › Performance), so a wallpaper keeps playing behind windows you can see through. | While windows cover a display, the app takes a tiny snapshot (about 48 pixels wide) of each window over it, keeps only how see-through each part is, and discards the snapshot at once, in memory. Nothing is saved, logged or transmitted, and nothing else on your screen is captured. |
 | **Now Playing (media information)** (no prompt) | Some wallpapers can display the current track title, artist and artwork. | Read from macOS's media information on your Mac and shown in the wallpaper. Nothing is stored or transmitted. |
 
 ## 6. Keychain and credentials
