@@ -92,6 +92,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
             return [SettingField(\.otherApplicationFocused), SettingField(\.otherApplicationMaximized),
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),
                     SettingField(\.displayAsleep), SettingField(\.laptopOnBattery), SettingField(\.applicationRules),
+                    SettingField(\.applicationsCoverDisplay), SettingField(\.seeThroughWindows),
                     SettingField(\.batteryQuality), SettingField(\.batteryQualityPreset), SettingField(\.batteryFrameRateCap),
                     SettingField(\.antiAliasing), SettingField(\.postProcessing), SettingField(\.textureResolution),
                     SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.upscaling),

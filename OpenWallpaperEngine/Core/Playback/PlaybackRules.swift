@@ -45,14 +45,24 @@ struct PlaybackRules: Equatable {
     var playingAudio: GSPlayback
     var displayAsleep: GSPlayback
     var onBattery: GSPlayback
+    /// "Applications Cover the Display": anything but Keep Running stops drawing a display that
+    /// windows together hide (`DesktopWindowLayout.coveredDisplays`, `WallpaperViewModel.coveredScreens`).
+    /// It isn't one of WE's per-display actions, so it doesn't take part in `playback`.
+    var covered: GSPlayback
+    /// "Check for see-through windows": a covered display whose windows let the wallpaper show
+    /// through keeps drawing (`WindowOpacityProbe`, which needs Screen Recording).
+    var seesThroughWindows: Bool
     /// The application rules that can act (enabled, with an action).
     var applicationRules: [ApplicationRule]
 
     init(focused: GSPlayback = .keepRunning, maximized: GSPlayback = .keepRunning,
          fullscreen: GSPlayback = .keepRunning, playingAudio: GSPlayback = .keepRunning,
          displayAsleep: GSPlayback = .keepRunning, onBattery: GSPlayback = .keepRunning,
+         covered: GSPlayback = .keepRunning, seesThroughWindows: Bool = false,
          applicationRules: [ApplicationRule] = []) {
         self.applicationRules = applicationRules.filter(\.isActive)
+        self.covered = covered
+        self.seesThroughWindows = seesThroughWindows
         self.focused = focused
         self.maximized = maximized
         self.fullscreen = fullscreen
@@ -65,8 +75,12 @@ struct PlaybackRules: Equatable {
         self.init(focused: settings.otherApplicationFocused, maximized: settings.otherApplicationMaximized,
                   fullscreen: settings.otherApplicationFullscreen, playingAudio: settings.otherApplicationPlayingAudio,
                   displayAsleep: settings.displayAsleep, onBattery: settings.laptopOnBattery,
+                  covered: settings.applicationsCoverDisplay, seesThroughWindows: settings.seeThroughWindows,
                   applicationRules: settings.applicationRules)
     }
+
+    /// Which displays windows cover has to be followed.
+    var watchesCoverage: Bool { covered != .keepRunning }
 
     /// Some rule looks at other applications' windows, so they have to be watched.
     var watchesWindows: Bool { [focused, maximized, fullscreen].contains { $0 != .keepRunning } }

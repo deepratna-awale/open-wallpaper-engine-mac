@@ -13,6 +13,9 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         var battery = false
         var windowReads = 0
         var evaluations = 0
+        /// What the see-through check reports, and the windows it was asked about.
+        var opacity: [CGWindowID: WindowOpacityMask] = [:]
+        var opacityQueries: [[CGWindowID]] = []
         let displays = [
             DesktopDisplay(id: "1", frame: CGRect(x: 0, y: 0, width: 1920, height: 1080),
                            visibleFrame: CGRect(x: 0, y: 25, width: 1920, height: 1055)),
@@ -40,7 +43,11 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
             frontmostPID: { desktop.frontmost },
             ownPID: 1,
             otherApplicationPlayingAudio: { _ in desktop.audio },
-            onBattery: { desktop.battery })
+            onBattery: { desktop.battery },
+            windowOpacity: { windows in
+                desktop.opacityQueries.append(windows.map(\.id))
+                return desktop.opacity
+            })
     }
 
     private func makeMonitor(scanQueue: DispatchQueue?) -> DisplayPlaybackMonitor {
@@ -256,8 +263,8 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         XCTAssertEqual(applied, [["1": .run, "2": .run]], "only the latest rules' answer is applied")
     }
 
-    /// With coverage followed, the displays windows tile are handed on, and the monitor polls
-    /// for windows moving away even with every rule off.
+    /// With "Applications Cover the Display" on Pause, the displays windows tile are handed on,
+    /// and the monitor polls for windows moving away even with every other rule off.
     func testCoveredDisplaysAreHandedOn() {
         var covered: [Set<String>] = []
         monitor = DisplayPlaybackMonitor(sources: makeSources(), scanQueue: nil,
@@ -266,13 +273,48 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         XCTAssertFalse(monitor.isPolling)
         desktop.windows = [DesktopWindow(ownerPID: 100, bounds: CGRect(x: 1920, y: 25, width: 960, height: 1055)),
                            DesktopWindow(ownerPID: 200, bounds: CGRect(x: 2880, y: 25, width: 960, height: 1055))]
-        monitor.watchesCoverage = true
+        monitor.evaluate()
+        XCTAssertEqual(covered, [], "Keep Running doesn't follow coverage")
+        monitor.setRules(PlaybackRules(covered: .pause))
         XCTAssertTrue(monitor.isPolling)
         XCTAssertEqual(covered, [["2"]])
         XCTAssertEqual(applied.last, ["1": .run, "2": .run], "covering isn't a playback rule")
         desktop.windows.removeLast()
         monitor.evaluate()
         XCTAssertEqual(covered, [["2"], []])
+    }
+
+    /// Back on Keep Running, a covered display is handed on as uncovered and the poll stops.
+    func testKeepRunningUncoversADisplay() {
+        var covered: [Set<String>] = []
+        monitor = DisplayPlaybackMonitor(sources: makeSources(), scanQueue: nil,
+                                         onCoverage: { covered.append($0) }, apply: { [weak self] in self?.applied.append($0) })
+        desktop.windows = [DesktopWindow(ownerPID: 100, bounds: desktop.displays[0].visibleFrame)]
+        monitor.setRules(PlaybackRules(covered: .pause))
+        XCTAssertEqual(covered, [["1"]])
+        monitor.setRules(PlaybackRules(covered: .keepRunning))
+        XCTAssertEqual(covered, [["1"], []])
+        XCTAssertFalse(monitor.isPolling)
+    }
+
+    /// With "Check for see-through windows" on, only a covered display's windows are looked at,
+    /// this app's own left out, and a see-through one uncovers the display.
+    func testSeeThroughWindowsKeepADisplayUncovered() {
+        var covered: [Set<String>] = []
+        monitor = DisplayPlaybackMonitor(sources: makeSources(), scanQueue: nil,
+                                         onCoverage: { covered.append($0) }, apply: { [weak self] in self?.applied.append($0) })
+        desktop.windows = [DesktopWindow(ownerPID: 100, bounds: CGRect(x: 1920, y: 25, width: 960, height: 1055), id: 5),
+                           DesktopWindow(ownerPID: 200, bounds: CGRect(x: 2880, y: 25, width: 960, height: 1055), id: 6),
+                           DesktopWindow(ownerPID: 1, bounds: CGRect(x: 1920, y: 25, width: 400, height: 400), id: 7),
+                           DesktopWindow(ownerPID: 300, bounds: CGRect(x: 100, y: 100, width: 400, height: 300), id: 8)]
+        monitor.setRules(PlaybackRules(covered: .pause, seesThroughWindows: true))
+        XCTAssertEqual(covered, [["2"]], "until the snapshots are in, the windows count as opaque")
+        XCTAssertEqual(desktop.opacityQueries.last, [5, 6])
+        desktop.opacity = [6: WindowOpacityMask(columns: 1, rows: 1, opaque: [false])]
+        monitor.evaluate()
+        XCTAssertEqual(covered, [["2"], []])
+        monitor.setRules(PlaybackRules(covered: .pause, seesThroughWindows: false))
+        XCTAssertEqual(covered, [["2"], [], ["2"]])
     }
 }
 

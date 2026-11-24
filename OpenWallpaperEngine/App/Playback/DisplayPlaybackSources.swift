@@ -28,6 +28,10 @@ struct DisplayPlaybackSources: @unchecked Sendable {
     /// Starts following which processes play sound; `changed` is called on any thread when that
     /// changes. The returned closure stops following.
     var observeAudioProcesses: (_ changed: @escaping @Sendable () -> Void) -> (() -> Void) = { _ in {} }
+    /// Where each of the given windows is see-through, by window number, as far as their latest
+    /// snapshots show; a window without one is left out ("Check for see-through windows",
+    /// `WindowOpacityProbe`). Read on the scan queue.
+    var windowOpacity: (_ windows: [DesktopWindow]) -> [CGWindowID: WindowOpacityMask] = { _ in [:] }
     /// Whether the screen is locked and whether this user's session is the one in front, read
     /// when the monitor starts and when the session becomes active again. Main thread.
     var session: () -> DesktopSessionState = { DesktopSessionState() }
@@ -65,6 +69,7 @@ extension DisplayPlaybackSources {
         let ownPID = ProcessInfo.processInfo.processIdentifier
         let audio = OtherApplicationAudio(ownPID: ownPID)
         let audioProcesses = ProcessAudioOutputWatch(ownPID: ownPID)
+        let opacity = WindowOpacityProbe()
         return DisplayPlaybackSources(
             windows: { DesktopWindowList.onScreen() },
             displays: { DesktopWindowList.displays() },
@@ -92,6 +97,7 @@ extension DisplayPlaybackSources {
                 audioProcesses.start(changed: changed)
                 return { audioProcesses.stop() }
             },
+            windowOpacity: { opacity.masks(for: $0) },
             session: { DesktopSessionState.current() })
     }
 }
@@ -120,7 +126,8 @@ enum DesktopWindowList {
                                  alpha: info[kCGWindowAlpha as String] as? Double ?? 1,
                                  isOnScreen: info[kCGWindowIsOnscreen as String] as? Bool ?? true,
                                  // Only normal-level windows can count; their owners are looked up once.
-                                 ownerIsApplication: layer == 0 && isApplication(pid))
+                                 ownerIsApplication: layer == 0 && isApplication(pid),
+                                 id: info[kCGWindowNumber as String] as? CGWindowID ?? 0)
         }
     }
 

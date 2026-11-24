@@ -16,6 +16,8 @@ struct DesktopWindow: Equatable {
     /// borders, display utilities) draw overlay windows at the normal level too, but aren't an
     /// application the rules mean.
     var ownerIsApplication = true
+    /// The window server's number for it (`kCGWindowNumber`); 0 when unknown.
+    var id: CGWindowID = 0
 }
 
 /// A display in the same coordinates as `DesktopWindow.bounds`.
@@ -139,6 +141,57 @@ enum DesktopWindowLayout {
             if unionArea(parts) >= coveredShare * visibleArea { covered.insert(display.id) }
         }
         return covered
+    }
+
+    /// Points sampled along the longer side of a display's visible area when windows' opacity is
+    /// known (`coveredDisplays(windows:displays:opacity:)`).
+    static let coverageSamples = 128
+
+    /// The windows `coveredDisplays` counts that overlap the visible area of one of `displays`.
+    static func coveringWindows(_ windows: [DesktopWindow], on displays: [DesktopDisplay]) -> [DesktopWindow] {
+        windows.filter { window in
+            counts(window, ignoring: []) && displays.contains { overlap(window.bounds, $0.visibleFrame) > 0 }
+        }
+    }
+
+    /// `coveredDisplays`, knowing where some windows are see-through (`opacity`, by window
+    /// number): the wallpaper shows at a point unless some window is opaque there, so the order
+    /// of the windows doesn't matter. A window missing from `opacity` hides all it covers. The
+    /// visible area is sampled on a grid of `coverageSamples` points along its longer side.
+    static func coveredDisplays(windows: [DesktopWindow], displays: [DesktopDisplay],
+                                opacity: [CGWindowID: WindowOpacityMask]) -> Set<String> {
+        guard !opacity.isEmpty else { return coveredDisplays(windows: windows, displays: displays) }
+        let shown = windows.filter { counts($0, ignoring: []) }
+        var covered: Set<String> = []
+        for display in displays {
+            let visible = display.visibleFrame
+            guard visible.width > 0, visible.height > 0 else { continue }
+            let onDisplay = shown.filter { overlap($0.bounds, visible) > 0 }
+            guard !onDisplay.isEmpty else { continue }
+            let scale = CGFloat(coverageSamples) / max(visible.width, visible.height)
+            let columns = max(1, Int((visible.width * scale).rounded()))
+            let rows = max(1, Int((visible.height * scale).rounded()))
+            var hidden = 0
+            for row in 0..<rows {
+                let y = visible.minY + (CGFloat(row) + 0.5) * visible.height / CGFloat(rows)
+                for column in 0..<columns {
+                    let point = CGPoint(x: visible.minX + (CGFloat(column) + 0.5) * visible.width / CGFloat(columns), y: y)
+                    if onDisplay.contains(where: { hides($0, at: point, opacity: opacity) }) { hidden += 1 }
+                }
+            }
+            if CGFloat(hidden) >= coveredShare * CGFloat(columns * rows) { covered.insert(display.id) }
+        }
+        return covered
+    }
+
+    /// Whether `window` hides the wallpaper at `point`.
+    private static func hides(_ window: DesktopWindow, at point: CGPoint,
+                              opacity: [CGWindowID: WindowOpacityMask]) -> Bool {
+        let bounds = window.bounds
+        guard bounds.contains(point) else { return false }
+        guard let mask = opacity[window.id] else { return true }
+        return mask.isOpaque(atUnit: CGPoint(x: (point.x - bounds.minX) / bounds.width,
+                                             y: (point.y - bounds.minY) / bounds.height))
     }
 
     /// The area `rects` cover together: the sum, over the vertical strips between their edges, of

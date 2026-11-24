@@ -93,8 +93,21 @@ final class PlaybackRulesTests: XCTestCase {
         settings.otherApplicationPlayingAudio = .pause
         settings.displayAsleep = .stop
         settings.laptopOnBattery = .pause
+        settings.applicationsCoverDisplay = .keepRunning
+        settings.seeThroughWindows = true
         XCTAssertEqual(PlaybackRules(settings), PlaybackRules(focused: .pauseAll, maximized: .mute, fullscreen: .stop,
-                                                              playingAudio: .pause, displayAsleep: .stop, onBattery: .pause))
+                                                              playingAudio: .pause, displayAsleep: .stop, onBattery: .pause,
+                                                              covered: .keepRunning, seesThroughWindows: true))
+    }
+
+    /// A display windows cover stops drawing unless the user chose Keep Running; the see-through
+    /// check, which needs Screen Recording, starts off.
+    func testCoverageDefaultsToPauseWithoutTheSeeThroughCheck() throws {
+        let settings = try JSONDecoder().decode(GlobalSettings.self, from: Data("{}".utf8))
+        XCTAssertEqual(settings.applicationsCoverDisplay, .pause)
+        XCTAssertFalse(settings.seeThroughWindows)
+        XCTAssertTrue(PlaybackRules(settings).watchesCoverage)
+        XCTAssertFalse(PlaybackRules(covered: .keepRunning).watchesCoverage)
     }
 
     func testStoredActionsDecodeAndTheMaximizedRuleDefaultsToKeepRunning() throws {
