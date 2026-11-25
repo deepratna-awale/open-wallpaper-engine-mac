@@ -6,6 +6,28 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.25</title>
+            <pubDate>Wed, 25 Nov 2026 14:03:32 +0000</pubDate>
+            <sparkle:version>30</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.25</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.25/OpenWallpaperEngine-1.0.0-beta.25.zip" length="180669952" type="application/octet-stream" sparkle:edSignature="HJlVTqJS/Xt5LN2i0FrD4CmutJyT62vBBsWwKy9JSeDHnfSJIVSCf6nyrNIKs+RfQZ9PEEvSZflQAFS9uEutBg==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.25/OpenWallpaperEngine-1.0.0-beta.25-from-29.delta" sparkle:deltaFrom="29" length="3857878" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="UCQV7/8GF0uLvqNjQPQtsB4lKUa4qDLdHragP5QuWOkPWdr3BTRySSfsHWUKZUFoJLJYs9YGsopbIcJYJUOHDw==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.25/OpenWallpaperEngine-1.0.0-beta.25-from-28.delta" sparkle:deltaFrom="28" length="3944530" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="AmJbOHGIkv6n11QosTHLjOUSDw4+ByFHtiC+BRyLwS7k5bZvNTL1QZYtR+KfR0AFTr1MpLA3PfC4lIfQQcjTCg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.25/OpenWallpaperEngine-1.0.0-beta.25-from-27.delta" sparkle:deltaFrom="27" length="4450226" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="0qRU8gN9SYOnEkDmgd2+11bC3w/9cySErD4SpyucgTU8idwb5GtPGqX3F2KrOjc5/XEL2R1VkFoVpz2v+FFjBA==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.25</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.25</link>
+            <description>&lt;h2 dir="auto"&gt;What's Changed&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;feat(playback): Applications Cover the Display setting and see-through window check by &lt;a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/deepratna-awale/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/deepratna-awale"&gt;@deepratna-awale&lt;/a&gt; in &lt;a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6585177472" data-permission-text="Title is private" data-url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/654" data-hovercard-type="pull_request" data-hovercard-url="/deepratna-awale/open-wallpaper-engine-mac/pull/654/hovercard" href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/pull/654"&gt;#654&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;docs(changelog): 1.0.0-beta.25 by &lt;a class="user-mention notranslate" data-hovercard-type="user" data-hovercard-url="/users/deepratna-awale/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="https://github.com/deepratna-awale"&gt;@deepratna-awale&lt;/a&gt; in &lt;a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6592714907" data-permission-text="Title is private" data-url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/656" data-hovercard-type="pull_request" data-hovercard-url="/deepratna-awale/open-wallpaper-engine-mac/pull/656/hovercard" href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/pull/656"&gt;#656&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;&lt;strong&gt;Full Changelog&lt;/strong&gt;: &lt;a class="commit-link" href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/compare/v1.0.0-beta.24...v1.0.0-beta.25"&gt;&lt;tt&gt;v1.0.0-beta.24...v1.0.0-beta.25&lt;/tt&gt;&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.24</title>
             <pubDate>Tue, 24 Nov 2026 00:52:20 +0000</pubDate>
             <sparkle:version>29</sparkle:version>
