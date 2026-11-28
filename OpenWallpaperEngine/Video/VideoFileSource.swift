@@ -76,6 +76,72 @@ final class VideoFileSource: Sendable {
         return asset
     }
 
+    /// The picture and the soundtrack of a looping video, each an asset of that one track.
+    /// `@unchecked Sendable`: both are immutable once made (an `AVComposition` copy, or an
+    /// `AVURLAsset` nothing changes), and AVFoundation loads an asset's values thread-safely.
+    struct LoopAssets: @unchecked Sendable {
+        let picture: AVAsset
+        /// Nil when the file has no sound.
+        let soundtrack: AVAsset?
+
+        /// A pass of the soundtrack, its pitch kept at other rates. Only for a file with sound.
+        func makeSoundtrackItem() -> AVPlayerItem {
+            let item = AVPlayerItem(asset: soundtrack ?? picture)
+            item.audioTimePitchAlgorithm = .timeDomain
+            return item
+        }
+    }
+
+    /// The video split into its picture and its soundtrack, for `GaplessLoop`s.
+    ///
+    /// A queue player runs from one pass into the next without a break only for an item of a single
+    /// track: with both, the sound's queue is started afresh at every pass, which held the picture
+    /// for about 140 ms and silenced the sound for 75 ms (measured on a 4K60 loop). Both are as long
+    /// as the picture, so the two loops keep in step pass after pass: a soundtrack that runs longer
+    /// is cut there, a shorter one is padded with silence. When the tracks can't be read, both are
+    /// the whole file, as before.
+    func makeLoopAssets() async -> LoopAssets {
+        let source = makeAsset()
+        do {
+            guard let video = try await source.loadTracks(withMediaType: .video).first else {
+                return LoopAssets(picture: source, soundtrack: makeAsset())
+            }
+            let (videoRange, transform) = try await video.load(.timeRange, .preferredTransform)
+            let length = videoRange.end
+            let picture = AVMutableComposition()
+            guard let pictureTrack = picture.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+            else { throw CocoaError(.featureUnsupported) }
+            try Self.insert(video, range: videoRange, into: pictureTrack, length: length)
+            pictureTrack.preferredTransform = transform
+
+            var soundtrack: AVComposition?
+            if let audio = try await source.loadTracks(withMediaType: .audio).first {
+                let audioRange = try await audio.load(.timeRange)
+                let sound = AVMutableComposition()
+                guard let soundTrack = sound.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+                else { throw CocoaError(.featureUnsupported) }
+                try Self.insert(audio, range: audioRange, into: soundTrack, length: length)
+                soundtrack = sound.copy() as? AVComposition
+            }
+            guard let pictureCopy = picture.copy() as? AVComposition else { throw CocoaError(.featureUnsupported) }
+            return LoopAssets(picture: pictureCopy, soundtrack: soundtrack)
+        } catch {
+            OWELog.error(.library, "Can't split \(url.lastPathComponent) into picture and sound; its loop point may pause: \(error)")
+            return LoopAssets(picture: source, soundtrack: makeAsset())
+        }
+    }
+
+    /// Puts `track`'s media of `range`, cut to `length`, into `target` at the same times, with
+    /// silence (or no picture) before and after it up to `length`.
+    private static func insert(_ track: AVAssetTrack, range: CMTimeRange, into target: AVMutableCompositionTrack,
+                               length: CMTime) throws {
+        let used = range.intersection(CMTimeRange(start: .zero, end: length))
+        if used.start > .zero { target.insertEmptyTimeRange(CMTimeRange(start: .zero, end: used.start)) }
+        if !used.isEmpty { try target.insertTimeRange(used, of: track, at: used.start) }
+        let end = used.isEmpty ? .zero : used.end
+        if end < length { target.insertEmptyTimeRange(CMTimeRange(start: end, end: length)) }
+    }
+
     /// The file's type as AVFoundation wants it (a UTI); MPEG-4 when the extension says nothing.
     static func contentType(of url: URL) -> String {
         guard let type = UTType(filenameExtension: url.pathExtension), type.conforms(to: .audiovisualContent) else {

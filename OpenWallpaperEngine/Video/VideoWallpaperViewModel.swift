@@ -60,8 +60,13 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.volume = displayPlayback.playsSound ? playVolume : 0
     }
 
-    var player = WallpaperAVPlayer.make()
-    private var audioPlayer = WallpaperAVPlayer.make()
+    /// The picture and the soundtrack, each looping without a pause at the end (`GaplessLoop`).
+    private let videoQueue = WallpaperAVPlayer.makeQueue()
+    private let audioQueue = WallpaperAVPlayer.makeQueue()
+    private lazy var videoLoop = GaplessLoop(player: videoQueue)
+    private lazy var audioLoop = GaplessLoop(player: audioQueue)
+    var player: AVPlayer { videoQueue }
+    private var audioPlayer: AVPlayer { audioQueue }
     private let ownAudioTap = AudioLevelTap()
     private var cancellables = Set<AnyCancellable>()
     /// The notification observers and the probe timer, which the nonisolated `deinit` removes.
@@ -83,12 +88,11 @@ class VideoWallpaperViewModel: ObservableObject {
         self.playsAudio = wallpaperViewModel.playsInstanceAudio
         self.wallpaperViewModel = wallpaperViewModel
         self.player.isMuted = true
-        // The default `.pause` drops the rate to 0 at the end, and the rate cache then never sets
-        // it back, so the video stopped after one pass. With `.none` it keeps its rate across the
-        // seek back to the start.
-        self.player.actionAtItemEnd = .none
-        self.audioPlayer.actionAtItemEnd = .none
         self.audioPlayer.isMuted = !playsAudio
+        // Called on the main queue (`GaplessLoop`), so `assumeIsolated` holds.
+        videoLoop.passEnded = { [weak self] in
+            MainActor.assumeIsolated { self?.videoPassEnded() }
+        }
         // Block-based observers with a weak target, so this instance can still deinit (and stop
         // playback) when the wallpaper view is torn down instead of being kept alive forever.
         // Each is delivered on the main queue (`queue: .main`), so `assumeIsolated` holds.
@@ -162,15 +166,15 @@ class VideoWallpaperViewModel: ObservableObject {
         teardown.setTimer(nil)
         player.pause()
         audioPlayer.pause()
-        player.replaceCurrentItem(with: nil)
-        audioPlayer.replaceCurrentItem(with: nil)
+        videoLoop.clear()
+        audioLoop.clear()
         videoFile = nil
     }
 
     deinit {
         preparation?.cancel()
-        player.pause()
-        audioPlayer.pause()
+        videoQueue.pause()
+        audioQueue.pause()
         teardown.removeAll()
     }
 
@@ -266,15 +270,38 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.rate = rate
     }
 
-    private func playerDidFinishPlaying() {
+    /// The picture played to its end and runs on into its next pass (`GaplessLoop`), as the
+    /// soundtrack does on its own.
+    private func videoPassEnded() {
         wallpaperViewModel.advancePlaylistIfVideoEnds(currentWallpaper)
         probe.reset()
-        self.player.seek(to: CMTime.zero)
-        self.audioPlayer.seek(to: CMTime.zero)
-        // Whatever the players' rates are now, reapply the wanted ones.
-        appliedVideoRate = nil
-        appliedAudioRate = nil
-        updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
+        resyncSoundtrackIfDrifted()
+    }
+
+    /// The soundtrack runs to the audio device's clock and loops on its own, so over hours it can
+    /// drift from the picture; at the picture's loop point a drift past `maximumDrift` is put right.
+    /// Nothing is done while music pacing or the rates make the two run apart on purpose.
+    private func resyncSoundtrackIfDrifted() {
+        guard playsAudio, !audioPlayer.isMuted, !VideoMusicSyncStore.shared.bool(currentWallpaper, "paceEnabled"),
+              let audioRate = appliedAudioRate, audioRate > 0, let videoRate = appliedVideoRate,
+              abs(audioRate - videoRate) <= Self.rateEpsilon,
+              let duration = audioPlayer.currentItem?.duration.seconds, duration.isFinite, duration > 0 else { return }
+        let video = player.currentTime()
+        guard let drift = Self.loopDrift(audio: audioPlayer.currentTime().seconds, video: video.seconds, duration: duration),
+              abs(drift) > Self.maximumDrift else { return }
+        audioPlayer.seek(to: video, toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    /// How far a soundtrack shows lip-sync drift: about what people notice with sound running late.
+    static let maximumDrift = 0.08
+
+    /// How far the soundtrack at `audio` runs ahead of the picture at `video` (seconds; negative
+    /// when it runs behind), on a loop of `duration`: the shorter way round the loop.
+    static func loopDrift(audio: Double, video: Double, duration: Double) -> Double? {
+        guard audio.isFinite, video.isFinite, duration.isFinite, duration > 0 else { return nil }
+        var drift = (audio - video).truncatingRemainder(dividingBy: duration)
+        if drift > duration / 2 { drift -= duration } else if drift < -duration / 2 { drift += duration }
+        return drift
     }
 
     private func systemWillSleep() {
@@ -290,57 +317,47 @@ class VideoWallpaperViewModel: ObservableObject {
         updatePlaybackRates(audioLevel: level ?? WallpaperServices.shared.audioLevel)
     }
 
-    private func observeItemEnd(of item: AVPlayerItem?) {
-        // Delivered on the main queue (`queue: .main`), so `assumeIsolated` holds.
-        teardown.observe(.itemEnd, on: .default, token: NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.playerDidFinishPlaying() }
-        })
-    }
-
     /// Opens the wallpaper's video in the players once its source is made, off the main thread: a
     /// video whose track AVFoundation refuses as it is plays repaired (`VideoSampleEntryRepair`,
     /// read from its `moov`), and WE's "Video loading" set to in memory reads the file into memory
     /// (`VideoFileSource`).
     private func preparePlayers(for wallpaper: WEWallpaper) {
         preparation?.cancel()
-        pendingPreparation = nil
         let source = wallpaper.mediaURL
         let readMode = wallpaperViewModel.videoReadMode
-        guard VideoSampleEntryRepair.mayNeedRepair(source) || readMode == .inMemory else {
-            replacePlayers(with: VideoFileSource(url: source, mode: .fromDisk))
-            return
-        }
+        let offMain = VideoSampleEntryRepair.mayNeedRepair(source) || readMode == .inMemory
         let id = UUID()
         pendingPreparation = id
         preparation = Task { [weak self] in
-            let file = await Task.detached(priority: .userInitiated) {
-                VideoFileSource(url: source, mode: readMode)
-            }.value
+            let file = offMain
+                ? await Task.detached(priority: .userInitiated) { VideoFileSource(url: source, mode: readMode) }.value
+                : VideoFileSource(url: source, mode: .fromDisk)
+            let assets = await file.makeLoopAssets()
             guard let self, !Task.isCancelled, !self.stopped, self.pendingPreparation == id else { return }
             self.pendingPreparation = nil
-            self.replacePlayers(with: file)
+            self.replacePlayers(with: file, assets: assets)
         }
     }
 
-    private func replacePlayers(with file: VideoFileSource) {
+    /// Plays `file`, split into `assets`; what played before plays until then.
+    private func replacePlayers(with file: VideoFileSource, assets: VideoFileSource.LoopAssets) {
         let url = file.url
         videoFile = file
         mediaLease = CacheLeases.current.lease(url)
-        // New AVPlayers start at rate 0, so the cached values no longer describe them.
+        // Emptied queues stop, so the cached rates no longer describe the players.
         appliedVideoRate = nil
         appliedAudioRate = nil
         probe.reset()
-        let videoItem = file.makeItem()
-        let audioAsset = file.makeAsset()
-        let audioItem = AVPlayerItem(asset: audioAsset)
-        audioItem.audioTimePitchAlgorithm = .timeDomain
-
-        player.replaceCurrentItem(with: videoItem)
-        audioPlayer.replaceCurrentItem(with: audioItem)
+        videoLoop.play { AVPlayerItem(asset: assets.picture) }
+        if let soundtrack = assets.soundtrack {
+            audioLoop.play { assets.makeSoundtrackItem() }
+            ownAudioTap.attach(toItemsOf: soundtrack) { [weak self] mix in self?.audioLoop.audioMix = mix }
+        } else {
+            audioLoop.clear()
+            ownAudioTap.detach()
+        }
         player.isMuted = true
         audioPlayer.isMuted = !playsAudio
-        ownAudioTap.attach(to: audioItem, asset: audioAsset)
-        observeItemEnd(of: videoItem)
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
     }
 }
@@ -358,7 +375,7 @@ extension VideoWallpaperViewModel: ScreenSaverVideoSharing {
 /// The view model's notification observers and probe timer, kept outside the main actor so its
 /// nonisolated `deinit` can remove them. `@unchecked Sendable`: `lock` guards both fields.
 private final class VideoWallpaperTeardown: @unchecked Sendable {
-    enum Observer { case itemEnd, sleep, wake, musicSync }
+    enum Observer { case sleep, wake, musicSync }
 
     private let lock = NSLock()
     private var observers: [Observer: (center: NotificationCenter, token: NSObjectProtocol)] = [:]

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Video wallpapers loop without a pause.** A video wallpaper, or a scene's video layer, used to stop for a moment at every loop: the picture held and the sound went quiet for about a third of a second, easy to hear on ASMR and ambient videos. The end now runs straight into the start, picture and sound. ([#657](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/657))
+
 ## [1.0.0-beta.25] - 2026-11-24
 
 ### Added

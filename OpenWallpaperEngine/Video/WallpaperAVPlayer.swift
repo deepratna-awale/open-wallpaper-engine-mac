@@ -19,6 +19,14 @@ enum WallpaperAVPlayer {
         return player
     }
 
+    /// A queue player for a `GaplessLoop`, set up as `make` sets up a player.
+    static func makeQueue(output: OutputOnlyAudioDevice? = WallpaperServices.shared.soundOutput) -> AVQueuePlayer {
+        let player = AVQueuePlayer()
+        player.preventsDisplaySleepDuringVideoPlayback = false
+        route(player, to: output)
+        return player
+    }
+
     /// Plays `player`'s sound on `output` (the default output device without its inputs), for
     /// players made elsewhere (an `AVQueuePlayer` behind an `AVPlayerLooper`). A muted player
     /// still opens its device, so muted ones are routed too.
