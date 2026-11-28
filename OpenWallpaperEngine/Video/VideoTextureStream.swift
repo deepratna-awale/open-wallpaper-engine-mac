@@ -16,7 +16,13 @@ import QuartzCore
 /// `VideoHDRConversion` turns into linear BT.709 light, 1.0 = 100 nits, which the scene's
 /// `combine_video_hdr` shows as EDR (`SceneHDRChain`).
 final class VideoTextureStream {
-    let player: AVPlayer
+    /// The picture and the soundtrack, each looping without a pause at the end (`GaplessLoop`).
+    /// The sound is a second player, mirroring the AVKit path: the picture's player stays muted so
+    /// music pacing never pitch-shifts the soundtrack.
+    private let videoLoop: GaplessLoop
+    private let audioLoop: GaplessLoop
+    var player: AVPlayer { videoLoop.player }
+    private var audioPlayer: AVPlayer { audioLoop.player }
     /// Natural frame size, once the first frame has arrived.
     private(set) var frameSize = SIMD2<Float>(1920, 1080)
     /// How the frames decode: `.sdr` is the 8-bit path; PQ or HLG, linear light (`VideoHDRConversion`).
@@ -24,10 +30,18 @@ final class VideoTextureStream {
     /// The HDR mode's conversion; nil for SDR.
     private let hdrConversion: VideoHDRConversion?
 
-    private let output: AVPlayerItemVideoOutput
-    /// Audio is a second player on the same file, mirroring the AVKit path: the video player stays
-    /// muted so music pacing never pitch-shifts the soundtrack.
-    private let audioPlayer: AVPlayer
+    /// Each pass's video output (an output serves one item), by item; a pass's goes when it ends.
+    /// The main thread queues passes while the renderer reads frames, so `outputsLock` guards it.
+    private var outputs: [ObjectIdentifier: AVPlayerItemVideoOutput] = [:]
+    private let outputsLock = NSLock()
+    /// The output of the pass playing now.
+    private var output: AVPlayerItemVideoOutput? {
+        guard let item = player.currentItem else { return nil }
+        return outputsLock.withLock { outputs[ObjectIdentifier(item)] }
+    }
+    /// Splits the file into picture and sound before the loops start (`makeLoopAssets`).
+    private var loading: Task<Void, Never>?
+    private var stopped = false
     private var textureCache: CVMetalTextureCache?
     private let ownAudioTap = AudioLevelTap()
     private var audioIsAudible = false
@@ -37,11 +51,15 @@ final class VideoTextureStream {
     /// decoder can't be handed the buffer back while a frame in flight still reads it.
     private var retainedTexture: CVMetalTexture?
     private var latestTexture: MTLTexture?
-    private var observers: [NSObjectProtocol] = []
 
-    /// Whether the end restarts playback (`IVideoTexture.loop`); a video that doesn't loop holds
-    /// its last frame.
-    private(set) var loops = true
+    /// Whether the end runs on into the start (`IVideoTexture.loop`); a video that doesn't loop
+    /// holds its last frame.
+    private(set) var loops = true {
+        didSet {
+            videoLoop.loops = loops
+            audioLoop.loops = loops
+        }
+    }
     /// `IVideoTexture.rate` of an embedded video texture, with `isPlaying`.
     private var scriptRate: Float = 1
     private var scriptPlaying = true
@@ -76,50 +94,61 @@ final class VideoTextureStream {
             OWELog.error(.scene, "Video \(file.url.lastPathComponent) plays as SDR: its HDR conversion can't be made")
         }
         self.dynamicRange = hdrConversion == nil ? .sdr : dynamicRange
-        output = hdrConversion == nil
-            ? AVPlayerItemVideoOutput(pixelBufferAttributes: [
-                kCVPixelBufferMetalCompatibilityKey as String: true,
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-            ])
-            : AVPlayerItemVideoOutput(outputSettings: Self.hdrOutputSettings)
-        let item = file.makeItem()
-        item.add(output)
-        player = WallpaperAVPlayer.make(item: item)
+        videoLoop = GaplessLoop(player: WallpaperAVPlayer.makeQueue())
+        audioLoop = GaplessLoop(player: WallpaperAVPlayer.makeQueue())
         player.isMuted = true
-        player.actionAtItemEnd = .none
-
-        let audioAsset = file.makeAsset()
-        let audioItem = AVPlayerItem(asset: audioAsset)
-        audioItem.audioTimePitchAlgorithm = .timeDomain
-        audioPlayer = WallpaperAVPlayer.make(item: audioItem)
-        audioPlayer.actionAtItemEnd = .none
-        ownAudioTap.attach(to: audioItem, asset: audioAsset)
-
-        // Weak and never reassigned: `nonisolated(unsafe)` only lets the `@Sendable` observer
-        // block capture it. The block runs on the main queue, as before.
-        nonisolated(unsafe) weak let stream = self
-        for observed in [item, audioItem] {
-            observers.append(NotificationCenter.default.addObserver(
-                forName: .AVPlayerItemDidPlayToEndTime, object: observed, queue: .main
-            ) { _ in stream?.reachedEnd() })
+        let isHDR = hdrConversion != nil
+        let ref = StreamReference(stream: self)
+        videoLoop.passEnded = { ref.stream?.videoPassEnded() }
+        loading = Task { @MainActor in
+            let assets = await file.makeLoopAssets()
+            ref.stream?.start(assets, isHDR: isHDR)
         }
     }
 
+    /// Starts both loops, each pass of the picture with its own output, at the rates asked so far.
+    private func start(_ assets: VideoFileSource.LoopAssets, isHDR: Bool) {
+        guard !stopped else { return }
+        let ref = StreamReference(stream: self)
+        videoLoop.play {
+            let item = AVPlayerItem(asset: assets.picture)
+            let output = isHDR
+                ? AVPlayerItemVideoOutput(outputSettings: Self.hdrOutputSettings)
+                : AVPlayerItemVideoOutput(pixelBufferAttributes: [
+                    kCVPixelBufferMetalCompatibilityKey as String: true,
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+                ])
+            item.add(output)
+            if let stream = ref.stream { stream.outputsLock.withLock { stream.outputs[ObjectIdentifier(item)] = output } }
+            return item
+        }
+        if let soundtrack = assets.soundtrack {
+            audioLoop.play { assets.makeSoundtrackItem() }
+            ownAudioTap.attach(toItemsOf: soundtrack) { mix in ref.stream?.audioLoop.audioMix = mix }
+        }
+        // Rates set while nothing was queued: hand them to the players again.
+        if let appliedVideoRate { player.rate = appliedVideoRate }
+        if let appliedAudioRate { audioPlayer.rate = appliedAudioRate }
+    }
+
     deinit {
-        observers.forEach(NotificationCenter.default.removeObserver)
+        loading?.cancel()
         player.pause()
         audioPlayer.pause()
-        player.replaceCurrentItem(with: nil)
-        audioPlayer.replaceCurrentItem(with: nil)
+        videoLoop.clear()
+        audioLoop.clear()
     }
 
     /// Stops both players and drops their items, so audio cannot keep playing through whatever
     /// still holds a reference to this stream (the renderer retains it inside the built layer).
     func stop() {
+        stopped = true
+        loading?.cancel()
         player.pause()
         audioPlayer.pause()
-        player.replaceCurrentItem(with: nil)
-        audioPlayer.replaceCurrentItem(with: nil)
+        videoLoop.clear()
+        audioLoop.clear()
+        outputsLock.withLock { outputs.removeAll() }
         appliedVideoRate = nil
         appliedAudioRate = nil
     }
@@ -127,7 +156,8 @@ final class VideoTextureStream {
     /// Whether a frame newer than the one last handed out is ready now (nothing is consumed): a
     /// frame without one shows the same picture, so the renderer can skip it.
     var hasNewFrame: Bool {
-        latestTexture == nil || output.hasNewPixelBuffer(forItemTime: output.itemTime(forHostTime: CACurrentMediaTime()))
+        guard latestTexture != nil, let output else { return true }
+        return output.hasNewPixelBuffer(forItemTime: output.itemTime(forHostTime: CACurrentMediaTime()))
     }
 
     /// HDR mode's decoder output: linear half floats in BT.2020, whose range AVFoundation keeps
@@ -161,6 +191,7 @@ final class VideoTextureStream {
     /// The decoder's frame for the current host time as a `format` texture, when a new one is
     /// ready; it becomes the frame `holdCurrentFrame(until:)` keeps.
     private func takeNewFrame(format: MTLPixelFormat) -> MTLTexture? {
+        guard let output else { return nil }
         let itemTime = output.itemTime(forHostTime: CACurrentMediaTime())
         guard output.hasNewPixelBuffer(forItemTime: itemTime),
               let buffer = output.copyPixelBuffer(forItemTime: itemTime, itemTimeForDisplay: nil),
@@ -226,8 +257,18 @@ final class VideoTextureStream {
         audioPlayer.rate = rate
     }
 
-    private func reachedEnd() {
-        if loops { restart() } else { player.pause(); audioPlayer.pause(); scriptPlaying = false; appliedVideoRate = nil }
+    /// The picture played to its end: a looping one already runs on into its next pass
+    /// (`GaplessLoop`), whose output now serves the frames; one that doesn't loop holds its last
+    /// frame, silent.
+    private func videoPassEnded() {
+        let playing = Set(videoLoop.player.items().map(ObjectIdentifier.init))
+        outputsLock.withLock { outputs = outputs.filter { playing.contains($0.key) } }
+        guard !loops else { return }
+        player.pause()
+        audioPlayer.pause()
+        scriptPlaying = false
+        appliedVideoRate = nil
+        appliedAudioRate = nil
     }
 
     // MARK: - Video textures in scenes
@@ -263,7 +304,10 @@ final class VideoTextureStream {
     func perform(_ command: SceneVideoTextureCommand) {
         switch command {
         case .play:
-            if !loops, let item = player.currentItem, item.currentTime() >= item.duration { player.seek(to: .zero) }
+            if !loops, let item = player.currentItem, item.currentTime() >= item.duration {
+                player.seek(to: .zero)
+                audioPlayer.seek(to: .zero)
+            }
             scriptPlaying = true
         case .pause:
             scriptPlaying = false
@@ -281,13 +325,12 @@ final class VideoTextureStream {
         setVideoRate(scriptPlaying ? scriptRate * hostRate : 0)
     }
 
-    func restart() {
-        player.seek(to: .zero)
-        audioPlayer.seek(to: .zero)
-        // Seeking clears the rate, so the cache no longer describes the players.
-        appliedVideoRate = nil
-        appliedAudioRate = nil
-    }
+}
+
+/// A weak reference to a stream for the closures its loops and loading call on the main thread.
+/// `@unchecked Sendable`: the stream is only reached from the main thread through it.
+private struct StreamReference: @unchecked Sendable {
+    weak var stream: VideoTextureStream?
 }
 
 /// A decoded frame kept alive by a command buffer's completion handler, with the texture cache
